@@ -1,17 +1,20 @@
 import os
 from fastapi import FastAPI
 from fastapi.security import HTTPBearer
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from google.cloud import firestore, storage, documentai
 from google.api_core.exceptions import GoogleAPIError
 from google import genai
+
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
 bearer_scheme = HTTPBearer()
 
 
 from app.config import settings
-from app.routers import user, auth
+from app.routers import user, auth, resume
 
 app = FastAPI(
     title="CareerBot AI Backend",
@@ -19,7 +22,16 @@ app = FastAPI(
     description="API для CareerBot AI (FastAPI + Google Cloud)",
 )
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "https://app.future.site"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/test-cloud")
 def test_google_cloud():
@@ -76,7 +88,7 @@ def test_google_cloud():
 
     return result
 
-# app.include_router(auth.router)
 
 app.include_router(user.router)
+app.include_router(resume.router)
 
