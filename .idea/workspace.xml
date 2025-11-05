@@ -4,49 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d627f65e-ce25-434c-aae4-bcd4b871e137" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/Backend.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/dependencies.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/common.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/interview_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/jd_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/plan_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/profile_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/models/resume_models.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/admin.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/interview.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/jd.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/media.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/plan.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/profile.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/progress.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/routers/resume.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/docai_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/firestore_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/gcs_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/stt_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/vertex_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/tests/test_auth.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/tests/test_plan.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/tests/test_resume.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/auth_utils.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/error_handler.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/utils/rate_limit.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test_main.http" afterDir="false" />
+    <list default="true" id="d627f65e-ce25-434c-aae4-bcd4b871e137" name="Changes" comment="main: init structure">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -65,6 +27,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "DaniyarAbikenov"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "git@github.com:DaniyarAbikenov/gdg-aitu-hackhathon.git",
+    "accountId": "5192bd45-ce92-4811-9529-6289c57d39c7"
+  }
+}]]></component>
   <component name="ProjectColorInfo"><![CDATA[{
   "customColor": "",
   "associatedIndex": 7
@@ -78,10 +52,13 @@
   "keyToString": {
     "FastAPI.Backend.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.main.executor": "Run",
+    "Python.temp.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/Abike/Documents/AITU/Hack/GDG Nov 2025/Project/Backend",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -91,11 +68,60 @@
   }
 }]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Abike\Documents\AITU\Hack\GDG Nov 2025\Project\Backend" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\Abike\Documents\AITU\Hack\GDG Nov 2025\Project\Backend\app" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Python.main">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Backend" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/app" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Backend" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="Backend" type="Python.FastAPI">
       <option name="file" value="$PROJECT_DIR$/main.py" />
       <module name="Backend" />
@@ -111,6 +137,12 @@
       <option name="launchJavascriptDebuger" value="false" />
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.main" />
+        <item itemvalue="Python.temp" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -127,14 +159,29 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1762319309315</updated>
-      <workItem from="1762319310663" duration="3406000" />
+      <workItem from="1762319310663" duration="11120000" />
     </task>
+    <task id="LOCAL-00001" summary="main: init structure">
+      <option name="closed" value="true" />
+      <created>1762328693828</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1762328693828</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="main: init structure" />
+    <option name="LAST_COMMIT_MESSAGE" value="main: init structure" />
+  </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Backend$main.coverage" NAME="main Coverage Results" MODIFIED="1762329717276" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app" />
     <SUITE FILE_PATH="coverage/Backend$Backend.coverage" NAME="Backend Coverage Results" MODIFIED="1762321017921" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/Backend$temp.coverage" NAME="temp Coverage Results" MODIFIED="1762339303343" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

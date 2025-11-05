@@ -1,15 +1,18 @@
-from pydantic import BaseSettings
+from pydantic_settings  import BaseSettings
 
 class Settings(BaseSettings):
     PROJECT_ID: str
-    GCP_LOCATION: str = "us-central1"
-    FIRESTORE_PREFIX: str = "prod_"
+    GCP_LOCATION: str
+    FIRESTORE_PREFIX: str
     GCS_BUCKET: str
-    DOC_AI_PROCESSOR_ID: str
     FIREBASE_PROJECT_ID: str
-    VERTEX_MODEL: str = "gemini-1.5-pro"
+    GOOGLE_APPLICATION_CREDENTIALS: str
+    DOC_AI_PROCESSOR_ID: str
+    VERTEX_MODEL: str
     SIGNED_URL_TTL: int = 3600
     STT_ENABLED: bool = False
+    DEBUG: bool = True
+    PORT: int = 8080
 
     class Config:
         env_file = ".env"
