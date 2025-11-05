@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+pydantic
+google-cloud-firestore
+google-cloud-storage
+google-cloud-secret-manager
+google-cloud-aiplatform
+google-cloud-documentai
+google-cloud-speech
+firebase-admin
+httpx
+tenacity

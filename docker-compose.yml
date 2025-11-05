@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: careerbot_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: careerbot
+      POSTGRES_PASSWORD: careerpass
+      POSTGRES_DB: careerbot_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data   # постоянные данные
+
+  backend:
+    build: .
+    container_name: careerbot_api
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./app:/app
+      - ./uploads:/uploads                 # пользовательские файлы не удаляются
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://careerbot:careerpass@postgres:5432/careerbot_db
+    depends_on:
+      - postgres
+
+volumes:
+  pg_data:
