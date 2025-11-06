@@ -6,16 +6,16 @@ from google import genai
 from google.genai import types
 from google.cloud import storage
 
-from app.config import settings
-from app.schemas.gemini_schemas import ResumeSchema
+from app.config import settings, Settings
+from app.schemas.gemini_schemas import ResumeSchema, ImprovementsResponse
 
 # ===========================================================
 # ✅ Единый клиент Gemini Vertex AI
 # ===========================================================
 client = genai.Client(
     vertexai=True,
-    project=settings.PROJECT_ID,     # "gdg-hackathon-aitu"
-    location=settings.GCP_LOCATION   # "us-central1"
+    project=settings.PROJECT_ID,  # "gdg-hackathon-aitu"
+    location=settings.GCP_LOCATION  # "us-central1"
 )
 
 MODEL_NAME = settings.VERTEX_MODEL  # "gemini-1.5-flash"
@@ -29,6 +29,7 @@ def _gemini_call(prompt: str, parts: list = None, config=None) -> str:
     Унифицированный вызов Gemini.
     `parts` — дополнительные данные (PDF, изображения и т.д.)
     """
+    print(prompt)
 
     if config is None:
         config = {}
@@ -154,9 +155,9 @@ def gemini_extract_resume_fields_from_pdf(gcs_path: str) -> dict:
             )
         ],
         config={
-        "response_mime_type": "application/json",
-        "response_json_schema": ResumeSchema.model_json_schema(),
-    },
+            "response_mime_type": "application/json",
+            "response_json_schema": ResumeSchema.model_json_schema(),
+        },
     )
 
     try:
@@ -169,63 +170,103 @@ def gemini_extract_resume_fields_from_pdf(gcs_path: str) -> dict:
 # ✅ Анализ резюме vs JD
 # ===========================================================
 def gemini_analyze_resume(fields_verified: dict, jd_text: str, user_profile: dict):
+    # Подготовим схему для анализа
     prompt = f"""
-You are a professional resume analyst.
+   Ты — профессиональная система адаптации резюме.
 
-User profile:
+Профиль пользователя:
 {json.dumps(user_profile, ensure_ascii=False)}
 
-Verified resume fields:
+Проверенные поля резюме:
 {json.dumps(fields_verified, ensure_ascii=False)}
 
-Job description:
+Описание вакансии:
 {jd_text}
 
-Return JSON with:
-{{
-  "improvements": [
-    {{
-       "id": "",
-       "type": "",
-       "field": "",
-       "before": "",
-       "after": "",
-       "reason": ""
-    }}
-  ],
-  "new_resume_draft": ""
-}}
-"""
+Твоя задача — предоставить улучшения для резюме на основе описания вакансии. Каждое улучшение должно быть конкретным, связанным с текущими данными резюме пользователя, и направленным на соответствие описанию вакансии. Не добавляй новую информацию, только корректируй уже существующие данные. Ты можешь предложить:
 
-    response = _gemini_call(prompt)
+Какие навыки из списка пользователя стоит удалить или заменить, если они не соответствуют вакансии.
+
+Какие навыки стоит добавить из списка пользователя, чтобы соответствовать вакансии (на основе требований).
+
+Какие области опыта или знания стоит углубить или развить для повышения соответствия вакансии.
+
+Как следует переписать раздел резюме (например, summary или job experience), чтобы акцентировать внимание на релевантном опыте.
+
+Каждое улучшение должно быть конкретным и основываться исключительно на уже проверенных данных резюме пользователя. Не добавляй новых навыков или знаний, которых нет в резюме. Максимум 10 улучшений.
+
+Пример улучшений:
+
+Изменить summary, чтобы выделить опыт в машинном обучении, если это требуется вакансией.
+
+Удалить навыки, связанные с Java, если вакансия требует только Python и Go.
+
+Добавить в резюме опыт работы с Kubernetes, если в вакансии это указано как ключевое требование.
+
+Переписать описание опыта работы в последней позиции, чтобы подчеркнуть роль лидера в проекте.
+
+Добавить «SQL» в список навыков, если вакансия требует работы с базами данных.
+    """
+    print(prompt)
+    # Подготовим запрос для генерации
+    client = genai.Client(
+        vertexai=True,
+        project="gdg-hackathon-aitu",
+        location="us-central1"
+    )
+
+    # Отправляем запрос в Gemini API с использованием схемы
+    response = _gemini_call(
+        prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_json_schema": {
+                "type": "object",
+                "properties": {
+                    "improvements": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": ["improvements"]
+            }
+        }
+    )
 
     try:
+        # Парсим JSON ответ от Gemini
         data = json.loads(response)
-        return data["improvements"], data["new_resume_draft"]
-    except:
+        improvements = data["improvements"]
+        return improvements
+    except Exception as e:
+        print(f"Error processing Gemini response: {e}")
         raise HTTPException(500, "Invalid JSON from Gemini (analyze)")
 
 
 # ===========================================================
 # ✅ Генерация HTML-резюме
 # ===========================================================
-def gemini_generate_html(fields, template_html):
+def gemini_generate_html(fields, advices):
     prompt = f"""
-Generate resume HTML based on this template:
+Generate resume HTML. You have to create full HTML page with styles (<style> tag) and sections.
 
-TEMPLATE:
-<<<HTML
-{template_html}
-HTML
 
 FIELDS (JSON):
 {json.dumps(fields, ensure_ascii=False)}
+
+improvments:
+{json.dumps(advices, ensure_ascii=False)}
 
 RULES:
 - Replace placeholders like [FULL_NAME], [SUMMARY_HTML], [SKILLS_HTML]
 - Only output final HTML
 - No extra text
+- Follow received Advices for improving CV
 """
 
     html = _gemini_call(prompt)
+    html = html.replace("```html", "", 1)
+    html = html.replace("```", "", 1)
     return html
