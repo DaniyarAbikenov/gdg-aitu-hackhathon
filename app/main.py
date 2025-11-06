@@ -13,11 +13,11 @@ from google import genai
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
 bearer_scheme = HTTPBearer()
-firebase_admin.initialize_app()   # БЕЗ credentials=...
+# firebase_admin.initialize_app()   # БЕЗ credentials=...
 
 
 from app.config import settings
-from app.routers import user, auth, resume
+from app.routers import user, auth, resume, interview
 
 app = FastAPI(
     title="CareerBot AI Backend",
@@ -94,4 +94,5 @@ def test_google_cloud():
 
 app.include_router(user.router)
 app.include_router(resume.router)
+app.include_router(interview.router)
 
