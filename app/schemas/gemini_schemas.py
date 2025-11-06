@@ -40,3 +40,20 @@ class Improvement(BaseModel):
 
 class ImprovementsResponse(BaseModel):
     improvements: List[Improvement]
+
+class InterviewQuestion(BaseModel):
+    question: str
+    answer: str
+
+class InterviewQuestionList(BaseModel):
+    items: list[InterviewQuestion]
+
+class InterviewStartRequest(BaseModel):
+    company_description: str
+    job_description: str
+    tech_stack: str
+    style: str  # "theoretical" | "practical" | "mixed"
+
+
+class InterviewAnswerRequest(BaseModel):
+    answer: str

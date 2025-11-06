@@ -5,9 +5,10 @@ from fastapi import HTTPException
 from google import genai
 from google.genai import types
 from google.cloud import storage
+from vertexai._genai.types import EvaluationResult
 
 from app.config import settings, Settings
-from app.schemas.gemini_schemas import ResumeSchema, ImprovementsResponse
+from app.schemas.gemini_schemas import ResumeSchema, ImprovementsResponse, InterviewQuestionList
 
 # ===========================================================
 # ✅ Единый клиент Gemini Vertex AI
@@ -33,6 +34,7 @@ def _gemini_call(prompt: str, parts: list = None, config=None) -> str:
 
     if config is None:
         config = {}
+
     contents = [prompt]
     if parts:
         contents.extend(parts)
@@ -270,3 +272,120 @@ RULES:
     html = html.replace("```html", "", 1)
     html = html.replace("```", "", 1)
     return html
+
+def build_first_question_prompt(data):
+    return f"""
+Ты — технический интервьюер.
+Сформируй первый вопрос интервью.
+
+Компания: {data["company_description"]}
+Вакансия: {data["job_description"]}
+Стек: {data["tech_stack"]}
+Стиль: {data["style"]}
+
+Выведи строго JSON:
+{{ "question": "..." }}
+"""
+
+
+def build_interview_prompt(data, new_user_answer=None):
+    conv = data.get("conversation", [])
+
+    prompt = f"""
+Ты — технический интервьюер компании.
+Компания: {data["company_description"]}
+Вакансия: {data["job_description"]}
+Стек: {data["tech_stack"]}
+Стиль интервью: {data["style"]}
+
+История диалога до текущего момента:
+"""
+
+    if len(conv) == 0:
+        prompt += "Пока вопросов и ответов не было.\n"
+    else:
+        for turn in conv:
+            prompt += f"""
+Вопрос: {turn["question"]}
+Ответ кандидата: {turn["answer"]}
+Оценка: {turn["result"]}
+"""
+
+    if new_user_answer:
+        prompt += f"""
+
+Текущий вопрос: {data["current_question"]}
+Ответ кандидата: {new_user_answer}
+
+Твоя задача:
+1. Оценить ответ: correct / partial / wrong  
+2. Дать короткое объяснение  
+3. Если partial — задать уточняющий follow-up вопрос  
+4. Если wrong — выдать следующий вопрос  
+5. Ответить строго в JSON:
+
+{{
+  "result": "...",
+  "feedback": "...",
+  "follow_up_question": "..." | null,
+  "next_question": "..." | null
+}}
+"""
+
+    return prompt
+
+def generate_interview_questions(company, job, stack, style):
+    prompt = f"""
+Ты — технический интервьюер.
+
+Сгенерируй список вопросов для технического интервью.
+Для каждого вопроса сформируй:
+- полную формулировку вопроса
+- корректный эталонный ответ
+
+Стиль интервью: {style}
+Компания: {company}
+Вакансия: {job}
+Технологический стек: {stack}
+
+Верни JSON строго по схеме.
+    """
+
+    schema = InterviewQuestionList.model_json_schema()
+
+    text = _gemini_call(
+        prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": schema
+        }
+    )
+
+    data = InterviewQuestionList.model_validate_json(text)
+    return data.items
+
+def evaluate_answer(correct_answer: str, user_answer: str):
+    prompt = f"""
+Ты — технический интервьюер.
+
+Правильный ответ:
+{correct_answer}
+
+Ответ кандидата:
+{user_answer}
+
+Оцени ответ и верни строго JSON по схеме.
+    """
+
+    schema = EvaluationResult.model_json_schema()
+    print(schema)
+
+    text = _gemini_call(
+        prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": schema
+        }
+    )
+
+    return EvaluationResult.model_validate_json(text)

@@ -17,8 +17,8 @@ else:
 bearer_scheme = HTTPBearer()
 
 
-
-from app.routers import user, auth, resume
+from app.config import settings
+from app.routers import user, auth, resume, interview
 
 app = FastAPI(
     title="CareerBot AI Backend",
@@ -95,4 +95,5 @@ def test_google_cloud():
 
 app.include_router(user.router)
 app.include_router(resume.router)
+app.include_router(interview.router)
 
