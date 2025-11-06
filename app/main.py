@@ -9,14 +9,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from google.cloud import firestore, storage, documentai
 from google.api_core.exceptions import GoogleAPIError
 from google import genai
-
-
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
-bearer_scheme = HTTPBearer()
-firebase_admin.initialize_app()   # БЕЗ credentials=...
-
-
 from app.config import settings
+if settings.DEBUG:
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
+else:
+    firebase_admin.initialize_app()   # БЕЗ credentials=...
+bearer_scheme = HTTPBearer()
+
+
+
 from app.routers import user, auth, resume
 
 app = FastAPI(
