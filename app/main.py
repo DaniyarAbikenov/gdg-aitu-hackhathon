@@ -30,7 +30,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:8080",
-        "https://app.future.site"
+        "https://gdg-hackathon-aitu.web.app",
     ],
     allow_credentials=True,
     allow_methods=["*"],
