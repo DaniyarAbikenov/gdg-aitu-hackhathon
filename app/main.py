@@ -64,7 +64,7 @@ def test_google_cloud():
             location="us-central1"
         )
         response = genai_client.models.generate_content(
-            model="publishers/google/models/gemini-2.5-flash",
+            model="publishers/google/models/gemini-2.5-pro",
             contents="hello",
         )
         result["vertex_ai"] = {"status": "ok", "sample": response.text[:40]}

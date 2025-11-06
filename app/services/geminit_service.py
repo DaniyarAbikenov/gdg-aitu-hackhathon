@@ -1,26 +1,86 @@
+import base64
 import json
-import requests
 from fastapi import HTTPException
+
+from google import genai
+from google.genai import types
+from google.cloud import storage
+
 from app.config import settings
+from app.schemas.gemini_schemas import ResumeSchema
 
-MODEL = settings.VERTEX_MODEL
-LOCATION = settings.GCP_LOCATION
-PROJECT = settings.PROJECT_ID
-
-API_URL = (
-    f"https://{LOCATION}-aiplatform.googleapis.com/v1/projects/{PROJECT}/"
-    f"locations/{LOCATION}/publishers/google/models/{MODEL}:generateContent"
+# ===========================================================
+# ✅ Единый клиент Gemini Vertex AI
+# ===========================================================
+client = genai.Client(
+    vertexai=True,
+    project=settings.PROJECT_ID,     # "gdg-hackathon-aitu"
+    location=settings.GCP_LOCATION   # "us-central1"
 )
 
+MODEL_NAME = settings.VERTEX_MODEL  # "gemini-1.5-flash"
 
+
+# ===========================================================
+# ✅ Универсальный вызов Gemini
+# ===========================================================
+def _gemini_call(prompt: str, parts: list = None, config=None) -> str:
+    """
+    Унифицированный вызов Gemini.
+    `parts` — дополнительные данные (PDF, изображения и т.д.)
+    """
+
+    if config is None:
+        config = {}
+    contents = [prompt]
+    if parts:
+        contents.extend(parts)
+
+    try:
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=contents,
+            config=config,
+        )
+    except Exception as e:
+        raise HTTPException(500, f"Gemini Vertex error: {e}")
+
+    # Gemini может вернуть кандидатов или одиночный текст
+    text = getattr(response, "text", None)
+
+    if not text:
+        raise HTTPException(500, f"Gemini returned empty response: {response}")
+
+    return text
+
+
+# ===========================================================
+# ✅ Скачать PDF из Cloud Storage
+# ===========================================================
+def _download_pdf_from_gcs(gcs_path: str) -> bytes:
+    if not gcs_path.startswith("gs://"):
+        raise HTTPException(400, "Invalid GCS path")
+
+    _, _, bucket_name, *blob_path = gcs_path.split("/", 3)
+    blob_path = blob_path[0]
+
+    storage_client = storage.Client()
+    bucket = storage_client.bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+
+    return blob.download_as_bytes()
+
+
+# ===========================================================
+# ✅ Текст → JSON полей резюме
+# ===========================================================
 def gemini_extract_resume_fields(text: str) -> dict:
     prompt = f"""
-You are a resume extraction engine. Extract structured fields from the resume text.
+You are a resume extraction engine.
 
-Resume text:
-{text}
+Extract structured resume fields from the text below
+and return ONLY valid JSON with schema:
 
-Return JSON with this schema:
 {{
   "full_name": "",
   "email": "",
@@ -30,15 +90,84 @@ Return JSON with this schema:
   "education": [],
   "experience": []
 }}
+
+Resume text:
+{text}
 """
 
     response = _gemini_call(prompt)
+
     try:
         return json.loads(response)
     except:
-        raise HTTPException(500, "Invalid JSON from Gemini in extract_resume_fields")
+        raise HTTPException(500, "Invalid JSON from Gemini")
 
 
+# ===========================================================
+# ✅ PDF → JSON полей резюме
+# ===========================================================
+def gemini_extract_resume_fields_from_pdf(gcs_path: str) -> dict:
+    pdf_bytes = _download_pdf_from_gcs(gcs_path)
+
+    prompt = """
+Ты — система для структурированной обработки резюме.
+Извлеки из PDF следующую структуру (чистый JSON!):
+
+{
+  "summary": "",
+  "skills": [],
+  "experience": [
+      {
+         "position": "",
+         "company": "",
+         "start_date": "",
+         "end_date": "",
+         "description": ""
+      }
+  ],
+  "education": [
+      {
+         "institution": "",
+         "degree": "",
+         "start_date": "",
+         "end_date": ""
+      }
+  ],
+  "projects": [
+      {
+         "name": "",
+         "description": "",
+         "technologies": []
+      }
+  ]
+}
+
+Если данных нет — возвращай пустые строки или пустые массивы.
+"""
+
+    response = _gemini_call(
+        prompt,
+        parts=[
+            types.Part.from_bytes(
+                mime_type="application/pdf",
+                data=pdf_bytes
+            )
+        ],
+        config={
+        "response_mime_type": "application/json",
+        "response_json_schema": ResumeSchema.model_json_schema(),
+    },
+    )
+
+    try:
+        return json.loads(response)
+    except Exception:
+        raise HTTPException(500, f"Gemini returned non-JSON: {response}")
+
+
+# ===========================================================
+# ✅ Анализ резюме vs JD
+# ===========================================================
 def gemini_analyze_resume(fields_verified: dict, jd_text: str, user_profile: dict):
     prompt = f"""
 You are a professional resume analyst.
@@ -52,22 +181,19 @@ Verified resume fields:
 Job description:
 {jd_text}
 
-
-Your tasks:
-1) Compare resume with JD.
-2) Suggest improvements as independent change objects.
-3) Each change must have:
-   - id
-   - type ("skill_add", "skill_remove", "experience_edit", "summary_rewrite", etc.)
-   - field ("skills", "summary", "experience", etc.)
-   - before (if exists)
-   - after (if exists)
-   - reason (why needed)
-
-Return JSON:
+Return JSON with:
 {{
-  "improvements": [...],
-  "new_resume_draft": "string"
+  "improvements": [
+    {{
+       "id": "",
+       "type": "",
+       "field": "",
+       "before": "",
+       "after": "",
+       "reason": ""
+    }}
+  ],
+  "new_resume_draft": ""
 }}
 """
 
@@ -77,127 +203,29 @@ Return JSON:
         data = json.loads(response)
         return data["improvements"], data["new_resume_draft"]
     except:
-        raise HTTPException(500, "Invalid JSON from Gemini analyze")
+        raise HTTPException(500, "Invalid JSON from Gemini (analyze)")
 
 
+# ===========================================================
+# ✅ Генерация HTML-резюме
+# ===========================================================
 def gemini_generate_html(fields, template_html):
-    prompt = """
-    You generate clean, production-ready HTML resume based on the template.
-    
-    TEMPLATE HTML:
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="UTF-8" />
-    <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      color: #111;
-      line-height: 1.55;
-    }
-    h1 {
-      font-size: 28px;
-      margin-bottom: 4px;
-    }
-    .contact {
-      color: #555;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
-    .section-title {
-      margin-top: 28px;
-      margin-bottom: 6px;
-      font-weight: bold;
-      font-size: 16px;
-      border-bottom: 1px solid #ddd;
-    }
-    .skill-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .skill-badge {
-      background: #f2f2f2;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .exp-item {
-      margin-bottom: 14px;
-    }
-    .exp-item-title {
-      font-weight: bold;
-    }
-    .exp-item-company {
-      color: #444;
-    }
-    .exp-item-dates {
-      font-size: 12px;
-      color: #777;
-    }
-    </style>
-    </head>
-    
-    <body>
-    
-    <h1>[FULL_NAME]</h1>
-    <div class="contact">[EMAIL] · [PHONE] · [LOCATION]</div>
-    
-    <div class="section-title">Summary</div>
-    <div>[SUMMARY_HTML]</div>
-    
-    <div class="section-title">Skills</div>
-    <div class="skill-badges">[SKILLS_HTML]</div>
-    
-    <div class="section-title">Experience</div>
-    <div>[EXPERIENCE_HTML]</div>
-    
-    <div class="section-title">Education</div>
-    <div>[EDUCATION_HTML]</div>
-    
-    </body>
-    </html>
-    USER FIELDS (JSON):
-    """ + json.dumps(fields, ensure_ascii=False) + """
-    RULES:
-    - Replace placeholders like [FULL_NAME], [SUMMARY_HTML], [SKILLS_HTML].
-    - Skills must be rendered as <span> elements.
-    - Experience must be rendered as structured HTML blocks.
-    - Do NOT change layout, styling or CSS.
-    - Do NOT add JavaScript or external links.
-    - Output ONLY the final HTML.
-    """
+    prompt = f"""
+Generate resume HTML based on this template:
+
+TEMPLATE:
+<<<HTML
+{template_html}
+HTML
+
+FIELDS (JSON):
+{json.dumps(fields, ensure_ascii=False)}
+
+RULES:
+- Replace placeholders like [FULL_NAME], [SUMMARY_HTML], [SKILLS_HTML]
+- Only output final HTML
+- No extra text
+"""
+
     html = _gemini_call(prompt)
     return html
-
-
-from google.auth import default
-from google.auth.transport.requests import Request
-
-
-def _gemini_call(prompt: str) -> str:
-    creds, _ = default()
-    creds.refresh(Request())
-
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {creds.token}"
-    }
-
-    payload = {
-        "contents": [
-            {"role": "user", "parts": [{"text": prompt}]}
-        ]
-    }
-
-    try:
-        r = requests.post(API_URL, headers=headers, json=payload, timeout=25)
-        r.raise_for_status()
-    except Exception as e:
-        raise HTTPException(500, f"Gemini API error: {e}, body={r.text}")
-
-    try:
-        return r.json()["candidates"][0]["content"]["parts"][0]["text"]
-    except:
-        raise HTTPException(500, f"Unexpected Gemini structure: {r.text}")

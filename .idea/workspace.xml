@@ -4,20 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d627f65e-ce25-434c-aae4-bcd4b871e137" name="Changes" comment="main: init google connect">
-      <change afterPath="$PROJECT_DIR$/app/services/geminit_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/html_to_pdf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/services/resume_pdf.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/resume_classic.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/resume_minimalist.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/resume_modern.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/templates/resume_template.html" afterDir="false" />
+    <list default="true" id="d627f65e-ce25-434c-aae4-bcd4b871e137" name="Changes" comment="hot fixes">
+      <change afterPath="$PROJECT_DIR$/app/schemas/gemini_schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/routers/resume.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/routers/resume.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/schemas/resume.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/schemas/resume.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/docai_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/docai_service.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/services/gcs_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/gcs_service.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/services/geminit_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/services/geminit_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,8 +21,8 @@
       <list>
         <option value="FastAPI main" />
         <option value="FastAPI test_main" />
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -58,27 +50,27 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "FastAPI.Backend.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.login_temp.executor": "Run",
-    "Python.main.executor": "Run",
-    "Python.temp.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/Users/Abike/Documents/AITU/Hack/GDG Nov 2025/Project/Backend",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;FastAPI.Backend.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.login_temp.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main.executor&quot;: &quot;Run&quot;,
+    &quot;Python.temp.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/Abike/Documents/AITU/Hack/GDG Nov 2025/Project/Backend&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Abike\Documents\AITU\Hack\GDG Nov 2025\Project\Backend" />
@@ -196,7 +188,8 @@
       <option name="presentableId" value="Default" />
       <updated>1762319309315</updated>
       <workItem from="1762319310663" duration="15310000" />
-      <workItem from="1762365245856" duration="13472000" />
+      <workItem from="1762365245856" duration="13672000" />
+      <workItem from="1762401308344" duration="3149000" />
     </task>
     <task id="LOCAL-00001" summary="main: init structure">
       <option name="closed" value="true" />
@@ -214,7 +207,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762339753834</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="hot fixes">
+      <option name="closed" value="true" />
+      <created>1762383021860</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1762383021860</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -223,7 +224,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="main: init structure" />
     <MESSAGE value="main: init google connect" />
-    <option name="LAST_COMMIT_MESSAGE" value="main: init google connect" />
+    <MESSAGE value="hot fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="hot fixes" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/Backend$main.coverage" NAME="main Coverage Results" MODIFIED="1762339687859" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app" />
