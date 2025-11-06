@@ -1,4 +1,6 @@
 import os
+
+import firebase_admin
 from fastapi import FastAPI
 from fastapi.security import HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,7 @@ from google import genai
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
 bearer_scheme = HTTPBearer()
+firebase_admin.initialize_app()   # БЕЗ credentials=...
 
 
 from app.config import settings
