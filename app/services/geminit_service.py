@@ -1,14 +1,13 @@
-import base64
 import json
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from google import genai
-from google.genai import types
 from google.cloud import storage
+from google.genai import types
 from vertexai._genai.types import EvaluationResult
 
-from app.config import settings, Settings
-from app.schemas.gemini_schemas import ResumeSchema, ImprovementsResponse, InterviewQuestionList
+from app.config import settings
+from app.schemas.gemini_schemas import ResumeSchema, InterviewQuestionList
 
 # ===========================================================
 # ✅ Единый клиент Gemini Vertex AI
@@ -210,12 +209,6 @@ def gemini_analyze_resume(fields_verified: dict, jd_text: str, user_profile: dic
 Добавить «SQL» в список навыков, если вакансия требует работы с базами данных.
     """
     print(prompt)
-    # Подготовим запрос для генерации
-    client = genai.Client(
-        vertexai=True,
-        project="gdg-hackathon-aitu",
-        location="us-central1"
-    )
 
     # Отправляем запрос в Gemini API с использованием схемы
     response = _gemini_call(
@@ -272,6 +265,7 @@ RULES:
     html = html.replace("```html", "", 1)
     html = html.replace("```", "", 1)
     return html
+
 
 def build_first_question_prompt(data):
     return f"""
@@ -334,6 +328,7 @@ def build_interview_prompt(data, new_user_answer=None):
 
     return prompt
 
+
 def generate_interview_questions(company, job, stack, style):
     prompt = f"""
 Ты — технический интервьюер.
@@ -363,6 +358,7 @@ def generate_interview_questions(company, job, stack, style):
 
     data = InterviewQuestionList.model_validate_json(text)
     return data.items
+
 
 def evaluate_answer(correct_answer: str, user_answer: str):
     prompt = f"""

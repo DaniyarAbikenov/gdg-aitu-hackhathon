@@ -1,12 +1,9 @@
-import json
 import pdfkit
 from fastapi import APIRouter, HTTPException, Depends
-from google.cloud import storage
 
 from app.routers.user import get_uid
 from app.services.firestore_service import update_doc, get_doc
 from app.services.gcs_service import generate_signed_url, upload_bytes_to_gcs
-from app.config import settings
 from app.services.geminit_service import gemini_generate_html
 
 router = APIRouter(prefix="/resume", tags=["Resume"])

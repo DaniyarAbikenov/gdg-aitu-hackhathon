@@ -1,6 +1,7 @@
-from google import genai
-from pydantic import BaseModel, Field
 from typing import List, Optional
+
+from pydantic import BaseModel, Field
+
 
 class ExperienceItem(BaseModel):
     position: str = Field(..., description="Job title or position")
@@ -9,16 +10,19 @@ class ExperienceItem(BaseModel):
     end_date: Optional[str] = Field(None, description="End date or \"Present\"")
     description: Optional[str] = Field("", description="Short description of role and achievements")
 
+
 class EducationItem(BaseModel):
     institution: str = Field(..., description="University or educational institution")
     degree: str = Field(..., description="Degree or certificate obtained")
     start_date: Optional[str]
     end_date: Optional[str]
 
+
 class ProjectItem(BaseModel):
     name: str = Field(..., description="Project title")
     description: Optional[str] = Field("", description="Project description")
     technologies: List[str] = Field(default_factory=list, description="Technologies used")
+
 
 class ResumeSchema(BaseModel):
     full_name: str
@@ -30,6 +34,7 @@ class ResumeSchema(BaseModel):
     education: List[EducationItem] = Field(default_factory=list)
     projects: List[ProjectItem] = Field(default_factory=list)
 
+
 class Improvement(BaseModel):
     id: str = Field(..., description="Unique ID for the improvement")
     section: str = Field(..., description="resume section: summary | skills | experience | education | projects")
@@ -38,15 +43,19 @@ class Improvement(BaseModel):
     after: Optional[str] = ""
     reason: str = Field(..., description="Why the change is needed")
 
+
 class ImprovementsResponse(BaseModel):
     improvements: List[Improvement]
+
 
 class InterviewQuestion(BaseModel):
     question: str
     answer: str
 
+
 class InterviewQuestionList(BaseModel):
     items: list[InterviewQuestion]
+
 
 class InterviewStartRequest(BaseModel):
     company_description: str

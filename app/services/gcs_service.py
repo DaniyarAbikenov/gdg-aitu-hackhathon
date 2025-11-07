@@ -2,7 +2,6 @@ import datetime
 from google.cloud import storage
 from fastapi import HTTPException
 from app.config import settings
-import uuid
 
 # Инициализация клиента для GCS
 client = storage.Client()
@@ -27,8 +26,7 @@ def upload_bytes_to_gcs(path: str, data: bytes, content_type="application/pdf"):
     blob = bucket.blob(path)
     try:
         blob.upload_from_string(data, content_type=content_type)
-        # Включите make_private(), если хотите, чтобы файл был доступен только для владельца
-        # blob.make_private()
+
     except Exception as e:
         raise HTTPException(500, f"GCS upload error: {e}")
 

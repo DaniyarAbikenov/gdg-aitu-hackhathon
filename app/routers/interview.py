@@ -1,12 +1,13 @@
-from fastapi import APIRouter, HTTPException, Depends
 import uuid
 
+from fastapi import APIRouter, HTTPException
 from google.cloud import firestore
 
-from app.schemas.gemini_schemas import InterviewStartRequest, InterviewAnswerRequest
-from app.services.geminit_service import generate_interview_questions, evaluate_answer
+from app.schemas.gemini_schemas import InterviewStartRequest
+from app.services.geminit_service import generate_interview_questions
 
 router = APIRouter(prefix="/interview", tags=["Interview"])
+
 
 @router.post("/start")
 def start_interview(payload: InterviewStartRequest):
@@ -44,8 +45,9 @@ def start_interview(payload: InterviewStartRequest):
         "total_questions": len(questions)
     }
 
+
 @router.post("/{session_id}/answer")
-def answer_question(session_id: str, payload: InterviewAnswerRequest):
+def answer_question(session_id: str):
     db = firestore.Client()
     ref = db.collection("interviews").document(session_id)
     snap = ref.get()

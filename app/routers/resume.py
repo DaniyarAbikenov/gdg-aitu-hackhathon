@@ -1,23 +1,22 @@
-import json
+import mimetypes
 import time
 import uuid
-import mimetypes
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from firebase_admin import auth as firebase_auth, firestore
 from google.cloud import storage
 
-from app.schemas.gemini_schemas import ImprovementsResponse
+from app.config import settings
 from app.schemas.resume import AnalyzeRequest
 from app.services.firestore_service import set_doc, get_doc, update_doc
-from app.services.gcs_service import generate_signed_url, upload_bytes_to_gcs
+from app.services.gcs_service import generate_signed_url
 from app.services.geminit_service import (
     gemini_extract_resume_fields_from_pdf,
     gemini_analyze_resume,
     gemini_generate_html
 )
-from app.config import settings
+
 # from app.services.html_to_pdf import generate_pdf_from_html
 
 router = APIRouter(prefix="/resume", tags=["Resume"])
@@ -168,7 +167,7 @@ async def improve_resume(resume_id: str, req: AnalyzeRequest, uid: str = Depends
 # ============================================================
 # 1. Генерация PDF
 @router.post("/{resume_id}/generate")
-async def generate_resume(resume_id: str, req: AnalyzeRequest, uid: str = Depends(get_uid)):
+async def generate_resume(resume_id: str, uid: str = Depends(get_uid)):
     doc = get_doc(f"resumes/{uid}/items", resume_id)
     if not doc:
         raise HTTPException(404, "Resume not found")
@@ -177,21 +176,10 @@ async def generate_resume(resume_id: str, req: AnalyzeRequest, uid: str = Depend
     if not fields:
         raise HTTPException(400, "No fields to generate")
 
-    # Текст вакансии из запроса
-    jd_text = req.jd_text
-
-    # Загрузка HTML шаблона (используем файл шаблона modern_resume2.html)
-    try:
-        with open("app/templates/modern_resume2.html") as f:
-            template_html = f.read()
-    except FileNotFoundError:
-        raise HTTPException(500, "Template file not found")
-
     # Заполнение HTML с контентом
     improvements = doc.get("improvements", [])
 
     html_filled = gemini_generate_html(fields, improvements)
-
 
     # Загружаем результат в GCS
     output_gcs = f"resumes/{uid}/generated/{resume_id}.html"
@@ -220,14 +208,11 @@ async def generate_resume(resume_id: str, req: AnalyzeRequest, uid: str = Depend
     return {"pdf_url": pdf_url}
 
 
-
-
 # ============================================================
 # ✅ 6. GET RESUME (for UI)
 # ============================================================
 @router.get("/{resume_id}")
 async def get_resume(resume_id: str, uid: str = Depends(get_uid)):
-
     doc = get_doc(f"resumes/{uid}/items", resume_id)
     if not doc:
         raise HTTPException(404, "Resume not found")
