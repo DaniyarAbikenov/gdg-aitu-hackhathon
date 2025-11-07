@@ -17,8 +17,6 @@ from app.services.geminit_service import (
     gemini_generate_html
 )
 
-# from app.services.html_to_pdf import generate_pdf_from_html
-
 router = APIRouter(prefix="/resume", tags=["Resume"])
 security = HTTPBearer()
 
@@ -46,7 +44,6 @@ def upload_to_gcs(file: UploadFile, uid: str) -> str:
 
     blob = bucket.blob(object_name)
     blob.upload_from_file(file.file, content_type=file.content_type)
-    # blob.make_private()
 
     return f"gs://{settings.GCS_BUCKET}/{object_name}"
 
@@ -178,8 +175,8 @@ async def generate_resume(resume_id: str, uid: str = Depends(get_uid)):
 
     # Заполнение HTML с контентом
     improvements = doc.get("improvements", [])
-
-    html_filled = gemini_generate_html(fields, improvements)
+    jd = doc.get("jd_text")
+    html_filled = gemini_generate_html(fields, improvements, jd)
 
     # Загружаем результат в GCS
     output_gcs = f"resumes/{uid}/generated/{resume_id}.html"

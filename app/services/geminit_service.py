@@ -243,7 +243,7 @@ def gemini_analyze_resume(fields_verified: dict, jd_text: str, user_profile: dic
 # ===========================================================
 # ✅ Генерация HTML-резюме
 # ===========================================================
-def gemini_generate_html(fields, advices):
+def gemini_generate_html(fields, advices, jd):
     prompt = f"""
 Generate resume HTML. You have to create full HTML page with styles (<style> tag) and sections.
 
@@ -253,6 +253,9 @@ FIELDS (JSON):
 
 improvments:
 {json.dumps(advices, ensure_ascii=False)}
+
+Job description:
+{json.dumps(jd, ensure_ascii=False)}
 
 RULES:
 - Replace placeholders like [FULL_NAME], [SUMMARY_HTML], [SKILLS_HTML]

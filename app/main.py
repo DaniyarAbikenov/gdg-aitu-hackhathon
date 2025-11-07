@@ -2,22 +2,19 @@ import os
 
 import firebase_admin
 from fastapi import FastAPI
-from fastapi.security import HTTPBearer
 from fastapi.middleware.cors import CORSMiddleware
-
-
-from google.cloud import firestore, storage, documentai
-from google.api_core.exceptions import GoogleAPIError
+from fastapi.security import HTTPBearer
 from google import genai
+from google.cloud import firestore, storage, documentai
+
 from app.config import settings
+
 if settings.DEBUG:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
 else:
-    firebase_admin.initialize_app()   # БЕЗ credentials=...
+    firebase_admin.initialize_app()  # БЕЗ credentials=...
 bearer_scheme = HTTPBearer()
 
-
-from app.config import settings
 from app.routers import user, resume, interview
 
 app = FastAPI(
@@ -37,12 +34,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/test-cloud")
 def test_google_cloud():
     result = {}
-
-    PROJECT = settings.PROJECT_ID
-    LOCATION = settings.GCP_LOCATION
 
     # --- Firestore ---
     try:
@@ -78,8 +73,7 @@ def test_google_cloud():
     # --- Document AI ---
     try:
         da_client = documentai.DocumentProcessorServiceClient()
-        # parent = f"projects/{PROJECT}/locations/{LOCATION}"
-        parent="projects/56998693149/locations/us"
+        parent = "projects/56998693149/locations/us"
         processors = da_client.list_processors(parent=parent)
         print(type(processors))
         first = next(iter(processors), None)
@@ -96,4 +90,3 @@ def test_google_cloud():
 app.include_router(user.router)
 app.include_router(resume.router)
 app.include_router(interview.router)
-
