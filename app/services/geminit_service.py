@@ -4,10 +4,9 @@ from fastapi import HTTPException
 from google import genai
 from google.cloud import storage
 from google.genai import types
-from vertexai._genai.types import EvaluationResult
 
 from app.config import settings
-from app.schemas.gemini_schemas import ResumeSchema, InterviewQuestionList
+from app.schemas.gemini_schemas import ResumeSchema, InterviewQuestionList, EvaluationResult, InterviewSummaryResponse
 
 # ===========================================================
 # ✅ Единый клиент Gemini Vertex AI
@@ -19,6 +18,20 @@ client = genai.Client(
 )
 
 MODEL_NAME = settings.VERTEX_MODEL  # "gemini-1.5-flash"
+
+
+def build_interview_prompt(messages, correct_answer, current_question):
+    conv_text = ""
+    for m in messages:
+        conv_text += f"{m['role']}: {m['text']}\n"
+
+    return (
+            "Ниже полная переписка интервью:\n\n" +
+            conv_text +
+            "\nТекущий вопрос: " + current_question + "\n"
+                                                      "Правильный ответ: " + correct_answer + "\n"
+                                                                                              "Оцени ответ пользователя, затем если нужно — задай уточнение.\n"
+    )
 
 
 # ===========================================================
@@ -363,21 +376,54 @@ def generate_interview_questions(company, job, stack, style):
     return data.items
 
 
-def evaluate_answer(correct_answer: str, user_answer: str):
+def evaluate_with_llm(messages: list, correct_answer: str, current_question: str, user_answer: str):
+    """
+    messages — вся история переписки в формате:
+    [
+        {"role": "user", "text": "..."},
+        {"role": "assistant", "text": "..."},
+        ...
+    ]
+    """
+
+    # ✅ Формируем текст переписки
+    conversation_text = ""
+    for m in messages:
+        r = "Пользователь" if m["role"] == "user" else "Интервьюер"
+        conversation_text += f"{r}: {m['text']}\n"
+
+    # ✅ Новый промпт: полный контекст + текущий вопрос
     prompt = f"""
-Ты — технический интервьюер.
+Ты — строгий технический интервьюер. Ниже приведена полная история диалога.
+
+История интервью:
+{conversation_text}
+
+Текущий вопрос (который нужно оценить):
+{current_question}
 
 Правильный ответ:
 {correct_answer}
 
-Ответ кандидата:
+Ответ кандидата на этот вопрос:
 {user_answer}
 
-Оцени ответ и верни строго JSON по схеме.
-    """
+Определи строго по реальному ответу:
+1. Насколько ответ правильный: correct / partial / wrong
+2. Короткое объяснение ошибки или успеха
+3. Если partial — задай один уточняющий follow-up вопрос
+4. Если wrong — предложи следующий вопрос
+5. Ответ строго в JSON:
+
+{{
+  "result": "correct | partial | wrong",
+  "feedback": "краткое объяснение",
+  "follow_up_question": "..." | null,
+  "next_question": "..." | null
+}}
+"""
 
     schema = EvaluationResult.model_json_schema()
-    print(schema)
 
     text = _gemini_call(
         prompt,
@@ -388,3 +434,37 @@ def evaluate_answer(correct_answer: str, user_answer: str):
     )
 
     return EvaluationResult.model_validate_json(text)
+
+
+def generate_interview_summary(dialog_text: str) -> InterviewSummaryResponse:
+    """
+    Принимает текст всего интервью и возвращает структурированный JSON-summary.
+    """
+
+    prompt = f"""
+Ты — опытный технический интервьюер.
+
+Проанализируй весь диалог технического интервью:
+
+{dialog_text}
+
+Требования:
+1. Дай общую характеристику кандидата
+2. Укажи сильные стороны
+3. Определи слабые места
+4. Дай рекомендации для роста
+5. Предположи уровень (Junior/Middle/Senior)
+6. Верни строго JSON по схеме
+"""
+
+    schema = InterviewSummaryResponse.model_json_schema()
+
+    result = _gemini_call(
+        prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_schema": schema
+        }
+    )
+
+    return InterviewSummaryResponse.model_validate_json(result)

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 from pydantic import BaseModel, Field
 
@@ -66,3 +66,30 @@ class InterviewStartRequest(BaseModel):
 
 class InterviewAnswerRequest(BaseModel):
     answer: str
+
+
+class EvaluationResult(BaseModel):
+    result: Literal["correct", "partial", "wrong"] = Field(
+        ...,
+        description="Оценка ответа кандидата."
+    )
+    feedback: str = Field(
+        ...,
+        description="Короткое объяснение оценки."
+    )
+    follow_up_question: Optional[str] = Field(
+        None,
+        description="Уточняющий вопрос, если result == 'partial'. Иначе null."
+    )
+    next_question: Optional[str] = Field(
+        None,
+        description="Следующий вопрос, если result == 'wrong'. Иначе null."
+    )
+
+
+class InterviewSummaryResponse(BaseModel):
+    summary: str = Field(..., description="Общее описание кандидата")
+    strengths: List[str] = Field(..., description="Сильные стороны")
+    weaknesses: List[str] = Field(..., description="Слабые стороны")
+    recommendations: List[str] = Field(..., description="Рекомендации по улучшению")
+    estimated_level: str = Field(..., description="Оценка уровня кандидата")
