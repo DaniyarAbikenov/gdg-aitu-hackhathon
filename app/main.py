@@ -18,7 +18,7 @@ bearer_scheme = HTTPBearer()
 
 
 from app.config import settings
-from app.routers import user, auth, resume, interview
+from app.routers import user, resume, interview
 
 app = FastAPI(
     title="CareerBot AI Backend",

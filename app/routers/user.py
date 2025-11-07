@@ -22,14 +22,6 @@ def get_uid(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 
 # ---------------------------
-# Get current user basic info
-# ---------------------------
-@router.get("/me")
-def get_me(uid: str = Depends(get_uid)):
-    return {"uid": uid}
-
-
-# ---------------------------
 # Full profile load
 # ---------------------------
 @router.get("/profile")
