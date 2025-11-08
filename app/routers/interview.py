@@ -154,11 +154,6 @@ def answer_question(session_id: str, payload: InterviewAnswerRequest):
     # ===========================
     if result == "wrong":
         index += 1
-        next_question = data["questions"][index]["question"]
-        messages.append({
-            "role": "assistant",
-            "text": next_question
-        })
         if index >= len(data["questions"]):
             data["finished"] = True
             ref.set(data)
@@ -168,8 +163,11 @@ def answer_question(session_id: str, payload: InterviewAnswerRequest):
                 "follow_up": None,
                 "next_question": None
             }
-
         next_question = data["questions"][index]["question"]
+        messages.append({
+            "role": "assistant",
+            "text": next_question
+        })
         data["current_index"] = index
         ref.set(data)
 
