@@ -1,6 +1,6 @@
+import { Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getUserProfile } from "@/api/user";
 import i18n from "@/i18n/config";
 interface Recognition {
   lang: string;
@@ -22,7 +22,6 @@ export function DictationButton({
   onText: (value: string) => void;
   disabled: boolean;
 }) {
-  const [enabled, setEnabled] = useState(false);
   const [active, setActive] = useState(false);
   const [error, setError] = useState("");
   const current = useRef<Recognition | null>(null);
@@ -32,12 +31,8 @@ export function DictationButton({
   };
   const Factory = browser.SpeechRecognition || browser.webkitSpeechRecognition;
   useEffect(() => {
-    getUserProfile()
-      .then((p) => setEnabled(p.audio_mode))
-      .catch(() => setEnabled(false));
     return () => current.current?.stop();
   }, []);
-  if (!enabled) return null;
   const toggle = () => {
     if (active) {
       current.current?.stop();
@@ -79,6 +74,7 @@ export function DictationButton({
         disabled={disabled || !Factory}
         onClick={toggle}
       >
+        <Mic className="h-4 w-4 mr-2" aria-hidden="true" />
         {!Factory
           ? "Браузер не поддерживает диктовку"
           : active

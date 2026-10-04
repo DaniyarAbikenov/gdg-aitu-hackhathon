@@ -1,5 +1,5 @@
 import type { ResumeFields } from "./resume";
-export interface Profile {
+export interface Profile extends ResumeFields {
   revision: number;
   full_name: string;
   email: string;

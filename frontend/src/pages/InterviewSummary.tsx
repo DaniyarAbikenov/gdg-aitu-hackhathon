@@ -1,3 +1,4 @@
+import { InterviewReview } from "@/components/InterviewReview";
 import client from "@/api/client";
 import { getInterview } from "@/api/interview";
 import { useEffect, useState } from "react";
@@ -170,6 +171,7 @@ export default function InterviewSummary() {
             {t("interview.summary.backToHome")}
           </Button>
         </div>
+        <InterviewReview id={sessionId} />
       </div>
     </MainLayout>
   );

@@ -7,7 +7,16 @@ export interface InterviewRecord {
   finished: boolean;
   total_questions: number;
   score: number | null;
-  context: { job_description: string };
+  created_at: string;
+  context: {
+    job_description: string;
+    company_description: string;
+    company_name?: string;
+    vacancy_title?: string;
+    mode?: "text" | "voice";
+    tech_stack: string;
+  };
+  transcript?: { id: string; role: "user" | "assistant"; text: string }[];
   answers: {
     question: string;
     answer: string;

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import client from "@/api/client";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -25,6 +26,26 @@ export default function ResumeImprove() {
       : [],
   );
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([
+      getResume(resumeId!),
+      client.get(`/resume/${resumeId}/assessment`),
+    ])
+      .then(([resume, { data }]) => {
+        useResumeStore.setState({
+          resumeId: resumeId!,
+          fields: resume.fields,
+          revision: resume.revision,
+          jdText: data?.job || resume.jd_text,
+        });
+        if (data) {
+          setImprovements(data.improvements);
+          setJdText(data.job);
+        }
+      })
+      .catch((e) => setError(e.message));
+  }, [resumeId]);
 
   async function handleAnalyze() {
     setLoading(true);
@@ -85,21 +106,21 @@ export default function ResumeImprove() {
             {improvements.map((impr) => (
               <div
                 key={impr.id}
-                className="border rounded p-4 space-y-2 bg-white"
+                className="border rounded p-4 space-y-2 bg-background"
               >
                 <div className="font-bold">
                   {t("resume.improve.section")}: {impr.section}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   {t("resume.improve.type")}: {"Предложение"}
                 </div>
 
                 {impr.before && (
                   <div>
-                    <div className="text-gray-500 text-sm">
+                    <div className="text-muted-foreground text-sm">
                       {t("resume.improve.before")}:
                     </div>
-                    <pre className="bg-gray-100 p-2 rounded text-sm whitespace-pre-wrap">
+                    <pre className="bg-muted p-2 rounded text-sm whitespace-pre-wrap">
                       {impr.before}
                     </pre>
                   </div>
@@ -107,7 +128,7 @@ export default function ResumeImprove() {
 
                 {impr.after && (
                   <div>
-                    <div className="text-gray-500 text-sm">
+                    <div className="text-muted-foreground text-sm">
                       {t("resume.improve.after")}:
                     </div>
                     <pre className="bg-gray-50 p-2 rounded text-sm whitespace-pre-wrap">

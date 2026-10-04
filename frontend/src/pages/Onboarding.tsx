@@ -1,3 +1,5 @@
+import { ProfileBlocks } from "@/components/ProfileBlocks";
+import type { ResumeFields } from "@/types/resume";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -23,6 +25,8 @@ export default function Onboarding() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
+  const [details, setDetails] = useState<ResumeFields>({});
+  const [saving, setSaving] = useState(false);
   const [revision, setRevision] = useState(0);
 
   // ---- form fields ----
@@ -50,6 +54,7 @@ export default function Onboarding() {
         const profile = await getUserProfile(); // GET /user/profile
         if (profile) {
           setRevision(profile.revision);
+          setDetails(profile);
           setName(profile.full_name || "");
 
           setSelectedLanguages(profile.extra?.languages || []);
@@ -104,6 +109,7 @@ export default function Onboarding() {
       return;
     }
 
+    setSaving(true);
     try {
       const user = useAuthStore.getState();
       if (!user.isAuthenticated) {
@@ -115,9 +121,13 @@ export default function Onboarding() {
         return;
       }
 
+      const { revision: _revision, ...blocks } = details as ResumeFields & {
+        revision?: number;
+      };
       const payload = {
+        ...blocks,
         full_name: name,
-        email: user.email,
+        email: details.email || user.email || "",
         desired_position: selectedRoles[0],
         career_goal: selectedRoles.join(", "),
         skills: skills,
@@ -141,6 +151,8 @@ export default function Onboarding() {
         description: getErrorMessage(err),
         variant: "destructive",
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -232,8 +244,11 @@ export default function Onboarding() {
                 </div>
               </div>
 
+              <ProfileBlocks value={details} onChange={setDetails} />
               <div className="flex gap-2">
-                <Button onClick={handleSave}>{t("onboarding.save")}</Button>
+                <Button disabled={saving} onClick={handleSave}>
+                  {t("onboarding.save")}
+                </Button>
                 <Button variant="outline" onClick={handleNormalize}>
                   {t("onboarding.evaluateSkills")}
                 </Button>

@@ -1,5 +1,6 @@
 import {
   Home,
+  UserRound,
   FileText,
   Target,
   MessageSquare,
@@ -36,12 +37,13 @@ export function AppSidebar() {
     { title: t("nav.plan"), url: "/plan", icon: Target },
     { title: t("nav.interview"), url: "/interview", icon: MessageSquare },
     { title: t("nav.progress"), url: "/progress", icon: TrendingUp },
+    { title: "Профиль", url: "/onboarding", icon: UserRound },
     { title: t("nav.settings"), url: "/settings", icon: Settings },
   ];
 
   const secondaryItems = [
     { title: t("nav.support"), url: "/support", icon: HeadphonesIcon },
-    { title: t("nav.faq"), url: "/faq", icon: HelpCircle },
+    { title: "База знаний", url: "/faq", icon: HelpCircle },
   ];
 
   return (

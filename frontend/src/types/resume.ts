@@ -1,4 +1,8 @@
 export interface ResumeFields {
+  position?: string;
+  location?: string;
+  certificates?: string;
+  languages?: string;
   full_name?: string;
   email?: string;
   phone?: string;
@@ -12,6 +16,8 @@ export interface ResumeFields {
     date_from: string;
     date_to: string;
     achievements?: string[];
+    location?: string;
+    responsibilities?: string;
   }[];
 
   education?: {

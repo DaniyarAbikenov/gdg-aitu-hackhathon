@@ -5,8 +5,14 @@ export function ServiceStatus() {
   useEffect(() => {
     client
       .get("/health")
-      .then((r) => setProvider(r.data.provider))
-      .catch(() => setProvider("unavailable"));
+      .then((r) =>
+        setProvider(
+          r.data.development || r.data.provider === "local"
+            ? r.data.provider
+            : "",
+        ),
+      )
+      .catch(() => setProvider(""));
   }, []);
   if (!provider) return null;
   return (

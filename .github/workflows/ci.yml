@@ -91,6 +91,8 @@ jobs:
       - run: docker compose up --build --wait --wait-timeout 180
         env:
           CAREER_PROVIDER: local
+          CAREER_ADMIN_EMAILS: admin-e2e@example.test
+      - run: printf '%s\n' 'Portfolio-test-password-42' | docker compose exec -T backend python -m app.manage admin-e2e@example.test --password-stdin
       - run: curl --fail http://127.0.0.1:8080/health
       - run: npm run test:e2e
       - if: always()

@@ -1,10 +1,10 @@
 const { expect } = require("@playwright/test");
 const { randomUUID } = require("node:crypto");
 const password = "Portfolio-test-password-42";
-async function register(page) {
+async function register(page, address) {
   await page.addInitScript(() => localStorage.setItem("language", "en"));
   await page.goto("/register");
-  const email = `${randomUUID()}@example.com`;
+  const email = address || `${randomUUID()}@example.com`;
   await page.locator("#email").fill(email);
   await page.locator("#password").fill(password);
   await page.locator("#password2").fill(password);

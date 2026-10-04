@@ -1,136 +1,43 @@
-import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Mail, MessageCircle, Phone } from "lucide-react";
-
 export default function Support() {
-  const { t } = useTranslation();
-
   return (
     <MainLayout>
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">
-            {t("support.title")}
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            {t("support.description")}
+      <div className="max-w-3xl mx-auto p-6 space-y-6">
+        <h1 className="text-3xl font-bold">Помощь и обратная связь</h1>
+        <section className="rounded-xl border p-6 space-y-3">
+          <h2 className="text-xl font-semibold">Найти инструкцию</h2>
+          <p>
+            Сборка резюме, подготовка к интервью, учебные планы и работа с
+            профилем описаны в базе знаний.
           </p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <Mail className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>{t("support.email.title")}</CardTitle>
-              <CardDescription>
-                {t("support.email.description")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full"
-                disabled
-                title="Канал поддержки пока не настроен"
-              >
-                {t("support.email.action")}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <MessageCircle className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>{t("support.chat.title")}</CardTitle>
-              <CardDescription>{t("support.chat.description")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full"
-                disabled
-                title="Канал поддержки пока не настроен"
-              >
-                {t("support.chat.action")}
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <Phone className="h-8 w-8 text-primary mb-2" />
-              <CardTitle>{t("support.phone.title")}</CardTitle>
-              <CardDescription>
-                {t("support.phone.description")}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full"
-                disabled
-                title="Канал поддержки пока не настроен"
-              >
-                {t("support.phone.action")}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("support.form.title")}</CardTitle>
-            <CardDescription>{t("support.form.description")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">
-                {t("support.form.name")}
-              </label>
-              <input className="w-full mt-1 px-3 py-2 border rounded-md" />
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {t("support.form.email")}
-              </label>
-              <input
-                type="email"
-                className="w-full mt-1 px-3 py-2 border rounded-md"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">
-                {t("support.form.message")}
-              </label>
-              <textarea
-                className="w-full mt-1 px-3 py-2 border rounded-md"
-                rows={5}
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Отправка обращений пока не настроена.{" "}
-              <a
-                className="underline"
-                href="https://github.com/DaniyarAbikenov/gdg-aitu-hackhathon/issues"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Задачи проекта в GitHub
-              </a>
-            </p>
-            <Button className="w-full" disabled>
-              {t("support.form.submit")}
-            </Button>
-          </CardContent>
-        </Card>
+          <Button asChild>
+            <Link to="/faq">Открыть базу знаний</Link>
+          </Button>
+        </section>
+        <section className="rounded-xl border p-6 space-y-3">
+          <h2 className="text-xl font-semibold">
+            Сообщить об ошибке или предложить улучшение
+          </h2>
+          <p>
+            Опишите, что вы делали, какой результат ожидали и что произошло.
+            Приложите скриншот без личных данных.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Обращение откроется в GitHub. Не публикуйте пароли, API-ключи,
+            резюме и контактные данные.
+          </p>
+          <Button asChild variant="outline">
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://github.com/DaniyarAbikenov/gdg-aitu-hackhathon/issues/new"
+            >
+              Создать обращение в GitHub
+            </a>
+          </Button>
+        </section>
       </div>
     </MainLayout>
   );

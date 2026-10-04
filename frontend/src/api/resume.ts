@@ -10,6 +10,12 @@ export interface Improvement {
 export interface ResumeRecord {
   resume_id: string;
   filename: string;
+  title: string;
+  description: string;
+  lifecycle: "draft" | "active" | "archived";
+  created_at: string;
+  updated_at: string;
+  status: string;
   fields: ResumeFields;
   revision: number;
   jd_text: string;

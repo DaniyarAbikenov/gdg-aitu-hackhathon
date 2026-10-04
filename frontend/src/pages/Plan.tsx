@@ -1,3 +1,5 @@
+import { Textarea } from "@/components/ui/textarea";
+import { PlanCreator } from "@/components/PlanCreator";
 import type { PlanRecord } from "@/types/career";
 import { useParams, Link } from "react-router-dom";
 import client from "@/api/client";
@@ -18,6 +20,7 @@ export default function Plan() {
   const [plans, setPlans] = useState<PlanRecord[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [evidence, setEvidence] = useState<Record<string, string>>({});
   useEffect(() => {
     client
       .get("/plan")
@@ -37,6 +40,23 @@ export default function Plan() {
           .evidence,
       });
       setRecord(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const saveEvidence = async (id: string) => {
+    if (!record) return;
+    setBusy(true);
+    try {
+      const module = record.data.modules.find((m) => m.id === id)!;
+      const r = await client.post(`/plan/${record.id}/modules/${id}`, {
+        revision: record.revision,
+        completed: module.completed,
+        evidence: evidence[id] ?? module.evidence,
+      });
+      setRecord(r.data);
     } catch (e) {
       setError(e.message);
     } finally {
@@ -76,6 +96,7 @@ export default function Plan() {
         <div className="p-6 max-w-5xl mx-auto space-y-6">
           <h1 className="text-3xl font-bold">{t("plan.title")}</h1>
           {error && <p role="alert">{error}</p>}
+          <PlanCreator />
           {plans.map((p) => (
             <Card key={p.id}>
               <CardContent className="p-6">
@@ -84,10 +105,7 @@ export default function Plan() {
             </Card>
           ))}
           {!plans.length && (
-            <p>
-              Пока нет планов. Создайте план на главной странице после
-              заполнения профиля.
-            </p>
+            <p>Пока нет планов. Выберите позицию и стек в форме выше.</p>
           )}
           <Link to="/dashboard">На главную</Link>
         </div>
@@ -154,6 +172,24 @@ export default function Plan() {
                 <p className="text-sm">
                   {week.exercise} · {week.hours} ч.
                 </p>
+                <label className="block space-y-2">
+                  Результат задания
+                  <Textarea
+                    maxLength={2000}
+                    value={evidence[week.id] ?? week.evidence}
+                    onChange={(e) =>
+                      setEvidence({ ...evidence, [week.id]: e.target.value })
+                    }
+                    placeholder="Ссылка на код, заметки или описание результата"
+                  />
+                </label>
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() => saveEvidence(week.id)}
+                >
+                  Сохранить результат
+                </Button>
                 <div>
                   <h4 className="text-sm font-medium mb-2">
                     {t("plan.sources")}:

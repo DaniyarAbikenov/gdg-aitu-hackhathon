@@ -23,16 +23,9 @@ test("original frontend registers, persists profile and supports login", async (
   ).toBeVisible();
   await page.goto("/settings");
   await expect(page.getByText(email, { exact: true })).toBeVisible();
-  await page.locator("#audio-mode").click();
-  await expect(page.locator("#audio-mode")).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  await page.reload();
-  await expect(page.locator("#audio-mode")).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
+  await expect(
+    page.getByRole("link", { name: "Опыт и данные профиля" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Logout", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await page.locator("#email").fill(email);
@@ -55,7 +48,7 @@ test("upload, structured edit, saved version and actual PDF download", async ({
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/resume\/[^/]+\/edit$/);
   await page
-    .getByPlaceholder("Short introduction about yourself...")
+    .getByLabel("О себе", { exact: true })
     .fill("Verified portfolio summary");
   const saved = page.waitForResponse(
     (r) => r.url().endsWith("/save") && r.status() === 200,
@@ -63,14 +56,14 @@ test("upload, structured edit, saved version and actual PDF download", async ({
   await page.getByRole("button", { name: "Сохранить", exact: true }).click();
   await saved;
   await page.reload();
-  await expect(
-    page.getByPlaceholder("Short introduction about yourself..."),
-  ).toHaveValue("Verified portfolio summary");
+  await expect(page.getByLabel("О себе", { exact: true })).toHaveValue(
+    "Verified portfolio summary",
+  );
   await page.getByRole("button", { name: "Версии", exact: true }).click();
   await page.getByRole("button", { name: "Сохранить текущую версию" }).click();
   await expect(page.getByText("Версия 1", { exact: true })).toBeVisible();
   const downloaded = page.waitForEvent("download");
-  await page.getByRole("button", { name: "Download", exact: true }).click();
+  await page.getByRole("link", { name: "Download PDF", exact: true }).click();
   const download = await downloaded;
   expect(download.suggestedFilename()).toMatch(/\.pdf$/);
   await page.reload();

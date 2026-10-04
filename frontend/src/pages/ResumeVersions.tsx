@@ -1,208 +1,191 @@
-import type { VersionRecord } from "@/types/career";
-import type { ResumeRecord } from "@/api/resume";
-import { useParams, Link } from "react-router-dom";
+import type { SnapshotRecord } from "@/types/product";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import client from "@/api/client";
-import { getResume, saveVersion } from "@/api/resume";
-import { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { getResume, saveVersion, type ResumeRecord } from "@/api/resume";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { Download, Eye, CheckCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-
+import { Input } from "@/components/ui/input";
+const names = {
+  full_name: "Имя",
+  position: "Позиция",
+  email: "Email",
+  phone: "Телефон",
+  location: "Локация",
+  summary: "О себе",
+  skills: "Навыки",
+  experience: "Опыт",
+  education: "Образование",
+  projects: "Проекты",
+  certificates: "Сертификаты",
+  languages: "Языки",
+};
+function text(value: unknown): string {
+  if (!value) return "—";
+  if (Array.isArray(value)) return value.map(text).join("\n\n");
+  if (typeof value === "object")
+    return Object.values(value).filter(Boolean).map(text).join(" · ");
+  return String(value);
+}
 export default function ResumeVersions() {
-  const { t } = useTranslation();
   const { resumeId } = useParams();
-  const [activeVersion, setActiveVersion] = useState("");
   const [resume, setResume] = useState<ResumeRecord | null>(null);
-  const [versions, setVersions] = useState<VersionRecord[]>([]);
+  const [versions, setVersions] = useState<SnapshotRecord[]>([]);
+  const [label, setLabel] = useState("");
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
   const load = async () => {
     const [r, v] = await Promise.all([
       getResume(resumeId!),
       client.get(`/resume/${resumeId}/versions`),
     ]);
     setResume(r);
-    setVersions(
-      v.data.map((v) => ({
-        ...v,
-        tag: v.data.label,
-        date: new Date(v.created_at).toLocaleDateString(),
-        description: v.data.jd_text,
-      })),
-    );
+    setVersions(v.data);
   };
   useEffect(() => {
-    load().catch((e) => setError(e.message));
+    void load().catch((e) => setError(e.message));
   }, [resumeId]);
-  const handleDownload = (id: string) =>
-    window.location.assign(`/api/versions/${id}/pdf`);
-  const handleSetActive = async (id: string) => {
+  const save = async () => {
+    setBusy(true);
     try {
-      await client.post(`/versions/${id}/restore`, {
-        revision: resume.revision,
-      });
+      await saveVersion(
+        resumeId!,
+        resume!.fields,
+        resume!.revision,
+        label.trim() || `Версия ${versions.length + 1}`,
+        resume!.jd_text,
+      );
       await load();
-      setActiveVersion(id);
+      setLabel("");
+      setNotice("Версия сохранена");
     } catch (e) {
       setError(e.message);
+    } finally {
+      setBusy(false);
     }
   };
-
+  const restore = async (id: string) => {
+    if (
+      !window.confirm(
+        "Заменить текущие поля сохранённой версией? Сначала сохраните текущую версию, если она нужна.",
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      await client.post(`/versions/${id}/restore`, {
+        revision: resume!.revision,
+      });
+      await load();
+      setNotice("Содержимое резюме восстановлено. Остальные версии сохранены.");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
   return (
     <MainLayout>
-      <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">
-            {t("resume.versions.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("resume.versions.description")}
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
+        <header>
+          <h1 className="text-3xl font-bold">История версий</h1>
+          <p className="text-muted-foreground mt-2">
+            {resume?.title || resume?.filename}
           </p>
-        </div>
-
+        </header>
         {error && <p role="alert">{error}</p>}
-        <div className="flex flex-wrap gap-2">
-          <Button
-            disabled={!resume}
-            onClick={async () => {
-              try {
-                await saveVersion(
-                  resumeId!,
-                  resume.fields,
-                  resume.revision,
-                  `Версия ${versions.length + 1}`,
-                  resume.jd_text,
-                );
-                await load();
-              } catch (e) {
-                setError(e.message);
-              }
-            }}
-          >
+        {notice && <p role="status">{notice}</p>}
+        <div className="flex flex-wrap gap-3">
+          <Input
+            className="sm:max-w-sm"
+            aria-label="Название версии"
+            placeholder="Например: адаптация под Python"
+            value={label}
+            maxLength={160}
+            onChange={(e) => setLabel(e.target.value)}
+          />
+          <Button disabled={busy || !resume} onClick={save}>
             Сохранить текущую версию
           </Button>
-          <Button variant="outline" asChild>
+          <Button asChild variant="outline">
             <Link to={`/resume/${resumeId}/edit`}>Редактировать</Link>
           </Button>
         </div>
-        {!versions.length && <p>Пока нет сохранённых версий.</p>}
-        <div className="space-y-4">
-          {versions.map((version) => (
-            <Card
-              key={version.id}
-              className={version.id === activeVersion ? "border-primary" : ""}
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">
-                        {t("resume.versions.version")} {version.id}
-                      </CardTitle>
-                      {version.id === activeVersion && (
-                        <Badge variant="default">
-                          {t("resume.versions.active")}
-                        </Badge>
+        {resume && !versions.length && (
+          <p className="border rounded-lg p-5">
+            Сохранённых версий пока нет. Создайте снимок перед изменениями.
+          </p>
+        )}
+        {versions.map((v) => (
+          <section key={v.id} className="rounded-xl border p-5 space-y-4">
+            <div>
+              <h2 className="text-xl font-semibold">{v.data.label}</h2>
+              <p className="text-sm text-muted-foreground">
+                {new Date(v.created_at).toLocaleString()}
+              </p>
+              {v.data.jd_text && (
+                <details className="pt-2">
+                  <summary>Вакансия этой версии</summary>
+                  <p className="whitespace-pre-wrap text-sm pt-2">
+                    {v.data.jd_text}
+                  </p>
+                </details>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="outline">
+                <a href={`/api/versions/${v.id}/pdf`}>Download PDF</a>
+              </Button>
+              <Button asChild variant="outline">
+                <a href={`/api/versions/${v.id}/docx`}>Word</a>
+              </Button>
+              <Button
+                disabled={busy}
+                variant="outline"
+                onClick={() => restore(v.id)}
+              >
+                Восстановить
+              </Button>
+            </div>
+            <details>
+              <summary className="cursor-pointer">
+                Содержимое и сравнение с исходным
+              </summary>
+              <div className="space-y-4 pt-4">
+                {Object.entries(names).map(([key, title]) => {
+                  const before = text(v.data.before[key]);
+                  const after = text(v.data.fields[key]);
+                  return (
+                    <div key={key} className="border-t pt-3">
+                      <h3 className="font-semibold">{title}</h3>
+                      {before === after ? (
+                        <p className="whitespace-pre-wrap text-sm mt-2">
+                          {after}
+                        </p>
+                      ) : (
+                        <div className="grid sm:grid-cols-2 gap-3 mt-2">
+                          <div className="rounded bg-muted p-3">
+                            <p className="text-xs mb-2">До</p>
+                            <p className="whitespace-pre-wrap text-sm">
+                              {before}
+                            </p>
+                          </div>
+                          <div className="rounded bg-primary/10 p-3">
+                            <p className="text-xs mb-2">В этой версии</p>
+                            <p className="whitespace-pre-wrap text-sm">
+                              {after}
+                            </p>
+                          </div>
+                        </div>
                       )}
-                      <Badge variant="outline">{version.tag}</Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {version.date} • {version.description}
-                    </p>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Eye className="h-4 w-4 mr-2" />
-                        {t("resume.versions.showDiff")}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>
-                          {t("resume.versions.differences")}: {version.tag}
-                        </DialogTitle>
-                      </DialogHeader>
-                      <Tabs defaultValue="after">
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="before">
-                            {t("resume.improve.before")}
-                          </TabsTrigger>
-                          <TabsTrigger value="after">
-                            {t("resume.improve.after")}
-                          </TabsTrigger>
-                        </TabsList>
-                        <TabsContent value="before">
-                          <Textarea
-                            value={JSON.stringify(version.data.before, null, 2)}
-                            readOnly
-                            rows={12}
-                          />
-                        </TabsContent>
-                        <TabsContent value="after">
-                          <Textarea
-                            value={JSON.stringify(version.data.fields, null, 2)}
-                            readOnly
-                            rows={12}
-                            className="border-primary"
-                          />
-                        </TabsContent>
-                      </Tabs>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDownload(version.id)}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    {t("resume.versions.download")}
-                  </Button>
-
-                  {version.id !== activeVersion && (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleSetActive(version.id)}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      {t("resume.versions.makeActive")}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("resume.versions.tips")}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• {t("resume.versions.tip1")}</p>
-            <p>• {t("resume.versions.tip2")}</p>
-            <p>• {t("resume.versions.tip3")}</p>
-            <p>• {t("resume.versions.tip4")}</p>
-          </CardContent>
-        </Card>
+                  );
+                })}
+              </div>
+            </details>
+          </section>
+        ))}
       </div>
     </MainLayout>
   );

@@ -3,130 +3,285 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { FileText, Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { uploadResume, listResumes } from "@/api/resume";
-import { useResumeStore } from "@/store/resumeStore";
+import client from "@/api/client";
 
 export default function Resume() {
   const { t } = useTranslation();
-  const [uploading, setUploading] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const { toast } = useToast();
-  const setResumeId = useResumeStore((s) => s.setResumeId);
   const navigate = useNavigate();
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [drag, setDrag] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState<ResumeRecord[]>([]);
+  const [filter, setFilter] = useState("all");
+  const [query, setQuery] = useState("");
+  const [editing, setEditing] = useState<ResumeRecord | null>(null);
   useEffect(() => {
     listResumes()
       .then(setSaved)
-      .catch((e) => toast({ title: e.message, variant: "destructive" }));
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      if (selectedFile.size > 5 * 1024 * 1024) {
-        toast({
-          title: t("resume.upload.tooBig"),
-          description: t("resume.upload.tooBigDesc"),
-          variant: "destructive",
-        });
-        return;
-      }
-      setFile(selectedFile);
-      toast({
-        title: t("resume.fileSelected"),
-        description: selectedFile.name,
-      });
+  const choose = (f?: File) => {
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024 || !/\.(pdf|docx|txt)$/i.test(f.name)) {
+      setError("Выберите PDF, DOCX или TXT размером до 5 МБ.");
+      return;
+    }
+    setFile(f);
+    setError("");
+  };
+  const upload = async () => {
+    if (!file) return;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await uploadResume(file);
+      navigate(`/resume/${r.resume_id}/edit`);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
     }
   };
-
-  async function handleUpload() {
-    if (!file || uploading) return;
-    setUploading(true);
-
+  const saveMeta = async () => {
+    if (!editing) return;
+    setBusy(true);
     try {
-      const { resume_id } = await uploadResume(file);
-
-      // сохраняем ID в Zustand
-      setResumeId(resume_id);
-
-      // переход на страницу редактирования
-      navigate(`/resume/${resume_id}/edit`);
-    } catch (err) {
-      console.error(err);
-      toast({
-        title: t("resume.errorUpload"),
-        description: err.message,
-        variant: "destructive",
-      });
+      const { data } = await client.patch(
+        `/resume/${editing.resume_id}/metadata`,
+        {
+          revision: editing.revision,
+          title: editing.title,
+          description: editing.description,
+          lifecycle: editing.lifecycle,
+        },
+      );
+      setSaved(saved.map((r) => (r.resume_id === data.resume_id ? data : r)));
+      setEditing(null);
+    } catch (e) {
+      setError(e.message);
     } finally {
-      setUploading(false);
+      setBusy(false);
     }
-  }
-
+  };
+  const status = {
+    draft: "Черновик",
+    active: "Актуально",
+    archived: "В архиве",
+  };
+  const visible = saved.filter(
+    (r) =>
+      (filter === "all" || r.lifecycle === filter) &&
+      `${r.title} ${r.filename} ${r.description}`
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+  );
   return (
     <MainLayout>
-      <div className="p-6 max-w-xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{t("resume.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("resume.uploadDescription")}
+      <div className="p-4 sm:p-6 max-w-6xl mx-auto space-y-6">
+        <header className="flex flex-wrap gap-4 items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">{t("resume.title")}</h1>
+            <p className="text-muted-foreground">
+              Создавайте отдельное резюме для каждой позиции и храните его
+              версии.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/resume/new">Создать с нуля</Link>
+          </Button>
+        </header>
+        {error && (
+          <p role="alert" className="text-destructive">
+            {error}
           </p>
+        )}
+        <section
+          className={`border-2 border-dashed rounded-xl p-8 text-center space-y-4 ${drag ? "border-primary bg-primary/5" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDrag(true);
+          }}
+          onDragLeave={() => setDrag(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDrag(false);
+            if (!busy) choose(e.dataTransfer.files[0]);
+          }}
+        >
+          <input
+            type="file"
+            accept=".pdf,.docx,.txt"
+            disabled={busy}
+            id="resume-upload"
+            className="sr-only"
+            onChange={(e) => choose(e.target.files?.[0])}
+          />
+          <label
+            htmlFor="resume-upload"
+            className="cursor-pointer flex flex-col items-center gap-3"
+          >
+            <Upload className="h-10 w-10 text-primary" />
+            <span>
+              {file
+                ? file.name
+                : "Перетащите файл сюда или выберите на устройстве"}
+            </span>
+            <span className="text-sm text-muted-foreground">
+              PDF, Word (.docx), TXT · до 5 МБ
+            </span>
+          </label>
+          <Button disabled={!file || busy} onClick={upload}>
+            {busy ? "Извлекаем структуру резюме…" : t("resume.continue")}
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            После загрузки проверьте извлечённые должности, задачи, даты и
+            контакты.
+          </p>
+        </section>
+        <div className="flex flex-wrap gap-3">
+          <Input
+            className="sm:max-w-sm"
+            aria-label="Поиск резюме"
+            placeholder="Поиск по названию и описанию"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+          <select
+            aria-label="Статус резюме"
+            className="border rounded px-3 bg-background"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="all">Все статусы</option>
+            {Object.entries(status).map(([k, v]) => (
+              <option key={k} value={k}>
+                {v}
+              </option>
+            ))}
+          </select>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              {t("resume.upload.title")}
-            </CardTitle>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center">
+        {loading && <p role="status">Загрузка истории…</p>}
+        {!loading && !visible.length && (
+          <p className="rounded-lg border p-6 text-muted-foreground">
+            Резюме не найдено. Создайте новое или измените фильтр.
+          </p>
+        )}
+        <div className="grid md:grid-cols-2 gap-4">
+          {visible.map((r) => (
+            <Card key={r.resume_id}>
+              <CardContent className="p-5 space-y-3">
+                <div className="flex gap-3 items-start">
+                  <FileText className="shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <Link
+                      className="font-semibold break-words text-lg"
+                      to={`/resume/${r.resume_id}/edit`}
+                    >
+                      {r.title || r.filename}
+                    </Link>
+                    <p className="text-sm text-muted-foreground break-words">
+                      Файл: {r.filename}
+                    </p>
+                  </div>
+                  <span className="ml-auto text-xs rounded-full bg-muted px-2 py-1 whitespace-nowrap">
+                    {status[r.lifecycle]}
+                  </span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap break-words">
+                  {r.description || "Без описания"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Обновлено{" "}
+                  {new Date(r.updated_at || r.created_at).toLocaleString()} ·{" "}
+                  {r.status === "reviewed"
+                    ? "Проанализировано"
+                    : "Проверьте содержание"}
+                </p>
+                <div className="flex flex-wrap gap-3 text-sm">
+                  <Link
+                    className="text-primary underline"
+                    to={`/resume/${r.resume_id}`}
+                  >
+                    История версий
+                  </Link>
+                  <a href={`/api/resume/${r.resume_id}/pdf`}>PDF</a>
+                  <a href={`/api/resume/${r.resume_id}/docx`}>Word</a>
+                  <button
+                    className="text-primary"
+                    onClick={() => setEditing(r)}
+                  >
+                    Название и статус
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {editing && (
+          <section
+            aria-label="Свойства резюме"
+            className="border rounded-xl p-5 space-y-3"
+          >
+            <h2 className="font-semibold">Название и статус</h2>
+            <label className="block">
+              Название
               <Input
-                type="file"
-                accept=".pdf"
-                onChange={handleFileChange}
-                className="hidden"
-                id="resume-upload"
+                value={editing.title}
+                maxLength={200}
+                onChange={(e) =>
+                  setEditing({ ...editing, title: e.target.value })
+                }
               />
-              <Label
-                htmlFor="resume-upload"
-                className="cursor-pointer flex flex-col items-center gap-2"
-              >
-                <FileText className="h-12 w-12 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {file ? file.name : t("resume.clickToSelect")}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {t("resume.onlyPdf")}
-                </span>
-              </Label>
-            </div>
-
-            <Button
-              onClick={handleUpload}
-              disabled={!file || uploading}
-              className="w-full"
+            </label>
+            <label className="block">
+              Описание
+              <Textarea
+                value={editing.description}
+                maxLength={2000}
+                onChange={(e) =>
+                  setEditing({ ...editing, description: e.target.value })
+                }
+              />
+            </label>
+            <select
+              aria-label="Новый статус"
+              value={editing.lifecycle}
+              onChange={(e) =>
+                setEditing({
+                  ...editing,
+                  lifecycle: e.target.value as ResumeRecord["lifecycle"],
+                })
+              }
+              className="border p-2 rounded bg-background"
             >
-              {t("resume.continue")}
-            </Button>
-          </CardContent>
-        </Card>
-        {saved.map((r) => (
-          <Card key={r.resume_id}>
-            <CardContent className="p-4 flex flex-wrap gap-4">
-              <Link to={`/resume/${r.resume_id}/edit`}>{r.filename}</Link>
-              <Link to={`/resume/${r.resume_id}`}>Версии</Link>
-            </CardContent>
-          </Card>
-        ))}
+              {Object.entries(status).map(([k, v]) => (
+                <option key={k} value={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-3">
+              <Button
+                disabled={busy || !editing.title.trim()}
+                onClick={saveMeta}
+              >
+                Сохранить свойства
+              </Button>
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                Отмена
+              </Button>
+            </div>
+          </section>
+        )}
       </div>
     </MainLayout>
   );

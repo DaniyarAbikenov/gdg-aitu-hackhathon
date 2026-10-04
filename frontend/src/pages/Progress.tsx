@@ -1,3 +1,4 @@
+import { Journey } from "@/components/Journey";
 import type { ProgressRecord } from "@/types/career";
 import { useEffect, useState } from "react";
 import client from "@/api/client";
@@ -22,7 +23,10 @@ export default function Progress() {
   const [progress, setProgress] = useState<ProgressRecord | null>(null);
   const [error, setError] = useState("");
   const load = () =>
-    client.get("/progress").then(({ data }) => setProgress(data));
+    client
+      .get("/progress")
+      .then(({ data }) => setProgress(data))
+      .catch((e) => setError(e.message));
   useEffect(() => {
     load().catch((e) => setError(e.message));
   }, []);
@@ -59,6 +63,7 @@ export default function Progress() {
   return (
     <MainLayout>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
+        <Journey />
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("progress.title")}</h1>
           <p className="text-muted-foreground">{t("progress.subtitle")}</p>

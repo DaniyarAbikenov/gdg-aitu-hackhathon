@@ -6,13 +6,23 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
   await register(page);
   // Explicit deterministic provider is enabled only in this isolated test stack.
   await page.goto("/interview/start");
-  await page.locator("textarea").nth(0).fill("Library engineering team");
   await page
-    .locator("textarea")
-    .nth(1)
+    .getByLabel("Название компании", { exact: true })
+    .fill("Library team");
+  await page
+    .getByLabel("О компании", { exact: true })
+    .fill("Library engineering team");
+  await page
+    .getByLabel("Название вакансии", { exact: true })
+    .fill("Backend engineer");
+  await page
+    .getByLabel("Описание вакансии", { exact: true })
     .fill("Build reliable Python APIs using PostgreSQL");
-  await page.locator("textarea").nth(2).fill("Python, PostgreSQL");
-  await page.getByRole("button", { name: "Start", exact: true }).click();
+  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("Python");
+  await page.getByRole("option", { name: /^Python/ }).click();
+  await page
+    .getByRole("button", { name: "Начать интервью", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/interview\/session\?id=/);
   await page.reload();
   for (let i = 0; i < 3; i++) {
@@ -28,7 +38,7 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
   await expect(page).toHaveURL(/\/interview\/result\?id=/);
   await page.getByRole("button", { name: "View Summary" }).click();
   await page.reload();
-  await expect(page.getByText(/100\/100/)).toBeVisible();
+  await expect(page.getByText(/100\/100 · учебная оценка/)).toBeVisible();
   const profile = await (await page.request.get("/api/user/profile")).json();
   expect(
     (
@@ -44,8 +54,13 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
       })
     ).ok(),
   ).toBeTruthy();
-  await page.goto("/dashboard");
-  await page.getByRole("button", { name: "Create Plan", exact: true }).click();
+  await page.goto("/plan");
+  await page
+    .getByLabel("Целевая позиция", { exact: true })
+    .fill("Backend developer");
+  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("Python");
+  await page.getByRole("option", { name: /^Python/ }).click();
+  await page.getByRole("button", { name: "Создать план", exact: true }).click();
   await expect(page).toHaveURL(/\/plan\/[^/]+$/);
   await page.getByRole("checkbox").first().click();
   await expect(page.getByRole("checkbox").first()).toBeChecked();

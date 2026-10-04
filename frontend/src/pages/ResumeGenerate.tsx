@@ -1,3 +1,4 @@
+import { MainLayout } from "@/components/layout/MainLayout";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -32,33 +33,41 @@ export default function ResumeGenerate() {
   }
 
   return (
-    <div className="p-8 max-w-xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">{t("resume.generate.title")}</h1>
+    <MainLayout>
+      <div className="p-8 max-w-xl mx-auto space-y-6">
+        <h1 className="text-2xl font-bold">{t("resume.generate.title")}</h1>
 
-      <select
-        className="border p-2 rounded w-full"
-        value={template}
-        onChange={(e) => setTemplate(e.target.value)}
-      >
-        <option value="modern">{t("resume.generate.modern")}</option>
-        <option value="classic">{t("resume.generate.classic")}</option>
-        <option value="minimalist">{t("resume.generate.minimalist")}</option>
-      </select>
-
-      {error && <p role="alert">{error}</p>}
-      <Button className="w-full" disabled={busy} onClick={handleGenerate}>
-        {t("resume.generate.generatePdf")}
-      </Button>
-
-      {pdfUrl && (
-        <a
-          href={pdfUrl}
-          target="_blank"
-          className="block text-blue-600 underline text-center"
+        <select
+          className="border p-2 rounded w-full"
+          value={template}
+          onChange={(e) => setTemplate(e.target.value)}
         >
-          {t("resume.generate.downloadPdf")}
+          <option value="modern">{t("resume.generate.modern")}</option>
+          <option value="classic">{t("resume.generate.classic")}</option>
+          <option value="minimalist">{t("resume.generate.minimalist")}</option>
+        </select>
+
+        {error && <p role="alert">{error}</p>}
+        <Button className="w-full" disabled={busy} onClick={handleGenerate}>
+          {t("resume.generate.generatePdf")}
+        </Button>
+
+        {pdfUrl && (
+          <a
+            href={pdfUrl}
+            target="_blank"
+            className="block text-blue-600 underline text-center"
+          >
+            {t("resume.generate.downloadPdf")}
+          </a>
+        )}
+        <a
+          className="block text-primary underline"
+          href={`/api/resume/${resumeId}/docx`}
+        >
+          Скачать Word (.docx)
         </a>
-      )}
-    </div>
+      </div>
+    </MainLayout>
   );
 }

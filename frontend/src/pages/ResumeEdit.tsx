@@ -1,3 +1,4 @@
+import { ProfileBlocks } from "@/components/ProfileBlocks";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -95,11 +96,12 @@ export default function ResumeEdit() {
         )}
         {/* ✅ блок редакторов */}
         <div className="space-y-8">
-          <ResumeSummaryEditor />
+          <ProfileBlocks
+            includeName
+            value={fields || {}}
+            onChange={setFields}
+          />
           <ResumeSkillsEditor />
-          <ResumeExperienceEditor />
-          <ResumeEducationEditor />
-          <ResumeProjectsEditor />
         </div>
 
         {/* ✅ поле для текста вакансии */}

@@ -1,5 +1,6 @@
 import client from "./client";
-export interface UpdateProfileRequest {
+import type { ResumeFields } from "@/types/resume";
+export interface UpdateProfileRequest extends ResumeFields {
   full_name?: string;
   email?: string;
   desired_position?: string;

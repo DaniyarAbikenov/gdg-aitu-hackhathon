@@ -7,6 +7,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 const Login = lazy(() => import("./pages/Login"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const ResumeCreate = lazy(() => import("./pages/ResumeCreate"));
+const KnowledgeAdmin = lazy(() => import("./pages/KnowledgeAdmin"));
+const VoiceInterview = lazy(() => import("./pages/VoiceInterview"));
 const Resume = lazy(() => import("./pages/Resume"));
 const ResumeVersions = lazy(() => import("./pages/ResumeVersions"));
 const Plan = lazy(() => import("./pages/Plan"));
@@ -42,6 +45,30 @@ const App = () => (
           }
         >
           <Routes>
+            <Route
+              path="/resume/new"
+              element={
+                <ProtectedRoute>
+                  <ResumeCreate />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/knowledge"
+              element={
+                <ProtectedRoute>
+                  <KnowledgeAdmin />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview/voice"
+              element={
+                <ProtectedRoute>
+                  <VoiceInterview />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/login"
               element={
