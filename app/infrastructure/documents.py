@@ -1,9 +1,12 @@
 """Bounded text extraction and deterministic PDF rendering."""
 
 import io
+from dataclasses import asdict
 from pathlib import Path
 from xml.sax.saxutils import escape
+from zipfile import ZipFile
 
+from docx import Document
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from reportlab.lib import colors
@@ -27,6 +30,27 @@ def extract_text(filename, data):
             text = data.decode("utf-8-sig")
         except UnicodeDecodeError as exc:
             raise InvalidDocument("Use a UTF-8 text file or a text-based PDF.") from exc
+    elif suffix == ".docx":
+        try:
+            with ZipFile(io.BytesIO(data)) as archive:
+                if (
+                    sum(i.file_size for i in archive.infolist()) > 30_000_000
+                    or len(archive.infolist()) > 1000
+                ):
+                    raise InvalidDocument("The Word document is too large when unpacked.")
+            document = Document(io.BytesIO(data))
+            text = "\n".join(
+                [p.text for p in document.paragraphs]
+                + [
+                    " | ".join(c.text for c in row.cells)
+                    for table in document.tables
+                    for row in table.rows
+                ]
+            )
+        except InvalidDocument:
+            raise
+        except Exception as exc:
+            raise InvalidDocument("Use a valid .docx document.") from exc
     elif suffix == ".pdf":
         if not data.startswith(b"%PDF-"):
             raise InvalidDocument("This file is not a valid PDF.")
@@ -96,6 +120,8 @@ def render_pdf(fields, template="modern"):
         return Paragraph(escape(value).replace("\n", "<br/>"), styles[style])
 
     story = [paragraph(fields.full_name or "Resume", "CareerTitle")]
+    if fields.position:
+        story.append(paragraph(fields.position, "CareerSection"))
     if fields.email:
         story.append(paragraph(fields.email))
     contact = " · ".join(v for v in [fields.phone, fields.location] if v)
@@ -142,6 +168,7 @@ def render_pdf(fields, template="modern"):
 
 
 class ExtractedResume(BaseModel):
+    position: str = Field(default="", max_length=200)
     full_name: str = Field(default="", max_length=120)
     email: str = Field(default="", max_length=200)
     phone: str = Field(default="", max_length=100)
@@ -155,12 +182,21 @@ class ExtractedResume(BaseModel):
     languages: str = Field(default="", max_length=500)
 
 
+class ComposedResume(BaseModel):
+    fields: ExtractedResume
+    questions: list[str] = Field(max_length=6)
+
+
 class Documents:
     def __init__(self, settings=None, transport=None):
         self.settings = settings
         self.ai = structured_ai(settings, transport) if settings else None
 
     def extract(self, filename, data):
+        if self.settings and self.settings.provider == "unconfigured":
+            from app.domain.errors import ProviderUnavailable
+
+            raise ProviderUnavailable
         if self.settings and self.settings.provider in {"gemini", "openai"}:
             pdf = Path(filename).suffix.lower() == ".pdf"
             if pdf:
@@ -183,6 +219,60 @@ class Documents:
             )
             return ResumeFields(**fields)
         return extract_fields(extract_text(filename, data))
+
+    def compose(self, fields, position, job, facts):
+        if not self.settings or self.settings.provider == "unconfigured":
+            from app.domain.errors import ProviderUnavailable
+
+            raise ProviderUnavailable
+        if self.settings.provider == "local":
+            return {"fields": asdict(ResumeFields(**fields)), "questions": []}
+        return self.ai.generate(
+            "Compose a factual resume for the target position using ONLY selected profile blocks and confirmed additional facts. "
+            "Use exact experience, tasks, achievements, location and periods. Preserve contact details. "
+            "Never invent skills or numeric impact. If the evidence is insufficient ask up to six concrete clarifying questions; "
+            "otherwise questions must be empty. Tailor wording and order to the vacancy without changing facts.",
+            {"profile": fields, "position": position, "job": job, "confirmed_facts": facts},
+            ComposedResume,
+        )
+
+    def docx(self, fields):
+        document = Document()
+        document.add_heading(fields.full_name or "Resume", 0)
+        if fields.position:
+            document.add_paragraph(fields.position, style="Subtitle")
+        document.add_paragraph(
+            " · ".join(v for v in [fields.email, fields.phone, fields.location] if v)
+        )
+        for title, key in [
+            ("Profile", "summary"),
+            ("Skills", "skills"),
+            ("Experience", "experience"),
+            ("Education", "education"),
+            ("Projects", "projects"),
+            ("Certificates", "certificates"),
+            ("Languages", "languages"),
+        ]:
+            value = getattr(fields, key)
+            if not value:
+                continue
+            document.add_heading(title, 1)
+            if isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        for v in item.values():
+                            if isinstance(v, list):
+                                for entry in v:
+                                    document.add_paragraph(str(entry), style="List Bullet")
+                            elif v:
+                                document.add_paragraph(str(v))
+                    else:
+                        document.add_paragraph(str(item), style="List Bullet")
+            else:
+                document.add_paragraph(value)
+        output = io.BytesIO()
+        document.save(output)
+        return output.getvalue()
 
     def pdf(self, fields, template="modern"):
         return render_pdf(fields, template)

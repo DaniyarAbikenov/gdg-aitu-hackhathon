@@ -12,6 +12,8 @@ class Experience(StrictModel):
     role: str = Field(default="", max_length=300)
     date_from: str = Field(default="", max_length=50)
     date_to: str = Field(default="", max_length=50)
+    location: str = Field(default="", max_length=200)
+    responsibilities: str = Field(default="", max_length=6000)
     achievements: list[str] = Field(default_factory=list, max_length=40)
 
 
@@ -29,6 +31,7 @@ class Project(StrictModel):
 
 
 class ResumeFields(StrictModel):
+    position: str = Field(default="", max_length=200)
     full_name: str = Field(default="", max_length=120)
     email: str = Field(default="", max_length=200)
     summary: str = Field(default="", max_length=3000)

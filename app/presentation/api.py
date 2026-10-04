@@ -45,7 +45,12 @@ def router(settings):
     def health(request: Request):
         request.app.state.repository.health()
         request.app.state.sessions.health()
-        return {"status": "ok", "version": "0.3.0", "provider": settings.provider}
+        return {
+            "status": "ok",
+            "version": "0.3.0",
+            "provider": settings.provider,
+            "development": settings.environment == "development",
+        }
 
     @routes.post("/api/session", include_in_schema=False)
     @routes.post("/session")

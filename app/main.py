@@ -9,22 +9,28 @@ from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.application.career import CareerService
+from app.application.overview import Overview
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.config import Settings
+from app.infrastructure.activity import ActivityRepository
 from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
 from app.infrastructure.google_login import GoogleLogin
+from app.infrastructure.knowledge import KnowledgeRepository
 from app.infrastructure.passwords import ScryptPasswords
 from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
 from app.infrastructure.reviewer import Reviewer
 from app.infrastructure.skills import PostgresSkillRepository
+from app.infrastructure.voice import RealtimeVoice
 from app.presentation.api import router
 from app.presentation.career import career_router
 from app.presentation.http import configure_http
+from app.presentation.product import product_router
 from app.presentation.skills import skill_router
+from app.presentation.voice import voice_router
 
 
 def create_app(settings=None, reviewer=None):
@@ -49,6 +55,10 @@ def create_app(settings=None, reviewer=None):
         app.state.career = CareerService(
             career_store, repository, sessions, Coach(settings), ScryptPasswords()
         )
+
+        app.state.overview = Overview(app.state.career, ActivityRepository(repository.sessions))
+        app.state.voice = RealtimeVoice(settings)
+        app.state.knowledge = KnowledgeRepository(repository.sessions)
 
         async def cleanup():
             while True:
@@ -84,6 +94,8 @@ def create_app(settings=None, reviewer=None):
     app.include_router(router(settings))
     app.include_router(career_router(settings))
     app.include_router(skill_router())
+    app.include_router(product_router(settings))
+    app.include_router(voice_router())
     return app
 
 

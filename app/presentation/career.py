@@ -68,6 +68,14 @@ class Revision(StrictModel):
 
 
 class InterviewStart(StrictModel):
+    company_name: str = Field(default="", max_length=200)
+    vacancy_title: str = Field(default="", max_length=200)
+    company_id: str = Field(default="", max_length=36)
+    vacancy_id: str = Field(default="", max_length=36)
+    modes: list[Literal["theoretical", "practical"]] = Field(
+        default_factory=lambda: ["theoretical"], min_length=1, max_length=2
+    )
+    mode: Literal["text", "voice"] = "text"
     company_description: str = Field(min_length=3, max_length=3000)
     job_description: str = Field(min_length=10, max_length=10000)
     tech_stack: str = Field(min_length=2, max_length=1000)
@@ -80,6 +88,8 @@ class Answer(Revision):
 
 
 class PlanCreate(StrictModel):
+    position: str = Field(default="", max_length=200)
+    stacks: list[str] = Field(default_factory=list, max_length=60)
     goal: str = Field(min_length=3, max_length=500)
     resume_id: UUID | None = None
     interview_id: UUID | None = None
@@ -302,6 +312,8 @@ def career_router(settings):
             payload.goal,
             str(payload.resume_id) if payload.resume_id else None,
             str(payload.interview_id) if payload.interview_id else None,
+            payload.position,
+            payload.stacks,
         )
 
     @routes.post("/plan/{plan_id}/modules/{module_id}")

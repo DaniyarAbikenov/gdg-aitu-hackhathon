@@ -41,3 +41,7 @@ class ResumeRecord(StrictModel):
     created_at: str
     analysis: Analysis | None = None
     jd_text: str = ""
+    title: str = ""
+    description: str = ""
+    lifecycle: Literal["draft", "active", "archived"] = "draft"
+    updated_at: str = ""

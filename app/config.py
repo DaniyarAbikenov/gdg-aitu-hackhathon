@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr = SecretStr("")
     openai_model: str = ""
     google_client_id: str = ""
+    environment: Literal["development", "production"] = "production"
+    admin_emails: str = ""
+    openai_realtime_model: str = ""
+    openai_transcription_model: str = ""
     secure_cookie: bool = False
     session_hours: int = Field(default=24, ge=1, le=168)
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, ge=1024, le=10_000_000)

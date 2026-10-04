@@ -42,6 +42,22 @@ class RewardRow(AggregateColumns, Base):
     __tablename__ = "career_rewards"
 
 
+class AssessmentRow(AggregateColumns, Base):
+    __tablename__ = "career_assessments"
+
+
+class PreferencesRow(AggregateColumns, Base):
+    __tablename__ = "career_preferences"
+
+
+class CompanyRow(AggregateColumns, Base):
+    __tablename__ = "career_companies"
+
+
+class VacancyRow(AggregateColumns, Base):
+    __tablename__ = "career_vacancies"
+
+
 class AccountRow(Base):
     __tablename__ = "accounts"
     owner: Mapped[str] = mapped_column(String(36), primary_key=True)
@@ -51,7 +67,11 @@ class AccountRow(Base):
 
 
 TABLES = {
+    "assessment": AssessmentRow,
     "profile": ProfileRow,
+    "preferences": PreferencesRow,
+    "company": CompanyRow,
+    "vacancy": VacancyRow,
     "interview": InterviewRow,
     "plan": PlanRow,
     "version": VersionRow,
@@ -97,6 +117,12 @@ class PostgresCareerRepository:
                 )
                 db.add(row)
                 db.flush()
+                from app.infrastructure.activity import record_activity
+
+                if kind == "assessment":
+                    record_activity(db, session.owner, "resume_reviewed", data["resume_id"])
+                if kind in {"version", "plan", "interview"}:
+                    record_activity(db, session.owner, kind + "_created", row.id)
                 return record(row)
         except IntegrityError as exc:
             raise Conflict from exc
@@ -135,6 +161,16 @@ class PostgresCareerRepository:
             if row is None:
                 self.get(kind, owner, record_id)
                 raise Conflict
+            from app.infrastructure.activity import record_activity
+
+            if kind == "plan":
+                for module in data.get("modules", []):
+                    if module.get("completed"):
+                        record_activity(
+                            db, owner, "module_completed", record_id + ":" + module["id"]
+                        )
+            if kind == "interview" and data.get("finished"):
+                record_activity(db, owner, "interview_completed", record_id)
             return record(row)
 
     def delete(self, kind, owner, record_id):

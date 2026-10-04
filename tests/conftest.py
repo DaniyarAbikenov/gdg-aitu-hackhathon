@@ -35,7 +35,7 @@ def client(app):
         with app.state.repository.engine.begin() as db:
             db.execute(
                 text(
-                    "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards"
+                    "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards, career_preferences, career_companies, career_vacancies, career_activity, career_assessments"
                 )
             )
         client.post("/api/session")

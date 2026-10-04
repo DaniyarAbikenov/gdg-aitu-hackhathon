@@ -462,6 +462,8 @@ def test_structured_resume_roundtrip_versions_and_profile(client, resume):
                 "date_from": "2024",
                 "date_to": "2025",
                 "achievements": ["Built a Python API"],
+                "location": "",
+                "responsibilities": "",
             }
         ],
         "education": [

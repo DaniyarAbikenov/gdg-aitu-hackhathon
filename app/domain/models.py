@@ -4,6 +4,7 @@ from datetime import datetime
 
 @dataclass
 class ResumeFields:
+    position: str = ""
     full_name: str = ""
     email: str = ""
     summary: str = ""
@@ -42,6 +43,10 @@ class ResumeRecord:
     created_at: str
     analysis: Analysis | None = None
     jd_text: str = ""
+    title: str = ""
+    description: str = ""
+    lifecycle: str = "draft"
+    updated_at: str = ""
 
 
 @dataclass(frozen=True)

@@ -29,6 +29,12 @@ class Base(DeclarativeBase):
 class ResumeRow(Base):
     __tablename__ = "resumes"
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    title: Mapped[str] = mapped_column(String(200), default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    lifecycle: Mapped[str] = mapped_column(String(20), default="draft")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC)
+    )
     owner: Mapped[str] = mapped_column(String(36), index=True)
     filename: Mapped[str] = mapped_column(String(180))
     fields: Mapped[dict] = mapped_column(JSONB)
@@ -55,6 +61,10 @@ def to_record(row):
         created_at=row.created_at.isoformat(),
         analysis=analysis,
         jd_text=row.jd_text,
+        title=row.title,
+        description=row.description,
+        lifecycle=row.lifecycle,
+        updated_at=row.updated_at.isoformat(),
     )
 
 
@@ -99,6 +109,7 @@ class PostgresRepository:
                 id=str(uuid4()),
                 owner=session.owner,
                 filename=filename,
+                title=fields.position or filename,
                 fields=asdict(fields),
                 status="extracted",
                 revision=1,
@@ -109,6 +120,9 @@ class PostgresRepository:
             )
             db.add(row)
             db.flush()
+            from app.infrastructure.activity import record_activity
+
+            record_activity(db, session.owner, "resume_created", row.id)
             return to_record(row)
 
     def get(self, owner, resume_id):
@@ -137,7 +151,7 @@ class PostgresRepository:
                     *self.visible(owner, resume_id),
                     ResumeRow.revision == revision,
                 )
-                .values(revision=revision + 1, **values)
+                .values(revision=revision + 1, updated_at=datetime.now(UTC), **values)
                 .returning(ResumeRow)
             )
             if row is None:
@@ -145,7 +159,16 @@ class PostgresRepository:
                 if exists:
                     raise Conflict
                 raise NotFound
+            if values.get("status") == "reviewed":
+                from app.infrastructure.activity import record_activity
+
+                record_activity(db, owner, "resume_reviewed", resume_id)
             return to_record(row)
+
+    def metadata(self, owner, resume_id, revision, title, description, lifecycle):
+        return self._update(
+            owner, resume_id, revision, title=title, description=description, lifecycle=lifecycle
+        )
 
     def save(self, owner, resume_id, revision, fields):
         return self._update(

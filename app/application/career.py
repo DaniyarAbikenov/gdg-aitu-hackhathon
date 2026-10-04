@@ -6,6 +6,7 @@ from app.application.ports import ResumeRepository, SessionStore
 from app.domain.career import CareerCoach, CareerRepository, PasswordHasher
 from app.domain.errors import Conflict, InvalidDocument, NotFound
 from app.domain.models import ResumeFields
+from app.domain.review import compare
 
 
 class CareerService:
@@ -63,6 +64,17 @@ class CareerService:
             raise Conflict
         self.sessions.consume_analysis(session)
         result = self.coach.improvements(asdict(resume.fields), self.profile_data(session), job)
+        self.store.create(
+            "assessment",
+            session,
+            {
+                "resume_id": resume_id,
+                "resume_revision": revision,
+                "missing_skills": compare(resume.fields, job).missing_skills,
+                "job": job,
+                "improvements": result["improvements"],
+            },
+        )
         return {**result, "revision": revision, "jd_text": job}
 
     def save_version(self, session, resume_id, revision, fields, label, job):
@@ -93,6 +105,23 @@ class CareerService:
 
     def start_interview(self, session, context):
         self.sessions.consume_analysis(session)
+        for kind in ["company", "vacancy"]:
+            if context.get(kind + "_id"):
+                self.store.get(kind, session.owner, context[kind + "_id"])
+        if context.get("mode") == "voice":
+            return self.store.create(
+                "interview",
+                session,
+                {
+                    "provider": "openai",
+                    "context": context,
+                    "questions": [],
+                    "answers": [],
+                    "transcript": [],
+                    "finished": False,
+                    "score": None,
+                },
+            )
         generated = self.coach.questions({**context, "profile": self.profile_data(session)})
         return self.store.create(
             "interview",
@@ -113,7 +142,10 @@ class CareerService:
             "finished": data["finished"],
             "score": data["score"],
             "total_questions": len(data["questions"]),
-            "question": None if data["finished"] else data["questions"][index]["question"],
+            "question": None
+            if data["finished"] or not data["questions"]
+            else data["questions"][index]["question"],
+            "transcript": data.get("transcript", []),
         }
 
     def answer(self, session, interview_id, revision, answer):
@@ -138,7 +170,9 @@ class CareerService:
             data["score"] = round(sum(a["score"] for a in data["answers"]) / len(data["answers"]))
         return self.store.update("interview", session.owner, interview_id, revision, data)
 
-    def create_plan(self, session, goal, resume_id=None, interview_id=None):
+    def create_plan(
+        self, session, goal, resume_id=None, interview_id=None, position="", stacks=None
+    ):
         gaps = []
         if resume_id:
             resume = self.resumes.get(session.owner, resume_id)
@@ -149,8 +183,18 @@ class CareerService:
             for answer in interview.data["answers"]:
                 gaps += answer["improvements"]
         self.sessions.consume_analysis(session)
-        plan = self.coach.plan(self.profile_data(session), goal, gaps[:20])
-        plan.update(resume_id=resume_id, interview_id=interview_id)
+        plan = self.coach.plan(
+            {
+                **self.profile_data(session),
+                "target_position": position,
+                "preferred_stacks": stacks or [],
+            },
+            goal,
+            gaps[:20],
+        )
+        plan.update(
+            resume_id=resume_id, interview_id=interview_id, position=position, stacks=stacks or []
+        )
         return self.store.create("plan", session, plan)
 
     def complete_module(self, session, plan_id, module_id, revision, completed, evidence):
