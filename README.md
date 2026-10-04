@@ -28,6 +28,8 @@ Open **http://localhost:8080**. Use `CAREER_PORT=8088` if that port is occupied.
 6. **Progress:** see real completion counts, interview practice scores, saved resume versions and earned milestones.
 7. **Account:** register to retain the guest workspace, or sign in to an existing account from another browser. Signing out preserves account data.
 
+Screenshots: [interview coaching](docs/screenshots/interview.png) · [learning plan](docs/screenshots/plan.png).
+
 See the [original-to-current feature map](docs/features.md) and [API migration notes](docs/migration.md).
 
 ## Real coaching and the credential-free demo

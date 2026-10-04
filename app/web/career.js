@@ -733,6 +733,9 @@ async function showHelp() {
 async function showTab(tab) {
   recognition?.stop();
   careerTab = tab;
+  $("current-view").textContent = CareerI18n.t(
+    tabs.find(([key]) => key === tab)[1],
+  );
   $("resume-pane").hidden = tab !== "resume";
   pane.hidden = tab === "resume";
   pane.replaceChildren();
