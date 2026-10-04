@@ -330,3 +330,98 @@ def test_gemini_all_coaching_contracts():
     )
     with pytest.raises(ProviderUnavailable):
         malformed.questions(CONTEXT)
+
+
+def test_google_nonce_identity_and_replay_protection(client, settings, monkeypatch):
+    settings.google_client_id = "test-client"
+    monkeypatch.setattr(
+        client.app.state.google_login,
+        "verify",
+        lambda credential, nonce: {"subject": "google-123", "email": "google@example.com"},
+    )
+    assert client.get("/auth/options").json()["google"]
+    challenge = client.post("/auth/google/nonce").json()
+    assert len(challenge["nonce"]) > 30
+    assert (
+        client.post("/auth/google", json={"credential": "test-google-token-12345"}).status_code
+        == 200
+    )
+    assert client.get("/user/me").json()["authenticated"]
+    assert client.post("/auth/google/nonce").status_code == 409
+    assert (
+        client.post("/auth/google", json={"credential": "test-google-token-12345"}).status_code
+        == 409
+    )
+    client.post("/auth/logout")
+    client.post("/api/session")
+    assert (
+        client.post("/auth/google", json={"credential": "test-google-token-12345"}).status_code
+        == 401
+    )
+    client.post("/auth/google/nonce")
+    assert (
+        client.post("/auth/google", json={"credential": "test-google-token-12345"}).status_code
+        == 200
+    )
+
+
+def test_google_verifier_validates_nonce_and_claims(monkeypatch):
+    from app.domain.errors import NotFound
+    from app.infrastructure.google_login import GoogleLogin
+
+    claims = {
+        "email_verified": True,
+        "email": "Alex@example.com",
+        "sub": "123",
+        "nonce": "expected",
+    }
+    monkeypatch.setattr(
+        "app.infrastructure.google_login.id_token.verify_oauth2_token",
+        lambda token, request, audience: claims,
+    )
+    assert GoogleLogin("client").verify("credential", "expected")["email"] == "alex@example.com"
+    with pytest.raises(NotFound):
+        GoogleLogin("client").verify("credential", "wrong")
+    with pytest.raises(ProviderUnavailable):
+        GoogleLogin("").verify("credential", "expected")
+    claims["email_verified"] = False
+    with pytest.raises(NotFound):
+        GoogleLogin("client").verify("credential", "expected")
+
+
+def test_gemini_resume_extraction_and_pdf_styles(client, resume):
+    import io
+
+    from pypdf import PdfReader
+
+    from app.domain.models import ResumeFields
+    from app.infrastructure.documents import Documents, render_pdf
+
+    settings = Settings(
+        _env_file=None, provider="gemini", gemini_api_key="test", gemini_model="test"
+    )
+    fields = ResumeFields(
+        full_name="Alex", summary="A factual profile", phone="123", projects="A real project"
+    )
+    from dataclasses import asdict
+
+    captured = []
+
+    def handler(request):
+        captured.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            json={"candidates": [{"content": {"parts": [{"text": json.dumps(asdict(fields))}]}}]},
+        )
+
+    docs = Documents(settings, httpx.MockTransport(handler))
+    assert docs.extract("resume.pdf", render_pdf(fields)) == fields
+    assert "inline_data" in captured[0]["contents"][0]["parts"][1]
+    for style in ["modern", "classic", "minimalist"]:
+        pdf = client.get(f"/resume/{resume['resume_id']}/pdf", params={"template": style})
+        assert pdf.status_code == 200
+        assert "Alex Morgan" in PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
+    assert (
+        client.get(f"/resume/{resume['resume_id']}/pdf", params={"template": "unknown"}).status_code
+        == 422
+    )

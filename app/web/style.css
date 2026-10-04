@@ -1032,3 +1032,17 @@ summary {
     font-size: 12px;
   }
 }
+
+.language-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.language-control select {
+  width: auto;
+  max-width: 160px;
+  padding: 6px;
+}

@@ -4,6 +4,7 @@ import io
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -13,7 +14,9 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
 from app.domain.errors import InvalidDocument
+from app.domain.models import ResumeFields
 from app.domain.review import extract_fields
+from app.infrastructure.coach import GeminiJSON
 
 
 def extract_text(filename, data):
@@ -128,8 +131,47 @@ def render_pdf(fields, template="modern"):
     return output.getvalue()
 
 
+class ExtractedResume(BaseModel):
+    full_name: str = Field(default="", max_length=120)
+    email: str = Field(default="", max_length=200)
+    phone: str = Field(default="", max_length=100)
+    location: str = Field(default="", max_length=200)
+    summary: str = Field(default="", max_length=3000)
+    skills: list[str] = Field(default_factory=list, max_length=60)
+    experience: str = Field(default="", max_length=12000)
+    education: str = Field(default="", max_length=3000)
+    projects: str = Field(default="", max_length=6000)
+    certificates: str = Field(default="", max_length=3000)
+    languages: str = Field(default="", max_length=500)
+
+
 class Documents:
+    def __init__(self, settings=None, transport=None):
+        self.settings = settings
+        self.ai = GeminiJSON(settings, transport) if settings else None
+
     def extract(self, filename, data):
+        if self.settings and self.settings.provider == "gemini":
+            pdf = Path(filename).suffix.lower() == ".pdf"
+            if pdf:
+                try:
+                    reader = PdfReader(io.BytesIO(data))
+                    if reader.is_encrypted or len(reader.pages) > 20:
+                        raise InvalidDocument("Use an unencrypted PDF with 20 pages or fewer.")
+                except InvalidDocument:
+                    raise
+                except Exception as exc:
+                    raise InvalidDocument("The PDF could not be read.") from exc
+                source = {"filename": filename}
+            else:
+                source = {"text": extract_text(filename, data)}
+            fields = self.ai.generate(
+                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. For each section use plain text with line breaks. Do not infer or invent missing facts. Empty fields are allowed.",
+                source,
+                ExtractedResume,
+                document=data if pdf else None,
+            )
+            return ResumeFields(**fields)
         return extract_fields(extract_text(filename, data))
 
     def pdf(self, fields, template="modern"):

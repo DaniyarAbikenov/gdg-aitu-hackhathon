@@ -65,14 +65,16 @@ async function run(action) {
   } finally {
     busy = false;
     document.body.classList.remove("busy");
-    controls.forEach((control) => {
-      control.disabled = false;
-    });
+    document
+      .querySelectorAll("button, input, textarea, select")
+      .forEach((control) => (control.disabled = false));
   }
 }
 
 function node(tag, text, className) {
   const element = document.createElement(tag);
+  if (["button", "input", "textarea", "select"].includes(tag))
+    element.disabled = busy;
   if (text) element.textContent = text;
   if (className) element.className = className;
   return element;
@@ -360,7 +362,7 @@ async function initialize() {
     ? "When you select Find my focus, your reviewed fields and this job description are sent to Google Gemini."
     : "Rule-based skill matching. Your resume stays on this server; no external AI calls.";
   $("privacy-note").textContent = cloud
-    ? "Extraction stays local. Gemini is used only when you request recommendations."
+    ? "Gemini mode: uploading sends your document to Google for extraction. Coaching sends the relevant fields and answers. PDF export stays local."
     : "Local analysis. No account, cloud keys, or external AI calls required.";
   document.dispatchEvent(new CustomEvent("career:ready"));
   const records = await loadHistory();

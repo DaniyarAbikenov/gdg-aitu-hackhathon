@@ -10,6 +10,7 @@
     <title>CareerBot — Your next career step</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/style.css" />
+    <script defer src="/static/i18n.js"></script>
     <script defer src="/static/app.js"></script>
     <script defer src="/static/career.js"></script>
   </head>
@@ -49,13 +50,22 @@
         ><span class="mode-badge" id="mode">Connecting…</span>
       </header>
       <main id="main">
+        <label class="language-control"
+          >Language / Язык / Тіл<select id="ui-language">
+            <option value="en">English</option>
+            <option value="ru">Русский</option>
+            <option value="kk">Қазақша</option>
+          </select></label
+        >
         <nav id="career-nav" aria-label="Career workspace"></nav>
         <div id="notice" role="status" aria-live="polite" hidden></div>
         <div id="resume-pane">
           <div class="intro">
             <div>
               <div class="eyebrow">A LITTLE CLARITY. A BETTER NEXT STEP.</div>
-              <h1>Make your experience count.</h1>
+              <h1 data-i18n="Make your experience count.">
+                Make your experience count.
+              </h1>
               <p>
                 Bring your resume. Find the right focus. Leave with a clearer
                 story.

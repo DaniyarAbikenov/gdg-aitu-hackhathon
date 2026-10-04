@@ -19,14 +19,14 @@ const tabs = [
 ];
 
 function button(text, action, className = "secondary") {
-  const b = node("button", text, className);
+  const b = node("button", CareerI18n.t(text), className);
   b.type = "button";
   b.addEventListener("click", () => run(action));
   return b;
 }
 function card(title, description = "") {
   const c = node("section", "", "card career-card");
-  c.append(node("h2", title));
+  c.append(node("h2", CareerI18n.t(title)));
   if (description) c.append(node("p", description, "muted"));
   return c;
 }
@@ -38,7 +38,7 @@ function input(
   multiline = false,
   required = false,
 ) {
-  const label = node("label", title);
+  const label = node("label", CareerI18n.t(title));
   const element = node(multiline ? "textarea" : "input");
   element.id = id;
   element.value = value;
@@ -50,7 +50,7 @@ function input(
   return element;
 }
 function select(parent, id, title, choices, value) {
-  const label = node("label", title);
+  const label = node("label", CareerI18n.t(title));
   const element = node("select");
   element.id = id;
   for (const [key, text] of choices) {
@@ -170,7 +170,7 @@ async function showProfile() {
       notice("Skills normalized. Save your profile to keep the changes.");
     }),
   );
-  const submit = node("button", "Save profile", "primary");
+  const submit = node("button", CareerI18n.t("Save profile"), "primary");
   submit.type = "submit";
   form.append(submit);
   form.addEventListener("submit", (event) => {
@@ -228,7 +228,7 @@ async function showAccount() {
     password.minLength = 12;
     password.maxLength = 256;
     password.autocomplete = "current-password";
-    const register = node("button", "Create account", "primary");
+    const register = node("button", CareerI18n.t("Create account"), "primary");
     register.type = "submit";
     form.append(register);
     const authenticate = async (path) => {
@@ -327,7 +327,7 @@ async function showInterview() {
     ["theoretical", "Theoretical"],
     ["practical", "Practical"],
   ]);
-  const submit = node("button", "Start interview", "primary");
+  const submit = node("button", CareerI18n.t("Start interview"), "primary");
   submit.type = "submit";
   form.append(submit);
   form.addEventListener("submit", (event) => {
@@ -711,7 +711,7 @@ async function showHelp() {
     ],
     [
       "What leaves this server?",
-      "In Gemini mode, requesting coaching sends the relevant fields and answers to Google. Voice dictation may use your browser’s speech provider. Nothing is sent to NotebookLM automatically.",
+      "In Gemini mode, uploading sends your resume document to Google for extraction; requesting coaching sends the relevant fields and answers. Voice dictation may use your browser’s speech provider. Nothing is sent to NotebookLM automatically.",
     ],
     [
       "Need help or want to report a bug?",
@@ -758,7 +758,8 @@ async function showTab(tab) {
   }[tab]();
 }
 for (const [key, title] of tabs) {
-  const b = node("button", title, "text-button");
+  const b = node("button", CareerI18n.t(title), "text-button");
+  b.dataset.i18n = title;
   b.type = "button";
   b.dataset.careerTab = key;
   b.addEventListener("click", async () => {
@@ -938,4 +939,31 @@ document.addEventListener("career:ready", () => {
   $("career-nav")
     .querySelector('[data-career-tab="resume"]')
     .setAttribute("aria-current", "page");
+});
+
+$("ui-language").addEventListener("change", () =>
+  run(async () => {
+    const language = $("ui-language").value;
+    const profile = await api("/user/profile");
+    await api(
+      "/user/profile/update",
+      jsonRequest({
+        revision: profile.revision,
+        profile: { ...profile.data, language },
+      }),
+    );
+    CareerI18n.language = language;
+    CareerI18n.apply();
+    await showTab(careerTab);
+  }),
+);
+document.addEventListener("career:ready", async () => {
+  try {
+    const profile = await api("/user/profile");
+    CareerI18n.language = profile.data.language;
+    $("ui-language").value = profile.data.language;
+    CareerI18n.apply();
+  } catch (error) {
+    notice(error.message, true);
+  }
 });

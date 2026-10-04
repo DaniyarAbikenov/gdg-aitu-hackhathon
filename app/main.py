@@ -37,7 +37,7 @@ def create_app(settings=None, reviewer=None):
             repository,
             sessions,
             reviewer or Reviewer(settings),
-            Documents(),
+            Documents(settings),
             settings.max_upload_bytes,
         )
 
