@@ -1,3 +1,4 @@
+import { ServiceStatus } from "@/components/ServiceStatus";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
@@ -13,9 +14,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         <AppSidebar />
         <div className="flex-1 flex flex-col">
           <TopBar />
-          <main className="flex-1 overflow-auto bg-background">
-            {children}
-          </main>
+          <ServiceStatus />
+          <main className="flex-1 overflow-auto bg-background">{children}</main>
         </div>
       </div>
     </SidebarProvider>

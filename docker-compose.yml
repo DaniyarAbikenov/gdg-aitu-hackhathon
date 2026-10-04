@@ -36,13 +36,11 @@ services:
     build:
       context: .
       target: runtime
-    ports:
-      - "127.0.0.1:${CAREER_PORT:-8080}:8080"
     environment:
       CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
       CAREER_REDIS_URL: redis://redis:6379/0
       CAREER_GOOGLE_CLIENT_ID: ${CAREER_GOOGLE_CLIENT_ID:-}
-      CAREER_PROVIDER: ${CAREER_PROVIDER:-local}
+      CAREER_PROVIDER: ${CAREER_PROVIDER:-unconfigured}
       CAREER_GEMINI_API_KEY: ${CAREER_GEMINI_API_KEY:-}
       CAREER_GEMINI_MODEL: ${CAREER_GEMINI_MODEL:-}
       CAREER_SECURE_COOKIE: ${CAREER_SECURE_COOKIE:-false}
@@ -52,6 +50,19 @@ services:
       migrate:
         condition: service_completed_successfully
       redis:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${CAREER_PORT:-8080}:8080"
+    depends_on:
+      backend:
         condition: service_healthy
     read_only: true
     tmpfs:

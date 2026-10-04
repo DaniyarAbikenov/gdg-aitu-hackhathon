@@ -1,8 +1,18 @@
-import { useState } from "react";
+import type { Profile } from "@/types/career";
+import { logout } from "@/api/auth";
+import { getUserProfile, updateUserProfile } from "@/api/user";
+import { useAuthStore } from "@/store/auth";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -16,22 +26,35 @@ export default function Settings() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogout = () => {
-    toast({
-      title: t("settings.logout.success"),
-      description: t("settings.logout.successDesc"),
-    });
-    setTimeout(() => navigate("/login"), 500);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    getUserProfile()
+      .then((p) => {
+        setProfile(p);
+        setAudioMode(p.audio_mode);
+      })
+      .catch((e) => setError(e.message));
+  }, []);
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (e) {
+      setError(e.message);
+    }
   };
-
-  const handleAudioToggle = (checked: boolean) => {
-    setAudioMode(checked);
-    toast({
-      title: checked ? t("settings.interview.enabled") : t("settings.interview.disabled"),
-      description: checked
-        ? t("settings.interview.enabledDesc")
-        : t("settings.interview.disabledDesc"),
-    });
+  const handleAudioToggle = async (checked: boolean) => {
+    try {
+      const p = await updateUserProfile(
+        { audio_mode: checked },
+        profile.revision,
+      );
+      setProfile(p);
+      setAudioMode(checked);
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
@@ -39,11 +62,10 @@ export default function Settings() {
       <div className="p-6 max-w-3xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("settings.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("settings.subtitle")}
-          </p>
+          <p className="text-muted-foreground">{t("settings.subtitle")}</p>
         </div>
 
+        {error && <p role="alert">{error}</p>}
         <Card>
           <CardHeader>
             <CardTitle>{t("settings.language.title")}</CardTitle>
@@ -78,6 +100,7 @@ export default function Settings() {
               </div>
               <Switch
                 id="audio-mode"
+                disabled={!profile}
                 checked={audioMode}
                 onCheckedChange={handleAudioToggle}
               />
@@ -88,17 +111,25 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle>{t("settings.profile.title")}</CardTitle>
-            <CardDescription>{t("settings.profile.description")}</CardDescription>
+            <CardDescription>
+              {t("settings.profile.description")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1">
-              <Label className="text-sm font-medium">{t("settings.profile.email")}</Label>
-              <p className="text-sm text-muted-foreground">user@example.com</p>
+              <Label className="text-sm font-medium">
+                {t("settings.profile.email")}
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                {useAuthStore.getState().email || profile?.email || "—"}
+              </p>
             </div>
             <div className="space-y-1">
-              <Label className="text-sm font-medium">{t("settings.profile.targetRoles")}</Label>
+              <Label className="text-sm font-medium">
+                {t("settings.profile.targetRoles")}
+              </Label>
               <p className="text-sm text-muted-foreground">
-                Frontend Developer, Full Stack Developer
+                {profile?.career_goal || "—"}
               </p>
             </div>
             <Button variant="outline" onClick={() => navigate("/onboarding")}>
@@ -123,13 +154,19 @@ export default function Settings() {
 
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-destructive">{t("settings.logout.title")}</CardTitle>
+            <CardTitle className="text-destructive">
+              {t("settings.logout.title")}
+            </CardTitle>
             <CardDescription>
               {t("settings.logout.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button variant="destructive" onClick={handleLogout} className="w-full">
+            <Button
+              variant="destructive"
+              onClick={handleLogout}
+              className="w-full"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               {t("settings.logout.button")}
             </Button>

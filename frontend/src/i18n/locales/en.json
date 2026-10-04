@@ -31,7 +31,7 @@
     "subtitle": "Create a new account",
     "confirmPassword": "Confirm Password",
     "passwordMismatch": "Passwords do not match",
-    "passwordWeak": "Password must be at least 6 characters",
+    "passwordWeak": "Password must be at least 12 characters",
     "success": "Registration successful",
     "haveAccount": "Already have an account?",
     "submit": "Register"
@@ -113,7 +113,7 @@
       "before": "Before",
       "after": "After",
       "reason": "Reason",
-      "generatePdf": "Generate PDF (Coming next)"
+      "generatePdf": "Generate PDF"
     },
     "improvements": {
       "title": "Resume Improvements",
@@ -229,7 +229,21 @@
     "title": "Interview Practice",
     "subtitle": "Practice your interview answers",
     "selectRole": "Select Role",
-    "start": "Start Practice",
+    "start": {
+      "title": "Start Interview",
+      "company": "Company description",
+      "companyPlaceholder": "Enter company description...",
+      "job": "Job description",
+      "jobPlaceholder": "Enter job description...",
+      "stack": "Tech stack",
+      "stackPlaceholder": "Enter tech stack (e.g., React, Node.js, PostgreSQL)...",
+      "style": "Interview style",
+      "styleTheoretical": "Theoretical",
+      "stylePractical": "Practical",
+      "styleMixed": "Mixed",
+      "startButton": "Start",
+      "starting": "Starting…"
+    },
     "session": {
       "title": "Interview",
       "noActiveInterview": "No active interview",
@@ -251,21 +265,6 @@
         "examples": "Example Phrases",
         "resources": "Resources"
       }
-    },
-    "start": {
-      "title": "Start Interview",
-      "company": "Company description",
-      "companyPlaceholder": "Enter company description...",
-      "job": "Job description",
-      "jobPlaceholder": "Enter job description...",
-      "stack": "Tech stack",
-      "stackPlaceholder": "Enter tech stack (e.g., React, Node.js, PostgreSQL)...",
-      "style": "Interview style",
-      "styleTheoretical": "Theoretical",
-      "stylePractical": "Practical",
-      "styleMixed": "Mixed",
-      "startButton": "Start",
-      "starting": "Starting…"
     },
     "result": {
       "title": "Interview Completed",

@@ -1,6 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Mail, MessageCircle, Phone } from "lucide-react";
 
@@ -11,8 +17,12 @@ export default function Support() {
     <MainLayout>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">{t("support.title")}</h1>
-          <p className="text-muted-foreground mt-2">{t("support.description")}</p>
+          <h1 className="text-3xl font-bold text-foreground">
+            {t("support.title")}
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            {t("support.description")}
+          </p>
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -20,10 +30,17 @@ export default function Support() {
             <CardHeader>
               <Mail className="h-8 w-8 text-primary mb-2" />
               <CardTitle>{t("support.email.title")}</CardTitle>
-              <CardDescription>{t("support.email.description")}</CardDescription>
+              <CardDescription>
+                {t("support.email.description")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled
+                title="Канал поддержки пока не настроен"
+              >
                 {t("support.email.action")}
               </Button>
             </CardContent>
@@ -36,7 +53,12 @@ export default function Support() {
               <CardDescription>{t("support.chat.description")}</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled
+                title="Канал поддержки пока не настроен"
+              >
                 {t("support.chat.action")}
               </Button>
             </CardContent>
@@ -46,10 +68,17 @@ export default function Support() {
             <CardHeader>
               <Phone className="h-8 w-8 text-primary mb-2" />
               <CardTitle>{t("support.phone.title")}</CardTitle>
-              <CardDescription>{t("support.phone.description")}</CardDescription>
+              <CardDescription>
+                {t("support.phone.description")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full">
+              <Button
+                variant="outline"
+                className="w-full"
+                disabled
+                title="Канал поддержки пока не настроен"
+              >
                 {t("support.phone.action")}
               </Button>
             </CardContent>
@@ -63,18 +92,43 @@ export default function Support() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="text-sm font-medium">{t("support.form.name")}</label>
+              <label className="text-sm font-medium">
+                {t("support.form.name")}
+              </label>
               <input className="w-full mt-1 px-3 py-2 border rounded-md" />
             </div>
             <div>
-              <label className="text-sm font-medium">{t("support.form.email")}</label>
-              <input type="email" className="w-full mt-1 px-3 py-2 border rounded-md" />
+              <label className="text-sm font-medium">
+                {t("support.form.email")}
+              </label>
+              <input
+                type="email"
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+              />
             </div>
             <div>
-              <label className="text-sm font-medium">{t("support.form.message")}</label>
-              <textarea className="w-full mt-1 px-3 py-2 border rounded-md" rows={5} />
+              <label className="text-sm font-medium">
+                {t("support.form.message")}
+              </label>
+              <textarea
+                className="w-full mt-1 px-3 py-2 border rounded-md"
+                rows={5}
+              />
             </div>
-            <Button className="w-full">{t("support.form.submit")}</Button>
+            <p className="text-sm text-muted-foreground">
+              Отправка обращений пока не настроена.{" "}
+              <a
+                className="underline"
+                href="https://github.com/DaniyarAbikenov/gdg-aitu-hackhathon/issues"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Задачи проекта в GitHub
+              </a>
+            </p>
+            <Button className="w-full" disabled>
+              {t("support.form.submit")}
+            </Button>
           </CardContent>
         </Card>
       </div>

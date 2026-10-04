@@ -123,10 +123,12 @@ class Coach:
         self.ai = GeminiJSON(settings, transport)
 
     def improvements(self, fields, profile, job):
+        if self.provider == "unconfigured":
+            raise ProviderUnavailable
         if self.provider == "gemini":
             result = self.ai.generate(
                 "Suggest specific resume changes: exact whole section before, replacement after, and reason. "
-                "For skills use comma-separated strings. Use existing resume and confirmed profile facts only. "
+                "For skills use comma-separated strings. For structured sections, before and after must be JSON arrays matching the exact existing structure. Use existing resume and confirmed profile facts only. "
                 "Preserve original facts; do not claim missing qualifications. Return only useful changes.",
                 {"resume": fields, "profile": profile, "job": job},
                 Improvements,
@@ -160,12 +162,26 @@ class Coach:
             item["id"] = str(index + 1)
             existing = fields.get(item["section"], "")
             if isinstance(existing, list):
-                existing = ", ".join(existing)
-            if item["before"] != existing:
+                existing = (
+                    ", ".join(existing)
+                    if item["section"] == "skills"
+                    else json.dumps(existing, ensure_ascii=False)
+                )
+            if isinstance(fields.get(item["section"]), list) and item["section"] != "skills":
+                try:
+                    if json.loads(item["before"]) != fields[item["section"]]:
+                        raise ProviderUnavailable
+                    if not isinstance(json.loads(item["after"]), list):
+                        raise ProviderUnavailable
+                except (ValueError, TypeError) as exc:
+                    raise ProviderUnavailable from exc
+            elif item["before"] != existing:
                 raise ProviderUnavailable
         return {**result, "provider": self.provider}
 
     def questions(self, context):
+        if self.provider == "unconfigured":
+            raise ProviderUnavailable
         if self.provider == "gemini":
             result = self.ai.generate(
                 "Create five interview questions tailored to company, role, stack and interview style. "
@@ -202,6 +218,8 @@ class Coach:
         return {**result, "provider": self.provider}
 
     def evaluate(self, context, question, answer):
+        if self.provider == "unconfigured":
+            raise ProviderUnavailable
         if self.provider == "gemini":
             result = self.ai.generate(
                 "Evaluate the candidate's answer against the question and criteria. Give a 0–100 practice score, "
@@ -223,6 +241,8 @@ class Coach:
         return {**result, "provider": self.provider}
 
     def plan(self, profile, goal, gaps):
+        if self.provider == "unconfigured":
+            raise ProviderUnavailable
         if self.provider == "gemini":
             result = self.ai.generate(
                 "Build an eight-week learning plan for this career goal, using the candidate's existing skills, "

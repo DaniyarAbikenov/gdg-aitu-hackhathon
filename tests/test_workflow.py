@@ -197,12 +197,12 @@ def test_upload_size_limit_with_and_without_content_length(client):
         client.post(
             "/resume/upload",
             files={
-                "file": ("large.txt", b"x" * 2_000_001),
+                "file": ("large.txt", b"x" * (5 * 1024 * 1024 + 1)),
             },
         ).status_code
         == 413
     )
-    response = client.post("/resume/upload", content=iter([b"x" * 1_100_000] * 2))
+    response = client.post("/resume/upload", content=iter([b"x" * 1_100_000] * 5))
     assert response.status_code == 413
 
 

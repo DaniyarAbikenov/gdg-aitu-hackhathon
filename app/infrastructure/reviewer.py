@@ -28,6 +28,8 @@ class Reviewer:
         self.transport = transport
 
     def analyze(self, fields, jd_text):
+        if self.settings.provider == "unconfigured":
+            raise ProviderUnavailable
         result = compare(fields, jd_text)
         if self.settings.provider == "local":
             return result

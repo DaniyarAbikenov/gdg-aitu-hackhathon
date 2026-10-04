@@ -16,3 +16,5 @@ playwright-report
 firebase-key.json
 *.pem
 *.key
+
+frontend

@@ -1,3 +1,6 @@
+import { updateUserProfile } from "@/api/user";
+import { useAuthStore } from "@/store/auth";
+import { toast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,12 +20,20 @@ const languages = [
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
-  const changeLanguage = (lng: string) => {
+  const changeLanguage = async (lng: string) => {
+    if (useAuthStore.getState().isAuthenticated) {
+      try {
+        await updateUserProfile({ language: lng === "kz" ? "kk" : lng });
+      } catch (e) {
+        toast({ title: e.message, variant: "destructive" });
+        return;
+      }
+    }
     i18n.changeLanguage(lng);
     localStorage.setItem("language", lng);
   };
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language);
+  const currentLanguage = languages.find((lang) => lang.code === i18n.language);
 
   return (
     <DropdownMenu>

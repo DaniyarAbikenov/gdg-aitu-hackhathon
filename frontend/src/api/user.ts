@@ -1,28 +1,27 @@
 import client from "./client";
-
 export interface UpdateProfileRequest {
-    full_name?: string;
-    email?: string;
-    desired_position?: string;
-    career_goal?: string;
-    skills?: string[];
-    extra?: Record<string, any>;
+  full_name?: string;
+  email?: string;
+  desired_position?: string;
+  career_goal?: string;
+  skills?: string[];
+  language?: string;
+  audio_mode?: boolean;
+  extra?: { languages?: string[]; normalized_skills?: string[] };
 }
-
-/**
- * Получение данных профиля пользователя
- * GET /user/profile
- */
 export async function getUserProfile() {
-    const resp = await client.get("/user/profile");
-    return resp.data;
+  const { data } = await client.get("/user/profile");
+  return { ...data.data, revision: data.revision };
 }
-
-/**
- * Обновление профиля
- * POST /user/profile/update
- */
-export async function updateUserProfile(data: UpdateProfileRequest) {
-    const resp = await client.post("/user/profile/update", data);
-    return resp.data;
+export async function updateUserProfile(
+  patch: UpdateProfileRequest,
+  revision?: number,
+) {
+  const current = await getUserProfile();
+  const { revision: loadedRevision, ...profile } = current;
+  const { data } = await client.post("/user/profile/update", {
+    profile: { ...profile, ...patch },
+    revision: revision ?? loadedRevision,
+  });
+  return { ...data.data, revision: data.revision };
 }

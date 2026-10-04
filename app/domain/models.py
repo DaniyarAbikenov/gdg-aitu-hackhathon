@@ -8,11 +8,11 @@ class ResumeFields:
     email: str = ""
     summary: str = ""
     skills: list[str] = field(default_factory=list)
-    experience: str = ""
-    education: str = ""
+    experience: str | list[dict] = ""
+    education: str | list[dict] = ""
     phone: str = ""
     location: str = ""
-    projects: str = ""
+    projects: str | list[dict] = ""
     certificates: str = ""
     languages: str = ""
 

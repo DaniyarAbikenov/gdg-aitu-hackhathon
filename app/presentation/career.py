@@ -33,7 +33,13 @@ class GoogleCredential(StrictModel):
     credential: str = Field(min_length=20, max_length=10000)
 
 
+class ProfileExtra(StrictModel):
+    languages: list[str] = Field(default_factory=list, max_length=30)
+    normalized_skills: list[str] = Field(default_factory=list, max_length=60)
+
+
 class Profile(ResumeFields):
+    extra: ProfileExtra = Field(default_factory=ProfileExtra)
     desired_position: str = Field(default="", max_length=200)
     career_goal: str = Field(default="", max_length=1000)
     language: Literal["en", "ru", "kk"] = "en"
@@ -182,8 +188,14 @@ def career_router(settings):
         return {"google": bool(settings.google_client_id)}
 
     @routes.get("/user/me")
-    def me(current: Session = Depends(workspace)):
-        return {"uid": current.owner, "authenticated": current.persistent}
+    def me(request: Request, current: Session = Depends(workspace)):
+        return {
+            "uid": current.owner,
+            "authenticated": current.persistent,
+            "email": request.app.state.career.store.email_for_owner(current.owner)
+            if current.persistent
+            else "",
+        }
 
     @routes.get("/user/profile")
     def profile(request: Request, current: Session = Depends(workspace)):

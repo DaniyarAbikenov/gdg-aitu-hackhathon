@@ -11,7 +11,6 @@ from app.presentation.schemas import AnalyzeRequest, ResumeRecord, SaveRequest
 
 COOKIE = "career_session"
 ASSETS = Path(__file__).parents[1] / "assets"
-WEB = Path(__file__).parents[1] / "web"
 SAMPLE_JOB = (
     "We are looking for a backend developer to build Python and FastAPI services. "
     "You will work with PostgreSQL, Docker, pytest and GitHub Actions. Experience "
@@ -32,7 +31,11 @@ def router(settings):
 
     @routes.get("/", include_in_schema=False)
     def index():
-        return FileResponse(WEB / "index.html")
+        return {
+            "service": "CareerBot API",
+            "frontend": "Served by the frontend container",
+            "schema": "/openapi.json",
+        }
 
     @routes.get("/static/font", include_in_schema=False)
     def font():
@@ -44,7 +47,8 @@ def router(settings):
         request.app.state.sessions.health()
         return {"status": "ok", "version": "0.3.0", "provider": settings.provider}
 
-    @routes.post("/api/session")
+    @routes.post("/api/session", include_in_schema=False)
+    @routes.post("/session")
     def session(request: Request, response: Response):
         sessions = request.app.state.sessions
         try:
@@ -62,7 +66,8 @@ def router(settings):
             )
         return {"provider": settings.provider, "expires_in_hours": settings.session_hours}
 
-    @routes.delete("/api/session", status_code=204)
+    @routes.delete("/api/session", status_code=204, include_in_schema=False)
+    @routes.delete("/session", status_code=204)
     def end_session(request: Request, response: Response, current: Session = Depends(workspace)):
         request.app.state.repository.delete_owner(current.owner)
         request.app.state.career.store.clear(current.owner)

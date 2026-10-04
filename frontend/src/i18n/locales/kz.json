@@ -31,7 +31,7 @@
     "subtitle": "Жаңа аккаунт жасау",
     "confirmPassword": "Құпия сөзді растау",
     "passwordMismatch": "Құпия сөздер сәйкес келмейді",
-    "passwordWeak": "Құпия сөз кемінде 6 таңбадан тұруы керек",
+    "passwordWeak": "Құпиясөз кемінде 12 таңбадан тұруы керек",
     "success": "Тіркелу аяқталды",
     "haveAccount": "Аккаунт бар ма?",
     "submit": "Тіркелу"
@@ -113,7 +113,7 @@
       "before": "Бұрын",
       "after": "Кейін",
       "reason": "Себебі",
-      "generatePdf": "PDF жасау (Жақында)"
+      "generatePdf": "PDF жасау"
     },
     "improvements": {
       "title": "Түйіндеме жақсартулары",
@@ -229,7 +229,21 @@
     "title": "Сұхбат жаттығуы",
     "subtitle": "Сұрақтарға жауап беруді жаттықтырыңыз",
     "selectRole": "Рөлді таңдаңыз",
-    "start": "Жаттығуды бастау",
+    "start": {
+      "title": "Сұхбатты бастау",
+      "company": "Компания сипаттамасы",
+      "companyPlaceholder": "Компания сипаттамасын енгізіңіз...",
+      "job": "Вакансия сипаттамасы",
+      "jobPlaceholder": "Вакансия сипаттамасын енгізіңіз...",
+      "stack": "Техникалық стек",
+      "stackPlaceholder": "Технологияларды енгізіңіз (мысалы, React, Node.js, PostgreSQL)...",
+      "style": "Сұхбат стилі",
+      "styleTheoretical": "Теориялық",
+      "stylePractical": "Практикалық",
+      "styleMixed": "Аралас",
+      "startButton": "Бастау",
+      "starting": "Бастау…"
+    },
     "session": {
       "title": "Сұхбат",
       "noActiveInterview": "Белсенді сұхбат жоқ",
@@ -251,21 +265,6 @@
         "examples": "Тұжырымдама мысалдары",
         "resources": "Ресурстар"
       }
-    },
-    "start": {
-      "title": "Сұхбатты бастау",
-      "company": "Компания сипаттамасы",
-      "companyPlaceholder": "Компания сипаттамасын енгізіңіз...",
-      "job": "Вакансия сипаттамасы",
-      "jobPlaceholder": "Вакансия сипаттамасын енгізіңіз...",
-      "stack": "Техникалық стек",
-      "stackPlaceholder": "Технологияларды енгізіңіз (мысалы, React, Node.js, PostgreSQL)...",
-      "style": "Сұхбат стилі",
-      "styleTheoretical": "Теориялық",
-      "stylePractical": "Практикалық",
-      "styleMixed": "Аралас",
-      "startButton": "Бастау",
-      "starting": "Бастау…"
     },
     "result": {
       "title": "Сұхбат аяқталды",

@@ -1,4 +1,7 @@
-import { useState } from "react";
+import type { PlanRecord } from "@/types/career";
+import { useParams, Link } from "react-router-dom";
+import client from "@/api/client";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,98 +13,86 @@ import { Download, Video } from "lucide-react";
 
 export default function Plan() {
   const { t } = useTranslation();
-  const [weekProgress, setWeekProgress] = useState<Record<number, boolean>>({});
-  const { toast } = useToast();
-
-  const toggleWeek = (week: number) => {
-    setWeekProgress(prev => ({ ...prev, [week]: !prev[week] }));
+  const { planId } = useParams();
+  const [record, setRecord] = useState<PlanRecord | null>(null);
+  const [plans, setPlans] = useState<PlanRecord[]>([]);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    client
+      .get("/plan")
+      .then(({ data }) => {
+        setPlans(data);
+        setRecord(data.find((p) => p.id === planId) || null);
+      })
+      .catch((e) => setError(e.message));
+  }, [planId]);
+  const toggleWeek = async (week: number) => {
+    setBusy(true);
+    try {
+      const { data } = await client.post(`/plan/${record.id}/modules/${week}`, {
+        revision: record.revision,
+        completed: !weekProgress[week],
+        evidence: record.data.modules.find((m) => m.id === String(week))
+          .evidence,
+      });
+      setRecord(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
   };
-
   const handleExport = () => {
-    toast({
-      title: t("plan.exported"),
-      description: t("plan.exportedDesc"),
-    });
+    window.location.assign(`/api/plan/${record.id}/export`);
   };
-
   const handleVideoOverview = () => {
-    toast({
-      title: t("plan.exported"),
-      description: t("plan.exportedDesc"),
-    });
+    handleExport();
+    window.open(
+      "https://notebooklm.google.com/",
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
-
-  const mockPlan = {
-    weeks: [
-      {
-        week: 1,
-        title: "HTML/CSS основы",
-        goals: ["Изучить семантические теги HTML5", "Освоить Flexbox и Grid"],
-        sources: [
-          { title: "MDN HTML Guide", url: "https://developer.mozilla.org" },
-          { title: "CSS Tricks - Flexbox", url: "https://css-tricks.com" },
-        ],
-      },
-      {
-        week: 2,
-        title: "JavaScript основы",
-        goals: ["Переменные, типы данных", "Циклы и условия", "Функции"],
-        sources: [
-          { title: "JavaScript.info", url: "https://javascript.info" },
-          { title: "Eloquent JavaScript", url: "https://eloquentjavascript.net" },
-        ],
-      },
-      {
-        week: 3,
-        title: "JavaScript продвинутый",
-        goals: ["Async/await", "Promises", "Fetch API"],
-        sources: [
-          { title: "Async JavaScript Guide", url: "https://javascript.info/async" },
-        ],
-      },
-      {
-        week: 4,
-        title: "React основы",
-        goals: ["Компоненты и props", "State и lifecycle", "Events"],
-        sources: [
-          { title: "React Official Docs", url: "https://react.dev" },
-        ],
-      },
-      {
-        week: 5,
-        title: "React Hooks",
-        goals: ["useState, useEffect", "Custom hooks", "useContext"],
-        sources: [
-          { title: "React Hooks API", url: "https://react.dev/reference/react" },
-        ],
-      },
-      {
-        week: 6,
-        title: "TypeScript",
-        goals: ["Типы и интерфейсы", "Generics", "TypeScript с React"],
-        sources: [
-          { title: "TypeScript Handbook", url: "https://typescriptlang.org" },
-        ],
-      },
-      {
-        week: 7,
-        title: "State Management",
-        goals: ["Redux Toolkit", "Zustand basics", "Context patterns"],
-        sources: [
-          { title: "Redux Toolkit Docs", url: "https://redux-toolkit.js.org" },
-        ],
-      },
-      {
-        week: 8,
-        title: "Testing",
-        goals: ["Jest basics", "React Testing Library", "Integration tests"],
-        sources: [
-          { title: "Testing Library", url: "https://testing-library.com" },
-        ],
-      },
-    ],
-    explanation: "План подобран под роль Frontend Developer с учетом текущих навыков. Акцент на React и TypeScript, так как это ключевые требования большинства вакансий. Последние недели посвящены state management и тестированию — это поможет выделиться среди junior-разработчиков.",
+  const weekProgress = Object.fromEntries(
+    (record?.data.modules || []).map((m) => [m.id, m.completed]),
+  );
+  const plan = {
+    explanation: record?.data.explanation || "",
+    weeks: (record?.data.modules || []).map((m) => ({
+      ...m,
+      week: Number(m.id),
+      sources: [
+        {
+          title: m.resource_topic,
+          url: `https://www.google.com/search?q=${encodeURIComponent(m.resource_topic)}`,
+        },
+      ],
+    })),
   };
+  if (!record)
+    return (
+      <MainLayout>
+        <div className="p-6 max-w-5xl mx-auto space-y-6">
+          <h1 className="text-3xl font-bold">{t("plan.title")}</h1>
+          {error && <p role="alert">{error}</p>}
+          {plans.map((p) => (
+            <Card key={p.id}>
+              <CardContent className="p-6">
+                <Link to={`/plan/${p.id}`}>{p.data.goal}</Link>
+              </CardContent>
+            </Card>
+          ))}
+          {!plans.length && (
+            <p>
+              Пока нет планов. Создайте план на главной странице после
+              заполнения профиля.
+            </p>
+          )}
+          <Link to="/dashboard">На главную</Link>
+        </div>
+      </MainLayout>
+    );
 
   return (
     <MainLayout>
@@ -114,7 +105,8 @@ export default function Plan() {
             </p>
           </div>
           <Badge variant="outline" className="text-sm">
-            {Object.values(weekProgress).filter(Boolean).length} / {mockPlan.weeks.length} недель
+            {Object.values(weekProgress).filter(Boolean).length} /{" "}
+            {plan.weeks.length} недель
           </Badge>
         </div>
 
@@ -124,13 +116,14 @@ export default function Plan() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {mockPlan.explanation}
+              {plan.explanation}
             </p>
           </CardContent>
         </Card>
 
+        {error && <p role="alert">{error}</p>}
         <div className="space-y-4">
-          {mockPlan.weeks.map(week => (
+          {plan.weeks.map((week) => (
             <Card key={week.week}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -138,6 +131,8 @@ export default function Plan() {
                     {t("plan.week")} {week.week}: {week.title}
                   </CardTitle>
                   <Checkbox
+                    disabled={busy}
+                    aria-label={`Неделя ${week.week} завершена`}
                     checked={weekProgress[week.week] || false}
                     onCheckedChange={() => toggleWeek(week.week)}
                   />
@@ -145,7 +140,9 @@ export default function Plan() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <h4 className="text-sm font-medium mb-2">{t("plan.goals")}:</h4>
+                  <h4 className="text-sm font-medium mb-2">
+                    {t("plan.goals")}:
+                  </h4>
                   <ul className="space-y-1">
                     {week.goals.map((goal, i) => (
                       <li key={i} className="text-sm text-muted-foreground">
@@ -154,8 +151,13 @@ export default function Plan() {
                     ))}
                   </ul>
                 </div>
+                <p className="text-sm">
+                  {week.exercise} · {week.hours} ч.
+                </p>
                 <div>
-                  <h4 className="text-sm font-medium mb-2">{t("plan.sources")}:</h4>
+                  <h4 className="text-sm font-medium mb-2">
+                    {t("plan.sources")}:
+                  </h4>
                   <div className="flex flex-wrap gap-2">
                     {week.sources.map((source, i) => (
                       <a
@@ -180,7 +182,11 @@ export default function Plan() {
             <Download className="h-4 w-4 mr-2" />
             {t("plan.export")}
           </Button>
-          <Button onClick={handleVideoOverview} variant="outline" className="flex-1">
+          <Button
+            onClick={handleVideoOverview}
+            variant="outline"
+            className="flex-1"
+          >
             <Video className="h-4 w-4 mr-2" />
             {t("plan.notebookLM")}
           </Button>

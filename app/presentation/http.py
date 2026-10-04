@@ -98,7 +98,7 @@ def configure_http(app, settings):
         ),
         ProviderUnavailable: (
             502,
-            "The AI reviewer is unavailable. Your resume is saved. Please try again.",
+            "AI is unavailable. Configure Gemini on the server or retry later. Your saved data is unchanged.",
         ),
     }
 

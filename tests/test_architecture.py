@@ -12,6 +12,7 @@ def test_inner_layers_do_not_import_frameworks_or_adapters():
         "app.infrastructure",
         "app.presentation",
         "app.config",
+        "app.contracts",
     )
     for layer in ("domain", "application"):
         for path in (Path("app") / layer).glob("*.py"):

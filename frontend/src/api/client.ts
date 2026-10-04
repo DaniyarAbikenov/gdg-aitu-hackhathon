@@ -1,17 +1,14 @@
 import axios from "axios";
-import { auth } from "@/lib/firebase";
-
 const client = axios.create({
-    baseURL: import.meta.env.VITE_API_URL,
+  baseURL: "/api",
+  withCredentials: true,
+  timeout: 90000,
 });
-
-client.interceptors.request.use(async (config) => {
-    const user = auth.currentUser;
-    if (user) {
-        const token = await user.getIdToken();
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
+client.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    error.message = error.response?.data?.detail || error.message;
+    return Promise.reject(error);
+  },
+);
 export default client;

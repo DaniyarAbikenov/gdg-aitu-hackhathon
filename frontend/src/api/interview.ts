@@ -1,59 +1,62 @@
 import client from "./client";
-
-// ======================================
-// ✅ Типы ответов от сервера (новая логика)
-// ======================================
-
-export interface StartInterviewResponse {
-    session_id: string;
+import i18n from "@/i18n/config";
+export interface InterviewRecord {
+  id: string;
+  revision: number;
+  question: string | null;
+  finished: boolean;
+  total_questions: number;
+  score: number | null;
+  context: { job_description: string };
+  answers: {
     question: string;
-    total_questions: number;
-}
-
-export interface AnswerInterviewResponse {
-    finished: boolean;
+    answer: string;
     feedback: string;
-    follow_up: string | null;
-    next_question: string | null;
+    score: number;
+    strengths: string[];
+    improvements: string[];
+    reference_answer: string;
+  }[];
 }
-
-// ======================================
-// ✅ Методы API
-// ======================================
-
 export async function startInterview(payload: {
-    company_description: string;
-    job_description: string;
-    tech_stack: string;
-    style: string;
-}): Promise<StartInterviewResponse> {
-    const r = await client.post("/interview/start", payload);
-    return r.data;
+  company_description: string;
+  job_description: string;
+  tech_stack: string;
+  style: string;
+}) {
+  const { data } = await client.post<InterviewRecord>("/interview/start", {
+    ...payload,
+    language: i18n.language === "kz" ? "kk" : i18n.language,
+  });
+  return { ...data, session_id: data.id };
 }
-
+export async function getInterview(id: string) {
+  return (await client.get<InterviewRecord>(`/interview/${id}`)).data;
+}
 export async function answerInterview(
-    sessionId: string,
-    answer: string
-): Promise<AnswerInterviewResponse> {
-    const r = await client.post(`/interview/${sessionId}/answer`, { answer });
-    return r.data;
+  id: string,
+  answer: string,
+  revision: number,
+) {
+  return (
+    await client.post<InterviewRecord>(`/interview/${id}/answer`, {
+      answer,
+      revision,
+    })
+  ).data;
 }
-export interface InterviewSummaryResult {
-    correct: number;
-    partial: number;
-    wrong: number;
+export async function getInterviewSummary(id: string) {
+  const record = await getInterview(id);
+  return {
+    correct: record.answers.filter((a) => a.score >= 70).length,
+    partial: record.answers.filter((a) => a.score >= 40 && a.score < 70).length,
+    wrong: record.answers.filter((a) => a.score < 40).length,
     summary: {
-        summary: string;
-        strengths: string[];
-        weaknesses: string[];
-        recommendations: string[];
-        estimated_level: string;
-    };
-}
-
-export async function getInterviewSummary(
-    sessionId: string
-): Promise<InterviewSummaryResult> {
-    const { data } = await client.post(`/interview/${sessionId}/summary`);
-    return data;
+      summary: record.answers.map((a) => a.feedback).join("\n\n"),
+      strengths: [...new Set(record.answers.flatMap((a) => a.strengths))],
+      weaknesses: [...new Set(record.answers.flatMap((a) => a.improvements))],
+      recommendations: record.answers.map((a) => a.reference_answer),
+      estimated_level: `${record.score ?? "—"}/100 · учебная оценка, не профессиональный уровень`,
+    },
+  };
 }

@@ -1,4 +1,9 @@
-import { useState } from "react";
+import type { VersionRecord } from "@/types/career";
+import type { ResumeRecord } from "@/api/resume";
+import { useParams, Link } from "react-router-dom";
+import client from "@/api/client";
+import { getResume, saveVersion } from "@/api/resume";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,70 +23,98 @@ import { Textarea } from "@/components/ui/textarea";
 
 export default function ResumeVersions() {
   const { t } = useTranslation();
-  const [activeVersion, setActiveVersion] = useState("v1");
-  const { toast } = useToast();
-
-  const handleDownload = (versionId: string) => {
-    toast({
-      title: t("resume.versions.downloadStarted"),
-      description: `${t("resume.versions.version")} ${versionId}`,
-    });
+  const { resumeId } = useParams();
+  const [activeVersion, setActiveVersion] = useState("");
+  const [resume, setResume] = useState<ResumeRecord | null>(null);
+  const [versions, setVersions] = useState<VersionRecord[]>([]);
+  const [error, setError] = useState("");
+  const load = async () => {
+    const [r, v] = await Promise.all([
+      getResume(resumeId!),
+      client.get(`/resume/${resumeId}/versions`),
+    ]);
+    setResume(r);
+    setVersions(
+      v.data.map((v) => ({
+        ...v,
+        tag: v.data.label,
+        date: new Date(v.created_at).toLocaleDateString(),
+        description: v.data.jd_text,
+      })),
+    );
   };
-
-  const handleSetActive = (versionId: string) => {
-    setActiveVersion(versionId);
-    toast({
-      title: t("resume.versions.versionActivated"),
-      description: `${t("resume.versions.version")} ${versionId} ${t("resume.versions.versionNowActive")}`,
-    });
-  };
-
-  const versions = [
-    {
-      id: "v1",
-      date: "15.01.2025",
-      tag: "Оригинал",
-      description: "Первоначальная версия",
-    },
-    {
-      id: "v2",
-      date: "16.01.2025",
-      tag: "Под Frontend вакансию",
-      description: "Адаптировано под React позицию",
-    },
-    {
-      id: "v3",
-      date: "17.01.2025",
-      tag: "Под Full Stack вакансию",
-      description: "Добавлен опыт с бэкендом",
-    },
-  ];
-
-  const mockDiff = {
-    before: "Frontend Developer с опытом в React.\n\nОпыт работы:\n- Разработка компонентов\n- Работа с API",
-    after: "Frontend Developer с 3+ годами опыта в React и TypeScript.\n\nОпыт работы:\n- Разработка более 50 переиспользуемых React компонентов\n- Интеграция 15+ REST API endpoints\n- Написание 200+ unit тестов с Jest и React Testing Library",
+  useEffect(() => {
+    load().catch((e) => setError(e.message));
+  }, [resumeId]);
+  const handleDownload = (id: string) =>
+    window.location.assign(`/api/versions/${id}/pdf`);
+  const handleSetActive = async (id: string) => {
+    try {
+      await client.post(`/versions/${id}/restore`, {
+        revision: resume.revision,
+      });
+      await load();
+      setActiveVersion(id);
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
     <MainLayout>
       <div className="p-6 max-w-5xl mx-auto space-y-6">
         <div>
-          <h1 className="text-3xl font-bold mb-2">{t("resume.versions.title")}</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {t("resume.versions.title")}
+          </h1>
           <p className="text-muted-foreground">
             {t("resume.versions.description")}
           </p>
         </div>
 
+        {error && <p role="alert">{error}</p>}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            disabled={!resume}
+            onClick={async () => {
+              try {
+                await saveVersion(
+                  resumeId!,
+                  resume.fields,
+                  resume.revision,
+                  `Версия ${versions.length + 1}`,
+                  resume.jd_text,
+                );
+                await load();
+              } catch (e) {
+                setError(e.message);
+              }
+            }}
+          >
+            Сохранить текущую версию
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to={`/resume/${resumeId}/edit`}>Редактировать</Link>
+          </Button>
+        </div>
+        {!versions.length && <p>Пока нет сохранённых версий.</p>}
         <div className="space-y-4">
           {versions.map((version) => (
-            <Card key={version.id} className={version.id === activeVersion ? "border-primary" : ""}>
+            <Card
+              key={version.id}
+              className={version.id === activeVersion ? "border-primary" : ""}
+            >
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{t("resume.versions.version")} {version.id}</CardTitle>
+                      <CardTitle className="text-lg">
+                        {t("resume.versions.version")} {version.id}
+                      </CardTitle>
                       {version.id === activeVersion && (
-                        <Badge variant="default">{t("resume.versions.active")}</Badge>
+                        <Badge variant="default">
+                          {t("resume.versions.active")}
+                        </Badge>
                       )}
                       <Badge variant="outline">{version.tag}</Badge>
                     </div>
@@ -102,23 +135,29 @@ export default function ResumeVersions() {
                     </DialogTrigger>
                     <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
                       <DialogHeader>
-                        <DialogTitle>{t("resume.versions.differences")}: {version.tag}</DialogTitle>
+                        <DialogTitle>
+                          {t("resume.versions.differences")}: {version.tag}
+                        </DialogTitle>
                       </DialogHeader>
                       <Tabs defaultValue="after">
                         <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="before">{t("resume.improve.before")}</TabsTrigger>
-                          <TabsTrigger value="after">{t("resume.improve.after")}</TabsTrigger>
+                          <TabsTrigger value="before">
+                            {t("resume.improve.before")}
+                          </TabsTrigger>
+                          <TabsTrigger value="after">
+                            {t("resume.improve.after")}
+                          </TabsTrigger>
                         </TabsList>
                         <TabsContent value="before">
                           <Textarea
-                            value={mockDiff.before}
+                            value={JSON.stringify(version.data.before, null, 2)}
                             readOnly
                             rows={12}
                           />
                         </TabsContent>
                         <TabsContent value="after">
                           <Textarea
-                            value={mockDiff.after}
+                            value={JSON.stringify(version.data.fields, null, 2)}
                             readOnly
                             rows={12}
                             className="border-primary"

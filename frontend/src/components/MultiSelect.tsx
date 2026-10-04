@@ -3,8 +3,19 @@ import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface MultiSelectProps {
   options: string[];
@@ -14,13 +25,19 @@ interface MultiSelectProps {
   allowCustom?: boolean;
 }
 
-export function MultiSelect({ options, selected, onChange, placeholder = "Выберите...", allowCustom = false }: MultiSelectProps) {
+export function MultiSelect({
+  options,
+  selected,
+  onChange,
+  placeholder = "Выберите...",
+  allowCustom = false,
+}: MultiSelectProps) {
   const [open, setOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
 
   const handleSelect = (value: string) => {
     if (selected.includes(value)) {
-      onChange(selected.filter(v => v !== value));
+      onChange(selected.filter((v) => v !== value));
     } else {
       onChange([...selected, value]);
     }
@@ -48,8 +65,13 @@ export function MultiSelect({ options, selected, onChange, placeholder = "Выб
               <CommandEmpty>Не найдено</CommandEmpty>
               <CommandGroup>
                 {options.map((option) => (
-                  <CommandItem key={option} onSelect={() => handleSelect(option)}>
-                    <Check className={`mr-2 h-4 w-4 ${selected.includes(option) ? "opacity-100" : "opacity-0"}`} />
+                  <CommandItem
+                    key={option}
+                    onSelect={() => handleSelect(option)}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${selected.includes(option) ? "opacity-100" : "opacity-0"}`}
+                    />
                     {option}
                   </CommandItem>
                 ))}
@@ -67,7 +89,9 @@ export function MultiSelect({ options, selected, onChange, placeholder = "Выб
             placeholder="Или введите свою..."
             onKeyDown={(e) => e.key === "Enter" && handleAddCustom()}
           />
-          <Button onClick={handleAddCustom} size="sm">+</Button>
+          <Button onClick={handleAddCustom} size="sm">
+            +
+          </Button>
         </div>
       )}
 
@@ -75,7 +99,10 @@ export function MultiSelect({ options, selected, onChange, placeholder = "Выб
         {selected.map((value) => (
           <Badge key={value} variant="secondary">
             {value}
-            <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => handleSelect(value)} />
+            <X
+              className="ml-1 h-3 w-3 cursor-pointer"
+              onClick={() => handleSelect(value)}
+            />
           </Badge>
         ))}
       </div>

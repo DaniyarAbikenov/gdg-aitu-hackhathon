@@ -401,7 +401,14 @@ def test_gemini_resume_extraction_and_pdf_styles(client, resume):
         _env_file=None, provider="gemini", gemini_api_key="test", gemini_model="test"
     )
     fields = ResumeFields(
-        full_name="Alex", summary="A factual profile", phone="123", projects="A real project"
+        full_name="Alex",
+        summary="A factual profile",
+        phone="123",
+        experience=[],
+        education=[],
+        projects=[
+            {"title": "A real project", "description": "A factual result", "tech": ["Python"]}
+        ],
     )
     from dataclasses import asdict
 
@@ -425,3 +432,71 @@ def test_gemini_resume_extraction_and_pdf_styles(client, resume):
         client.get(f"/resume/{resume['resume_id']}/pdf", params={"template": "unknown"}).status_code
         == 422
     )
+
+
+def test_structured_resume_roundtrip_versions_and_profile(client, resume):
+    import io
+
+    from pypdf import PdfReader
+
+    fields = {
+        **resume["fields"],
+        "experience": [
+            {
+                "company": "Library",
+                "role": "Developer",
+                "date_from": "2024",
+                "date_to": "2025",
+                "achievements": ["Built a Python API"],
+            }
+        ],
+        "education": [
+            {"institution": "University", "degree": "BSc", "year_start": 2020, "year_end": 2024}
+        ],
+        "projects": [
+            {"title": "CareerBot", "description": "Resume editor", "tech": ["React", "FastAPI"]}
+        ],
+    }
+    path = "/resume/" + resume["resume_id"]
+    saved = client.post(path + "/save", json={"fields": fields, "revision": resume["revision"]})
+    assert saved.status_code == 200
+    assert client.get(path).json()["fields"] == fields
+    version = client.post(
+        path + "/versions",
+        json={"fields": fields, "revision": saved.json()["revision"], "label": "Structured"},
+    )
+    assert version.status_code == 201
+    pdf = client.get("/versions/" + version.json()["id"] + "/pdf")
+    text = "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages)
+    assert all(
+        value in text for value in ["Library", "University", "CareerBot", "Built a Python API"]
+    )
+    profile = client.get("/user/profile").json()
+    profile["data"]["extra"] = {"languages": ["English", "Kazakh"], "normalized_skills": ["python"]}
+    assert (
+        client.post(
+            "/user/profile/update",
+            json={"profile": profile["data"], "revision": profile["revision"]},
+        ).status_code
+        == 200
+    )
+    assert client.get("/user/profile").json()["data"]["extra"] == profile["data"]["extra"]
+
+
+def test_unconfigured_ai_never_substitutes_demo():
+    from app.domain.errors import ProviderUnavailable
+    from app.domain.models import ResumeFields
+    from app.infrastructure.reviewer import Reviewer
+
+    settings = Settings(_env_file=None)
+    assert settings.provider == "unconfigured"
+    coach = Coach(settings)
+    for operation in [
+        lambda: coach.questions({}),
+        lambda: coach.evaluate({}, {}, "answer"),
+        lambda: coach.plan({}, "goal", []),
+        lambda: coach.improvements({}, {}, "job"),
+        lambda: Reviewer(settings).analyze(ResumeFields(), "job"),
+    ]:
+        with pytest.raises(ProviderUnavailable):
+            operation()

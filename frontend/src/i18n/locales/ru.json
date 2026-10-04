@@ -31,7 +31,7 @@
     "subtitle": "Создайте новый аккаунт",
     "confirmPassword": "Подтверждение пароля",
     "passwordMismatch": "Пароли не совпадают",
-    "passwordWeak": "Пароль должен быть не короче 6 символов",
+    "passwordWeak": "Пароль должен быть не короче 12 символов",
     "success": "Регистрация завершена",
     "haveAccount": "Уже есть аккаунт?",
     "submit": "Зарегистрироваться"
@@ -113,7 +113,7 @@
       "before": "До",
       "after": "После",
       "reason": "Причина",
-      "generatePdf": "Сгенерировать PDF (Скоро)"
+      "generatePdf": "Создать PDF"
     },
     "improvements": {
       "title": "Улучшения резюме",
@@ -229,7 +229,21 @@
     "title": "Тренировка интервью",
     "subtitle": "Практикуйте ответы на вопросы",
     "selectRole": "Выберите роль",
-    "start": "Начать тренировку",
+    "start": {
+      "title": "Начать интервью",
+      "company": "Описание компании",
+      "companyPlaceholder": "Введите описание компании...",
+      "job": "Описание вакансии",
+      "jobPlaceholder": "Введите описание вакансии...",
+      "stack": "Технический стек",
+      "stackPlaceholder": "Введите технологии (например, React, Node.js, PostgreSQL)...",
+      "style": "Стиль интервью",
+      "styleTheoretical": "Теоретический",
+      "stylePractical": "Практический",
+      "styleMixed": "Смешанный",
+      "startButton": "Начать",
+      "starting": "Запуск…"
+    },
     "session": {
       "title": "Интервью",
       "noActiveInterview": "Нет активного интервью",
@@ -251,21 +265,6 @@
         "examples": "Примеры формулировок",
         "resources": "Ресурсы"
       }
-    },
-    "start": {
-      "title": "Начать интервью",
-      "company": "Описание компании",
-      "companyPlaceholder": "Введите описание компании...",
-      "job": "Описание вакансии",
-      "jobPlaceholder": "Введите описание вакансии...",
-      "stack": "Технический стек",
-      "stackPlaceholder": "Введите технологии (например, React, Node.js, PostgreSQL)...",
-      "style": "Стиль интервью",
-      "styleTheoretical": "Теоретический",
-      "stylePractical": "Практический",
-      "styleMixed": "Смешанный",
-      "startButton": "Начать",
-      "starting": "Запуск…"
     },
     "result": {
       "title": "Интервью завершено",

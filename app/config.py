@@ -10,13 +10,13 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://career:career@localhost:5432/career"
     redis_url: str = "redis://localhost:6379/0"
     redis_namespace: str = "career"
-    provider: Literal["local", "gemini"] = "local"
+    provider: Literal["unconfigured", "local", "gemini"] = "unconfigured"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
     google_client_id: str = ""
     secure_cookie: bool = False
     session_hours: int = Field(default=24, ge=1, le=168)
-    max_upload_bytes: int = Field(default=2_000_000, ge=1024, le=10_000_000)
+    max_upload_bytes: int = Field(default=5 * 1024 * 1024, ge=1024, le=10_000_000)
     analysis_per_hour: int = Field(default=30, ge=1, le=1000)
 
     @field_validator("database_url")

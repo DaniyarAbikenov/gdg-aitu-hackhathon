@@ -13,6 +13,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
+from app.contracts import Education, Experience, Project
 from app.domain.errors import InvalidDocument
 from app.domain.models import ResumeFields
 from app.domain.review import extract_fields
@@ -113,6 +114,15 @@ def render_pdf(fields, template="modern"):
         if value:
             story.append(paragraph(title, "CareerSection"))
             # Split long user text into flowable paragraphs to allow page breaks.
+            if isinstance(value, list):
+                value = "\n\n".join(
+                    "\n".join(
+                        ", ".join(str(v) for v in item) if isinstance(item, list) else str(item)
+                        for item in row.values()
+                        if item
+                    )
+                    for row in value
+                )
             for line in value.splitlines():
                 if line.strip():
                     story.append(paragraph(line))
@@ -138,9 +148,9 @@ class ExtractedResume(BaseModel):
     location: str = Field(default="", max_length=200)
     summary: str = Field(default="", max_length=3000)
     skills: list[str] = Field(default_factory=list, max_length=60)
-    experience: str = Field(default="", max_length=12000)
-    education: str = Field(default="", max_length=3000)
-    projects: str = Field(default="", max_length=6000)
+    experience: list[Experience] = Field(default_factory=list, max_length=40)
+    education: list[Education] = Field(default_factory=list, max_length=40)
+    projects: list[Project] = Field(default_factory=list, max_length=40)
     certificates: str = Field(default="", max_length=3000)
     languages: str = Field(default="", max_length=500)
 
@@ -166,7 +176,7 @@ class Documents:
             else:
                 source = {"text": extract_text(filename, data)}
             fields = self.ai.generate(
-                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. For each section use plain text with line breaks. Do not infer or invent missing facts. Empty fields are allowed.",
+                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. Use structured entries for experience, education and projects. Use zero for unknown years and empty strings for unknown dates. Do not infer or invent missing facts. Empty fields are allowed.",
                 source,
                 ExtractedResume,
                 document=data if pdf else None,

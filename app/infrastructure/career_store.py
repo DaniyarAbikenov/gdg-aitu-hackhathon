@@ -165,6 +165,10 @@ class PostgresCareerRepository:
         except IntegrityError as exc:
             raise Conflict from exc
 
+    def email_for_owner(self, owner):
+        with self.sessions() as db:
+            return db.scalar(select(AccountRow.email).where(AccountRow.owner == owner)) or ""
+
     def account(self, email):
         with self.sessions() as db:
             row = db.scalar(select(AccountRow).where(AccountRow.email == email))

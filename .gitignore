@@ -20,3 +20,6 @@ firebase-key.json
 *.key
 *.log
 .DS_Store
+
+!frontend/src/data/
+!frontend/src/data/**

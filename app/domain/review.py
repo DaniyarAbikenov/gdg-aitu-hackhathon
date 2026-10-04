@@ -144,7 +144,7 @@ def compare(fields: ResumeFields, jd_text: str):
                 "want to do. Use details you can demonstrate.",
             )
         )
-    if not re.search(r"\d", fields.experience):
+    if not re.search(r"\d", json.dumps(fields.experience, ensure_ascii=False)):
         suggestions.append(
             Suggestion(
                 kind="improvement",

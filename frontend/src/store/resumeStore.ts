@@ -1,40 +1,48 @@
 import { create } from "zustand";
+import type { Improvement } from "@/api/resume";
 import { ResumeFields } from "@/types/resume";
 
 interface ResumeState {
-    resumeId: string | null;
-    fields: ResumeFields | null;
+  resumeId: string | null;
+  fields: ResumeFields | null;
 
-    jdText: string;
-    improvements: any[];
+  revision: number;
+  setRevision: (revision: number) => void;
+  jdText: string;
+  improvements: Improvement[];
 
-    setResumeId: (id: string) => void;
-    setFields: (fields: ResumeFields) => void;
+  setResumeId: (id: string) => void;
+  setFields: (fields: ResumeFields) => void;
 
-    setJdText: (text: string) => void;
-    setImprovements: (items: any[]) => void;
+  setJdText: (text: string) => void;
+  setImprovements: (items: Improvement[]) => void;
 
-    updateField: (key: keyof ResumeFields, value: any) => void;
+  updateField: (
+    key: keyof ResumeFields,
+    value: ResumeFields[keyof ResumeFields],
+  ) => void;
 }
 
 export const useResumeStore = create<ResumeState>((set) => ({
-    resumeId: null,
-    fields: null,
+  resumeId: null,
+  fields: null,
 
-    jdText: "",
-    improvements: [],
+  revision: 0,
+  setRevision: (revision) => set({ revision }),
+  jdText: "",
+  improvements: [],
 
-    setResumeId: (id) => set({ resumeId: id }),
-    setFields: (fields) => set({ fields }),
+  setResumeId: (id) => set({ resumeId: id }),
+  setFields: (fields) => set({ fields }),
 
-    setJdText: (text) => set({ jdText: text }),
-    setImprovements: (items) => set({ improvements: items }),
+  setJdText: (text) => set({ jdText: text }),
+  setImprovements: (items) => set({ improvements: items }),
 
-    updateField: (key, value) =>
-        set((state) => ({
-            fields: {
-                ...(state.fields || {}),
-                [key]: value,
-            },
-        })),
+  updateField: (key, value) =>
+    set((state) => ({
+      fields: {
+        ...(state.fields || {}),
+        [key]: value,
+      },
+    })),
 }));

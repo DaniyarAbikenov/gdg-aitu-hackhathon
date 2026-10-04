@@ -1,6 +1,15 @@
+import type { ProgressRecord } from "@/types/career";
+import { useEffect, useState } from "react";
+import client from "@/api/client";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -10,36 +19,52 @@ export default function Progress() {
   const { t } = useTranslation();
   const { toast } = useToast();
 
-  const handleClaimReward = (rewardId: string) => {
-    toast({
-      title: "Награда получена!",
-      description: "Поздравляем с достижением",
-    });
+  const [progress, setProgress] = useState<ProgressRecord | null>(null);
+  const [error, setError] = useState("");
+  const load = () =>
+    client.get("/progress").then(({ data }) => setProgress(data));
+  useEffect(() => {
+    load().catch((e) => setError(e.message));
+  }, []);
+  const handleClaimReward = async (id: string) => {
+    try {
+      await client.post(`/progress/rewards/${id}`);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    }
   };
-
   const stats = {
-    planSteps: { completed: 3, total: 10 },
-    avgInterviewScore: 74,
-    resumeIndex: 85,
+    planSteps: {
+      completed: progress?.completed_modules ?? 0,
+      total: progress?.total_modules ?? 0,
+    },
+    avgInterviewScore: progress?.average_score,
+    resumeIndex: progress?.resume_versions ?? 0,
   };
-
-  const rewards = [
-    { id: "r1", name: "Первый шаг", description: "Завершите первую неделю плана", available: true, claimed: false, icon: Target },
-    { id: "r2", name: "Собеседование пройдено", description: "Наберите 70+ баллов", available: true, claimed: false, icon: MessageSquare },
-    { id: "r3", name: "Мастер резюме", description: "Создайте 3 версии резюме", available: true, claimed: false, icon: FileText },
-    { id: "r4", name: "Упорство", description: "Завершите 5 недель плана", available: false, claimed: false, icon: Trophy },
-  ];
+  const rewards = (progress?.rewards || []).map((r) => ({
+    ...r,
+    id: r.key,
+    name: r.title,
+    description: "",
+    icon:
+      {
+        "first-step": Target,
+        interview: MessageSquare,
+        resume: FileText,
+        persistence: Trophy,
+      }[r.key] || Trophy,
+  }));
 
   return (
     <MainLayout>
       <div className="p-6 max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("progress.title")}</h1>
-          <p className="text-muted-foreground">
-            {t("progress.subtitle")}
-          </p>
+          <p className="text-muted-foreground">{t("progress.subtitle")}</p>
         </div>
 
+        {error && <p role="alert">{error}</p>}
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader>
@@ -60,7 +85,7 @@ export default function Progress() {
                   <div
                     className="bg-primary h-2 rounded-full transition-all"
                     style={{
-                      width: `${(stats.planSteps.completed / stats.planSteps.total) * 100}%`,
+                      width: `${(stats.planSteps.completed / (stats.planSteps.total || 1)) * 100}%`,
                     }}
                   />
                 </div>
@@ -77,12 +102,21 @@ export default function Progress() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <div className="text-3xl font-bold">{stats.avgInterviewScore}</div>
+                <div className="text-3xl font-bold">
+                  {stats.avgInterviewScore ?? "—"}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {t("progress.interviewScore")}
                 </p>
-                <Badge variant={stats.avgInterviewScore >= 70 ? "default" : "secondary"} className="mt-4">
-                  {stats.avgInterviewScore >= 70 ? "Отлично" : "Хорошо"}
+                <Badge
+                  variant={
+                    stats.avgInterviewScore >= 70 ? "default" : "secondary"
+                  }
+                  className="mt-4"
+                >
+                  {stats.avgInterviewScore == null
+                    ? "Нет завершённых интервью"
+                    : "Учебная оценка"}
                 </Badge>
               </div>
             </CardContent>
@@ -98,19 +132,7 @@ export default function Progress() {
             <CardContent>
               <div className="space-y-2">
                 <div className="text-3xl font-bold">{stats.resumeIndex}</div>
-                <p className="text-sm text-muted-foreground">
-                  {t("progress.resumeIndex")}
-                </p>
-                <div className="flex gap-1 mt-4">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <span
-                      key={star}
-                      className={star <= Math.floor(stats.resumeIndex / 20) ? "text-warning" : "text-muted"}
-                    >
-                      ★
-                    </span>
-                  ))}
-                </div>
+                <p className="text-sm text-muted-foreground">Версий резюме</p>
               </div>
             </CardContent>
           </Card>
@@ -181,8 +203,11 @@ export default function Progress() {
             <CardTitle>Рекомендации</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• Завершите еще 2 недели плана, чтобы получить награду "Упорство"</p>
-            <p>• Пройдите еще одну тренировку интервью для улучшения среднего балла</p>
+            <p>• Для награды «Упорство» завершите 5 недель плана</p>
+            <p>
+              • Пройдите еще одну тренировку интервью для улучшения среднего
+              балла
+            </p>
             <p>• Создайте версию резюме под новую вакансию</p>
           </CardContent>
         </Card>
