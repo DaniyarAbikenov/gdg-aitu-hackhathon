@@ -28,6 +28,7 @@ export default function Settings() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   useEffect(() => {
     getUserProfile()
       .then((p) => {
@@ -45,6 +46,7 @@ export default function Settings() {
     }
   };
   const handleAudioToggle = async (checked: boolean) => {
+    setSaving(true);
     try {
       const p = await updateUserProfile(
         { audio_mode: checked },
@@ -54,6 +56,8 @@ export default function Settings() {
       setAudioMode(checked);
     } catch (e) {
       setError(e.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -100,7 +104,7 @@ export default function Settings() {
               </div>
               <Switch
                 id="audio-mode"
-                disabled={!profile}
+                disabled={!profile || saving}
                 checked={audioMode}
                 onCheckedChange={handleAudioToggle}
               />

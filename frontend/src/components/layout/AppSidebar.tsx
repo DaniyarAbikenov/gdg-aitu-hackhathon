@@ -8,7 +8,7 @@ import {
   HelpCircle,
   HeadphonesIcon,
 } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   Sidebar,
@@ -24,6 +24,11 @@ import {
 
 export function AppSidebar() {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  const active = (url: string) =>
+    pathname === url ||
+    pathname.startsWith(url + "/") ||
+    (url === "/dashboard" && pathname === "/");
 
   const menuItems = [
     { title: t("nav.dashboard"), url: "/dashboard", icon: Home },
@@ -53,11 +58,11 @@ export function AppSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild isActive={active(item.url)}>
                     <NavLink
                       to={item.url}
-                      className={({ isActive }) =>
-                        isActive
+                      className={
+                        active(item.url)
                           ? "flex items-center gap-3 bg-sidebar-accent text-sidebar-primary font-medium"
                           : "flex items-center gap-3 text-sidebar-foreground hover:bg-sidebar-accent/50"
                       }

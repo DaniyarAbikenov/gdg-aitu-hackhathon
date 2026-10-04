@@ -150,7 +150,7 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <Button
                   onClick={handleCreatePlan}
-                  disabled={busy}
+                  disabled={busy || !profile}
                   className="w-full"
                 >
                   {t("dashboard.plan.create")}

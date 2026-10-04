@@ -97,7 +97,7 @@ export default function Plan() {
   return (
     <MainLayout>
       <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t("plan.title")}</h1>
             <p className="text-muted-foreground">
@@ -126,8 +126,8 @@ export default function Plan() {
           {plan.weeks.map((week) => (
             <Card key={week.week}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg">
+                <div className="flex items-start justify-between gap-4">
+                  <CardTitle className="min-w-0 flex-1 break-words text-lg">
                     {t("plan.week")} {week.week}: {week.title}
                   </CardTitle>
                   <Checkbox
@@ -177,7 +177,7 @@ export default function Plan() {
           ))}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={handleExport} variant="outline" className="flex-1">
             <Download className="h-4 w-4 mr-2" />
             {t("plan.export")}

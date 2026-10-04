@@ -1,3 +1,5 @@
+import { useResumeStore } from "@/store/resumeStore";
+import { useInterviewStore } from "@/store/useInterviewStore";
 import i18n from "@/i18n/config";
 import { create } from "zustand";
 import client from "@/api/client";
@@ -16,8 +18,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   email: null,
   setAuthenticated: (uid, email) =>
     set({ isLoading: false, isAuthenticated: true, uid, email }),
-  setUnauthenticated: () =>
-    set({ isLoading: false, isAuthenticated: false, uid: null, email: null }),
+  setUnauthenticated: () => {
+    useResumeStore.setState({
+      resumeId: null,
+      fields: null,
+      revision: 0,
+      jdText: "",
+      improvements: [],
+    });
+    useInterviewStore.getState().reset();
+    set({ isLoading: false, isAuthenticated: false, uid: null, email: null });
+  },
 }));
 export async function refreshIdentity() {
   try {

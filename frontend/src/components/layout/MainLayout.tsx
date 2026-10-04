@@ -12,7 +12,7 @@ export function MainLayout({ children }: MainLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <div className="flex-1 flex flex-col">
+        <div className="min-w-0 flex-1 flex flex-col">
           <TopBar />
           <ServiceStatus />
           <main className="flex-1 overflow-auto bg-background">{children}</main>
