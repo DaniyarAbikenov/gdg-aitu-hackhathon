@@ -2,7 +2,10 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 
 from app.config import Settings
-from app.infrastructure import career_store  # noqa: F401
+from app.infrastructure import (
+    career_store,  # noqa: F401
+    skills,  # noqa: F401
+)
 from app.infrastructure.postgres import Base
 
 url = Settings().database_url

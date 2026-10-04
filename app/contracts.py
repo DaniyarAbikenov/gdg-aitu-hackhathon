@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.domain.skills import skill_key, skill_name
+
 
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True, from_attributes=True)
@@ -45,9 +47,9 @@ class ResumeFields(StrictModel):
     def clean_skills(cls, skills):
         result = []
         for skill in skills:
-            skill = skill.strip()
+            skill = skill_name(skill)
             if not skill or len(skill) > 80:
                 raise ValueError("Skills must contain between 1 and 80 characters")
-            if skill.casefold() not in {s.casefold() for s in result}:
+            if skill_key(skill) not in {skill_key(s) for s in result}:
                 result.append(skill)
         return result

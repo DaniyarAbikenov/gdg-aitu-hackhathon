@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { SkillPicker } from "@/components/SkillPicker";
 import { MultiSelect } from "@/components/MultiSelect";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LANGUAGES } from "@/data/languages";
@@ -28,7 +29,6 @@ export default function Onboarding() {
   const [name, setName] = useState("");
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
   const [normalizedSkills, setNormalizedSkills] = useState<string[]>([]);
 
@@ -80,13 +80,6 @@ export default function Onboarding() {
       }
     })();
   }, []);
-
-  const addSkill = () => {
-    if (skillInput && !skills.includes(skillInput)) {
-      setSkills([...skills, skillInput]);
-      setSkillInput("");
-    }
-  };
 
   const removeSkill = (skill: string) => {
     setSkills(skills.filter((s) => s !== skill));
@@ -217,19 +210,11 @@ export default function Onboarding() {
               <div className="space-y-2">
                 <Label>{t("onboarding.currentSkills")}</Label>
 
-                <div className="flex gap-2">
-                  <Input
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
-                    placeholder={t("onboarding.currentSkillsPlaceholder")}
-                    onKeyDown={(e) =>
-                      e.key === "Enter" && (e.preventDefault(), addSkill())
-                    }
-                  />
-                  <Button type="button" onClick={addSkill}>
-                    +
-                  </Button>
-                </div>
+                <SkillPicker
+                  selected={skills}
+                  onChange={setSkills}
+                  placeholder={t("onboarding.currentSkillsPlaceholder")}
+                />
 
                 <div className="flex flex-wrap gap-2 mt-2">
                   {skills.map((skill) => (

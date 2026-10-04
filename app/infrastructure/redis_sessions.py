@@ -73,6 +73,11 @@ class RedisSessions:
         if self.increment(keys=[key], args=[3600]) > self.analysis_limit:
             raise QuotaExceeded
 
+    def consume_skill(self, session):
+        key = f"{self.namespace}:skills:{session.owner}"
+        if self.increment(keys=[key], args=[3600]) > 30:
+            raise QuotaExceeded
+
     def health(self):
         self.client.ping()
 
