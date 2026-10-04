@@ -141,23 +141,30 @@ test("account sign-in preserves language preferences across sessions", async ({
   await page
     .getByLabel("Password (at least 12 characters)")
     .fill("a long browser test password");
-  await page
-    .getByRole("button", { name: "Create account", exact: true })
-    .click();
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.getByRole("button", { name: "Create account", exact: true }).click(),
+  ]);
   await expect(page.getByText("Local reviewer", { exact: true })).toBeVisible();
   await page.locator("#ui-language").selectOption("ru");
   await expect(
     page.getByRole("button", { name: "Аккаунт", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Аккаунт", exact: true }).click();
-  await page.getByRole("button", { name: "Выйти", exact: true }).click();
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.getByRole("button", { name: "Выйти", exact: true }).click(),
+  ]);
   await expect(page.getByText("Local reviewer", { exact: true })).toBeVisible();
   await tab(page, "Account");
   await page.getByLabel("Account email", { exact: true }).fill(email);
   await page
     .getByLabel("Password (at least 12 characters)")
     .fill("a long browser test password");
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.getByRole("button", { name: "Sign in", exact: true }).click(),
+  ]);
   await expect(
     page.getByRole("button", { name: "Аккаунт", exact: true }),
   ).toBeVisible();
