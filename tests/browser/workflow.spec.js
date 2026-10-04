@@ -10,9 +10,7 @@ test("original frontend registers, persists profile and supports login", async (
   await page.locator("#name").fill("Alex Portfolio");
   await page.getByPlaceholder("Или введите свою...").fill("Backend developer");
   await page.getByPlaceholder("Или введите свою...").press("Enter");
-  await page
-    .getByPlaceholder("Enter skills separated by commas")
-    .fill("Python");
+  await page.getByPlaceholder("Search for a skill").fill("Python");
   await page.getByRole("option", { name: /^Python/ }).click();
   await page.getByRole("button", { name: "Save Profile", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);

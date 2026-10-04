@@ -219,8 +219,14 @@ export default function Onboarding() {
                 <div className="flex flex-wrap gap-2 mt-2">
                   {skills.map((skill) => (
                     <Badge key={skill} variant="secondary" className="gap-1">
-                      {skill}
-                      <button onClick={() => removeSkill(skill)}>×</button>
+                      <span>{skill}</span>
+                      <button
+                        type="button"
+                        aria-label={`Удалить навык ${skill}`}
+                        onClick={() => removeSkill(skill)}
+                      >
+                        ×
+                      </button>
                     </Badge>
                   ))}
                 </div>

@@ -45,7 +45,7 @@
     "targetRoles": "Target Roles",
     "targetRolesPlaceholder": "Select or enter your role...",
     "currentSkills": "Current Skills",
-    "currentSkillsPlaceholder": "Enter skills separated by commas",
+    "currentSkillsPlaceholder": "Search for a skill",
     "save": "Save Profile",
     "evaluateSkills": "Evaluate Skills",
     "toDashboard": "Go to Dashboard",

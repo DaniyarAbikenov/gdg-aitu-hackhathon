@@ -45,7 +45,7 @@
     "targetRoles": "Целевые роли",
     "targetRolesPlaceholder": "Выберите или введите свою роль...",
     "currentSkills": "Текущие навыки",
-    "currentSkillsPlaceholder": "Введите навыки через запятую",
+    "currentSkillsPlaceholder": "Найдите навык по названию",
     "save": "Сохранить анкету",
     "evaluateSkills": "Оценить навыки",
     "toDashboard": "Перейти в Личный кабинет",
