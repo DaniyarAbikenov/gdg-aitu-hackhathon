@@ -253,9 +253,15 @@ def test_password_hashes_and_auth_rate_limits(client):
     )
 
 
-def test_gemini_all_coaching_contracts():
+@pytest.mark.parametrize("provider", ["gemini", "openai"])
+def test_all_coaching_contracts(provider):
     settings = Settings(
-        _env_file=None, provider="gemini", gemini_api_key="fake", gemini_model="test"
+        _env_file=None,
+        provider=provider,
+        gemini_api_key="fake",
+        gemini_model="test",
+        openai_api_key="fake",
+        openai_model="test",
     )
     requests = []
     responses = [
@@ -302,21 +308,29 @@ def test_gemini_all_coaching_contracts():
 
     def handler(request):
         requests.append(json.loads(request.content))
-        return httpx.Response(
-            200,
-            json={"candidates": [{"content": {"parts": [{"text": json.dumps(responses.pop(0))}]}}]},
+        answer = json.dumps(responses.pop(0))
+        payload = (
+            {"candidates": [{"content": {"parts": [{"text": answer}]}}]}
+            if provider == "gemini"
+            else {
+                "status": "completed",
+                "output": [
+                    {"type": "message", "content": [{"type": "output_text", "text": answer}]}
+                ],
+            }
         )
+        return httpx.Response(200, json=payload)
 
     coach = Coach(settings, httpx.MockTransport(handler))
     fields = {"summary": "Original", "skills": []}
     assert (
-        coach.improvements(fields, {"career_goal": "Backend"}, "Python job")["provider"] == "gemini"
+        coach.improvements(fields, {"career_goal": "Backend"}, "Python job")["provider"] == provider
     )
     questions = coach.questions(CONTEXT)
     assert len(questions["questions"]) == 3
     assert coach.evaluate(CONTEXT, questions["questions"][0], "My answer")["score"] == 75
     assert len(coach.plan({}, "Backend", [])["modules"]) == 8
-    assert "Backend" in requests[0]["contents"][0]["parts"][0]["text"]
+    assert "Backend" in json.dumps(requests[0])
     failed = Coach(settings, httpx.MockTransport(lambda r: httpx.Response(503)))
     with pytest.raises(ProviderUnavailable):
         failed.questions(CONTEXT)

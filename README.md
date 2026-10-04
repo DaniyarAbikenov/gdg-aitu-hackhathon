@@ -13,7 +13,7 @@ The original React frontend from [`skill-pathfinder-151`](https://github.com/Dan
 | `frontend/` | React, TypeScript, Vite, original UI and typed API adapters |
 | `app/domain/` | Framework-independent business models |
 | `app/application/` | Use cases and repository/service ports |
-| `app/infrastructure/` | PostgreSQL, Redis, Gemini, PDF and identity adapters |
+| `app/infrastructure/` | PostgreSQL, Redis, OpenAI/Gemini, PDF and identity adapters |
 | `app/presentation/` | FastAPI endpoints and HTTP validation |
 | `app/contracts.py` | Validated value contracts shared by HTTP and document adapters |
 | `migrations/` | Alembic schema migrations |
@@ -39,7 +39,7 @@ flowchart LR
   API --> UseCases[Application / domain]
   UseCases --> PG[(PostgreSQL)]
   UseCases --> Redis[(Redis)]
-  UseCases --> Gemini[Gemini]
+  UseCases --> AI[OpenAI or Gemini]
 ```
 
 ### AI configuration
@@ -49,14 +49,19 @@ flowchart LR
 For real AI extraction, adaptation, interview questions/evaluation and learning plans, set these values locally:
 
 ```dotenv
-CAREER_PROVIDER=gemini
-CAREER_GEMINI_API_KEY=your-key
-CAREER_GEMINI_MODEL=your-supported-model-id
+CAREER_PROVIDER=openai
+CAREER_OPENAI_API_KEY=your-key
+CAREER_OPENAI_MODEL=your-supported-model-id
+CAREER_GOOGLE_CLIENT_ID=
 ```
 
-Then run `docker compose up --build --wait`. Never commit `.env`. Gemini receives uploaded documents and the relevant profile, vacancy or interview data. Responses are validated, and proposed resume changes require review. Live provider calls require your credentials; CI uses HTTP contract fixtures and explicitly selects `local` only for deterministic browser tests. `local` is a labelled test mode with templates, not AI.
+Choose an OpenAI model available to your API account that supports Responses structured outputs and image/PDF input. The adapter uses the [Responses structured-output format](https://developers.openai.com/api/docs/guides/structured-outputs) and [PDF file inputs](https://developers.openai.com/api/docs/guides/file-inputs), with `store=false`. This flag does not override the provider’s retention policies. Refusals, incomplete outputs and API errors fail explicitly; there is no automatic provider fallback.
 
-Google login separately requires `CAREER_GOOGLE_CLIENT_ID` and an authorized web origin in Google Cloud. Email/password login works independently. Passwords need at least 12 characters. Google ID tokens are verified server-side, with a single-use Redis nonce. Existing Firebase accounts are not automatically migrated.
+To switch back to Gemini, set `CAREER_PROVIDER=gemini`, `CAREER_GEMINI_API_KEY` and `CAREER_GEMINI_MODEL`. Authentication is independent of this selection.
+
+Then run `docker compose up --build --wait`. Never commit `.env`. The selected provider receives uploaded documents and the relevant profile, vacancy or interview data. Responses are validated, and proposed resume changes require review. Live provider calls require your credentials; CI uses HTTP contract fixtures and explicitly selects `local` only for deterministic browser tests. `local` is a labelled test mode with templates, not AI.
+
+Google login separately requires `CAREER_GOOGLE_CLIENT_ID` and an authorized web origin in Google Cloud. Email/password registration and login use PostgreSQL accounts and Redis sessions, and work independently without Google credentials. Leave `CAREER_GOOGLE_CLIENT_ID` empty to use only email/password; the Google button is hidden. Set it to enable Google alongside email/password. No accounts or saved data are deleted when changing providers. Passwords need at least 12 characters. Google ID tokens are verified server-side, with a single-use Redis nonce. Existing Firebase accounts are not automatically migrated.
 
 ![Original React dashboard](docs/screenshots/studio.png)
 
@@ -66,7 +71,7 @@ Screenshots use a fictional account in the explicitly labelled test environment:
 
 - Register, log in, edit a profile, save language and dictation preferences, and log out without losing data.
 - Upload a PDF (up to 5 MiB/20 pages), review extracted fields and edit experience, education and projects as structured entries. The API also accepts UTF-8 text files. Original upload bytes are not retained.
-- Adapt to a vacancy with Gemini; inspect before/after proposals, accept selected changes into saved versions, compare snapshots, restore and download PDFs in three styles.
+- Adapt to a vacancy with OpenAI or Gemini; inspect before/after proposals, accept selected changes into saved versions, compare snapshots, restore and download PDFs in three styles.
 - Start an interview, receive coaching, reload or resume a saved session from history, and review scores and reference answers. Scores describe practice performance, not hiring suitability.
 - Generate an eight-week plan from a career goal or interview feedback, persist completed modules and export the plan. NotebookLM uses a text download and manual external import.
 - View real progress and claim milestones backed by saved data.
