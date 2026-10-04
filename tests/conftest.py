@@ -33,7 +33,11 @@ def app(settings):
 def client(app):
     with TestClient(app) as client:
         with app.state.repository.engine.begin() as db:
-            db.execute(text("TRUNCATE TABLE resumes"))
+            db.execute(
+                text(
+                    "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards"
+                )
+            )
         client.post("/api/session")
         yield client
         keys = list(app.state.sessions.client.scan_iter(app.state.sessions.namespace + ":*"))

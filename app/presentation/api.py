@@ -41,7 +41,7 @@ def router(settings):
     def health(request: Request):
         request.app.state.repository.health()
         request.app.state.sessions.health()
-        return {"status": "ok", "version": "0.2.0", "provider": settings.provider}
+        return {"status": "ok", "version": "0.3.0", "provider": settings.provider}
 
     @routes.post("/api/session")
     def session(request: Request, response: Response):
@@ -64,6 +64,7 @@ def router(settings):
     @routes.delete("/api/session", status_code=204)
     def end_session(request: Request, response: Response, current: Session = Depends(workspace)):
         request.app.state.repository.delete_owner(current.owner)
+        request.app.state.career.store.clear(current.owner)
         request.app.state.sessions.delete(request.cookies[COOKIE])
         response.delete_cookie(COOKIE, path="/")
 

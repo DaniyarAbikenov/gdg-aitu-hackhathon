@@ -9,13 +9,18 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.application.career import CareerService
 from app.application.resumes import ResumeService
 from app.config import Settings
+from app.infrastructure.career_store import PostgresCareerRepository
+from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
+from app.infrastructure.passwords import ScryptPasswords
 from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
 from app.infrastructure.reviewer import Reviewer
 from app.presentation.api import WEB, router
+from app.presentation.career import career_router
 from app.presentation.http import configure_http
 
 
@@ -35,10 +40,16 @@ def create_app(settings=None, reviewer=None):
             settings.max_upload_bytes,
         )
 
+        career_store = PostgresCareerRepository(repository)
+        app.state.career = CareerService(
+            career_store, repository, sessions, Coach(settings), ScryptPasswords()
+        )
+
         async def cleanup():
             while True:
                 try:
                     await asyncio.to_thread(repository.purge_expired, datetime.now(UTC))
+                    await asyncio.to_thread(career_store.purge_expired, datetime.now(UTC))
                 except SQLAlchemyError:
                     logging.getLogger("career").warning("Expiration cleanup will retry")
                 await asyncio.sleep(300)
@@ -58,13 +69,14 @@ def create_app(settings=None, reviewer=None):
             repository.close()
 
     app = FastAPI(
-        title="Career Studio",
-        version="0.2.0",
+        title="CareerBot",
+        version="0.3.0",
         lifespan=lifespan,
         description="Upload, review, compare and export a factual resume. Start with /api/session.",
     )
     configure_http(app, settings)
     app.include_router(router(settings))
+    app.include_router(career_router(settings))
     app.mount("/static", StaticFiles(directory=WEB), name="static")
     return app
 

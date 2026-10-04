@@ -93,11 +93,17 @@ def render_pdf(fields):
     story = [paragraph(fields.full_name or "Resume", "CareerTitle")]
     if fields.email:
         story.append(paragraph(fields.email))
+    contact = " · ".join(v for v in [fields.phone, fields.location] if v)
+    if contact:
+        story.append(paragraph(contact))
     sections = [
         ("Profile", fields.summary),
         ("Skills", " · ".join(fields.skills)),
         ("Experience & projects", fields.experience),
         ("Education", fields.education),
+        ("Projects", fields.projects),
+        ("Certificates", fields.certificates),
+        ("Languages", fields.languages),
     ]
     for title, value in sections:
         if value:

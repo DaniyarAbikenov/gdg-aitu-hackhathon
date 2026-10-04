@@ -10,6 +10,7 @@ from sqlalchemy import (
     create_engine,
     delete,
     func,
+    or_,
     select,
     text,
     update,
@@ -34,7 +35,7 @@ class ResumeRow(Base):
     status: Mapped[str] = mapped_column(String(20))
     revision: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     analysis: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     jd_text: Mapped[str] = mapped_column(Text, default="")
 
@@ -71,7 +72,10 @@ class PostgresRepository:
 
     @staticmethod
     def visible(owner, resume_id=None):
-        filters = [ResumeRow.owner == owner, ResumeRow.expires_at > datetime.now(UTC)]
+        filters = [
+            ResumeRow.owner == owner,
+            or_(ResumeRow.expires_at.is_(None), ResumeRow.expires_at > datetime.now(UTC)),
+        ]
         if resume_id is not None:
             filters.append(ResumeRow.id == resume_id)
         return filters
@@ -99,7 +103,7 @@ class PostgresRepository:
                 status="extracted",
                 revision=1,
                 created_at=datetime.now(UTC),
-                expires_at=session.expires_at,
+                expires_at=None if session.persistent else session.expires_at,
                 analysis=None,
                 jd_text="",
             )

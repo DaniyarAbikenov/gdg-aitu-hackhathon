@@ -33,14 +33,20 @@ class RedisSessions:
         digest = hashlib.sha256(token.encode()).hexdigest()
         return f"{self.namespace}:session:{digest}"
 
-    def create(self, client_id):
+    def consume_auth(self, client_id):
+        key = f"{self.namespace}:auth:{hashlib.sha256(client_id.encode()).hexdigest()}"
+        if self.increment(keys=[key], args=[900]) > 15:
+            raise QuotaExceeded
+
+    def create(self, client_id, owner=None):
         fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
         key = f"{self.namespace}:new-session:{fingerprint}"
         if self.increment(keys=[key], args=[3600]) > 30:
             raise QuotaExceeded
         token = secrets.token_urlsafe(32)
         value = {
-            "owner": str(uuid4()),
+            "owner": owner or str(uuid4()),
+            "persistent": owner is not None,
             "expires_at": (datetime.now(UTC) + timedelta(seconds=self.seconds)).isoformat(),
         }
         self.client.set(self.key(token), json.dumps(value), ex=self.seconds)
@@ -53,7 +59,11 @@ class RedisSessions:
         if value is None:
             raise NotFound
         data = json.loads(value)
-        return Session(owner=data["owner"], expires_at=datetime.fromisoformat(data["expires_at"]))
+        return Session(
+            owner=data["owner"],
+            expires_at=datetime.fromisoformat(data["expires_at"]),
+            persistent=data.get("persistent", False),
+        )
 
     def delete(self, token):
         self.client.delete(self.key(token))

@@ -10,6 +10,11 @@ class ResumeFields:
     skills: list[str] = field(default_factory=list)
     experience: str = ""
     education: str = ""
+    phone: str = ""
+    location: str = ""
+    projects: str = ""
+    certificates: str = ""
+    languages: str = ""
 
 
 @dataclass
@@ -43,3 +48,4 @@ class ResumeRecord:
 class Session:
     owner: str
     expires_at: datetime
+    persistent: bool = False

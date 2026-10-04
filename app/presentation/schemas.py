@@ -15,6 +15,12 @@ class ResumeFields(StrictModel):
     experience: str = Field(default="", max_length=12000)
     education: str = Field(default="", max_length=3000)
 
+    phone: str = Field(default="", max_length=100)
+    location: str = Field(default="", max_length=200)
+    projects: str = Field(default="", max_length=6000)
+    certificates: str = Field(default="", max_length=3000)
+    languages: str = Field(default="", max_length=500)
+
     @field_validator("skills")
     @classmethod
     def clean_skills(cls, skills):
