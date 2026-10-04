@@ -10,6 +10,11 @@ const fields = {
   summary: "summary",
   experience: "experience",
   education: "education",
+  phone: "resume-phone",
+  location: "resume-location",
+  projects: "resume-projects",
+  certificates: "resume-certificates",
+  languages: "resume-languages",
 };
 
 function notice(message, error = false) {
@@ -121,6 +126,7 @@ function render(record) {
   $("skills").value = record.fields.skills.join(", ");
   if (record.jd_text) $("job-description").value = record.jd_text;
   renderAnalysis(record.analysis);
+  document.dispatchEvent(new CustomEvent("resume:changed"));
 }
 
 async function loadHistory() {
@@ -346,6 +352,7 @@ async function initialize() {
   $("privacy-note").textContent = cloud
     ? "Extraction stays local. Gemini is used only when you request recommendations."
     : "Local analysis. No account, cloud keys, or external AI calls required.";
+  document.dispatchEvent(new CustomEvent("career:ready"));
   const records = await loadHistory();
   if (records.length) {
     render(records[0]);

@@ -7,17 +7,18 @@
       name="description"
       content="Turn your experience into a clear, focused resume. A transparent, local-first portfolio demo."
     />
-    <title>Career Studio — Make your experience count</title>
+    <title>CareerBot — Your next career step</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/style.css" />
     <script defer src="/static/app.js"></script>
+    <script defer src="/static/career.js"></script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to workspace</a>
     <aside class="sidebar">
-      <a class="brand" href="/" aria-label="Career Studio home"
+      <a class="brand" href="/" aria-label="CareerBot home"
         ><span class="brand-mark">c<span>↗</span></span
-        ><span>career<span class="brand-light">studio</span></span></a
+        ><span>career<span class="brand-light">bot</span></span></a
       >
       <div class="sidebar-label">YOUR WORKSPACE</div>
       <div class="nav-item active">
@@ -48,224 +49,289 @@
         ><span class="mode-badge" id="mode">Connecting…</span>
       </header>
       <main id="main">
-        <div class="intro">
-          <div>
-            <div class="eyebrow">A LITTLE CLARITY. A BETTER NEXT STEP.</div>
-            <h1>Make your experience count.</h1>
-            <p>
-              Bring your resume. Find the right focus. Leave with a clearer
-              story.
-            </p>
-          </div>
-          <span class="edition">PORTFOLIO EDITION <span>01</span></span>
-        </div>
-        <ol class="steps" aria-label="Resume workflow">
-          <li class="current" id="step-1">
-            <span>01</span>
-            <div>
-              Bring your experience<small>Upload or try an example</small>
-            </div>
-          </li>
-          <li id="step-2">
-            <span>02</span>
-            <div>Find your focus<small>Review against a role</small></div>
-          </li>
-          <li id="step-3">
-            <span>03</span>
-            <div>Make it yours<small>Refine and export</small></div>
-          </li>
-        </ol>
+        <nav id="career-nav" aria-label="Career workspace"></nav>
         <div id="notice" role="status" aria-live="polite" hidden></div>
-        <section id="welcome" class="welcome-grid">
-          <div class="card upload-card">
-            <div class="card-heading">
-              <span class="section-num">01 / START HERE</span
-              ><span class="subtle-tag">PDF or TXT · up to 2 MB</span>
-            </div>
-            <h2>Your next chapter starts here.</h2>
-            <p class="muted">
-              Upload a text-based resume. You can review and edit everything we
-              extract.
-            </p>
-            <label class="dropzone" id="dropzone" for="file">
-              <span class="upload-icon">↥</span
-              ><strong>Drop your resume here</strong
-              ><span>or choose a file from your computer</span
-              ><span class="choose-file">Choose resume ↗</span>
-              <input
-                type="file"
-                id="file"
-                accept=".pdf,.txt"
-                aria-label="Choose a resume file"
-              />
-            </label>
-            <div class="upload-divider">
-              <span></span>JUST LOOKING AROUND?<span></span>
-            </div>
-            <button id="try-example" class="secondary full-width" type="button">
-              <span>Try a sample resume</span><span>→</span>
-            </button>
-            <p class="privacy-note" id="privacy-note">
-              Local analysis. No account, cloud keys, or external AI calls
-              required.
-            </p>
-          </div>
-          <div class="preview-card">
-            <div class="preview-head">
-              <span>SMALL CHANGES, CLEARER STORY</span><span>✳</span>
-            </div>
-            <div class="paper-preview">
-              <div class="paper-monogram">AM</div>
-              <h3>Alex Morgan</h3>
-              <p class="paper-role">Backend developer</p>
-              <div class="paper-rule"></div>
-              <div class="paper-label">EXPERIENCE THAT MATTERS</div>
-              <p>
-                Building reliable APIs.<br />Making complex systems easier to
-                use.
-              </p>
-              <div class="paper-label">TOOLS OF THE TRADE</div>
-              <div class="preview-chips">
-                <span>Python</span><span>FastAPI</span><span>Docker</span>
-              </div>
-              <div class="paper-lines"><i></i><i></i><i></i></div>
-            </div>
-            <div class="floating-note">
-              <span>✓</span>
-              <div>
-                Keep it factual.<small
-                  >Your story, with a little more focus.</small
-                >
-              </div>
-            </div>
-            <p class="preview-caption">A resume you can stand behind.</p>
-          </div>
-        </section>
-        <section id="workspace" hidden>
-          <div class="workspace-toolbar">
+        <div id="resume-pane">
+          <div class="intro">
             <div>
-              <span class="section-num" id="document-name"></span
-              ><span id="save-state" class="save-state">Saved</span>
-            </div>
-            <button id="new-resume" class="text-button" type="button">
-              + Add another resume
-            </button>
-          </div>
-          <div class="editor-grid">
-            <section class="card editor-card" aria-labelledby="review-title">
-              <div class="card-heading">
-                <span class="section-num">01 / YOUR EXPERIENCE</span
-                ><button
-                  id="delete-resume"
-                  class="text-button danger"
-                  type="button"
-                >
-                  Delete
-                </button>
-              </div>
-              <h2 id="review-title">Make sure it sounds like you.</h2>
-              <p class="muted small">
-                Text extraction is a starting point. Check names, sections and
-                details.
+              <div class="eyebrow">A LITTLE CLARITY. A BETTER NEXT STEP.</div>
+              <h1>Make your experience count.</h1>
+              <p>
+                Bring your resume. Find the right focus. Leave with a clearer
+                story.
               </p>
-              <form id="resume-form">
-                <div class="field-pair">
-                  <label
-                    >Full name<input
-                      id="full-name"
-                      maxlength="120"
-                      autocomplete="name" /></label
-                  ><label
-                    >Email<input
-                      id="email"
-                      type="email"
-                      maxlength="200"
-                      autocomplete="email"
-                  /></label>
+            </div>
+            <span class="edition">PORTFOLIO EDITION <span>01</span></span>
+          </div>
+          <ol class="steps" aria-label="Resume workflow">
+            <li class="current" id="step-1">
+              <span>01</span>
+              <div>
+                Bring your experience<small>Upload or try an example</small>
+              </div>
+            </li>
+            <li id="step-2">
+              <span>02</span>
+              <div>Find your focus<small>Review against a role</small></div>
+            </li>
+            <li id="step-3">
+              <span>03</span>
+              <div>Make it yours<small>Refine and export</small></div>
+            </li>
+          </ol>
+          <section id="welcome" class="welcome-grid">
+            <div class="card upload-card">
+              <div class="card-heading">
+                <span class="section-num">01 / START HERE</span
+                ><span class="subtle-tag">PDF or TXT · up to 2 MB</span>
+              </div>
+              <h2>Your next chapter starts here.</h2>
+              <p class="muted">
+                Upload a text-based resume. You can review and edit everything
+                we extract.
+              </p>
+              <label class="dropzone" id="dropzone" for="file">
+                <span class="upload-icon">↥</span
+                ><strong>Drop your resume here</strong
+                ><span>or choose a file from your computer</span
+                ><span class="choose-file">Choose resume ↗</span>
+                <input
+                  type="file"
+                  id="file"
+                  accept=".pdf,.txt"
+                  aria-label="Choose a resume file"
+                />
+              </label>
+              <div class="upload-divider">
+                <span></span>JUST LOOKING AROUND?<span></span>
+              </div>
+              <button
+                id="try-example"
+                class="secondary full-width"
+                type="button"
+              >
+                <span>Try a sample resume</span><span>→</span>
+              </button>
+              <p class="privacy-note" id="privacy-note">
+                Local analysis. No account, cloud keys, or external AI calls
+                required.
+              </p>
+            </div>
+            <div class="preview-card">
+              <div class="preview-head">
+                <span>SMALL CHANGES, CLEARER STORY</span><span>✳</span>
+              </div>
+              <div class="paper-preview">
+                <div class="paper-monogram">AM</div>
+                <h3>Alex Morgan</h3>
+                <p class="paper-role">Backend developer</p>
+                <div class="paper-rule"></div>
+                <div class="paper-label">EXPERIENCE THAT MATTERS</div>
+                <p>
+                  Building reliable APIs.<br />Making complex systems easier to
+                  use.
+                </p>
+                <div class="paper-label">TOOLS OF THE TRADE</div>
+                <div class="preview-chips">
+                  <span>Python</span><span>FastAPI</span><span>Docker</span>
                 </div>
-                <label
-                  >Profile<textarea
-                    id="summary"
-                    rows="3"
-                    maxlength="3000"
-                    placeholder="What do you do, and what kind of work matters to you?"
-                  ></textarea>
-                </label>
-                <label
-                  >Skills <span class="label-note">Separate with commas</span
-                  ><input id="skills" placeholder="Python, FastAPI, Docker"
-                /></label>
-                <label
-                  >Experience & projects<textarea
-                    id="experience"
-                    rows="8"
-                    maxlength="12000"
-                  ></textarea>
-                </label>
-                <label
-                  >Education<textarea
-                    id="education"
-                    rows="2"
-                    maxlength="3000"
-                  ></textarea>
-                </label>
-                <div class="form-actions">
-                  <button class="primary" type="submit" id="save">
-                    Save your changes <span>✓</span></button
-                  ><button class="secondary" id="download" type="button">
-                    Download PDF ↗
+                <div class="paper-lines"><i></i><i></i><i></i></div>
+              </div>
+              <div class="floating-note">
+                <span>✓</span>
+                <div>
+                  Keep it factual.<small
+                    >Your story, with a little more focus.</small
+                  >
+                </div>
+              </div>
+              <p class="preview-caption">A resume you can stand behind.</p>
+            </div>
+          </section>
+          <section id="workspace" hidden>
+            <div class="workspace-toolbar">
+              <div>
+                <span class="section-num" id="document-name"></span
+                ><span id="save-state" class="save-state">Saved</span>
+              </div>
+              <button id="new-resume" class="text-button" type="button">
+                + Add another resume
+              </button>
+            </div>
+            <div class="editor-grid">
+              <section class="card editor-card" aria-labelledby="review-title">
+                <div class="card-heading">
+                  <span class="section-num">01 / YOUR EXPERIENCE</span
+                  ><button
+                    id="delete-resume"
+                    class="text-button danger"
+                    type="button"
+                  >
+                    Delete
                   </button>
                 </div>
-              </form>
-            </section>
-            <div class="focus-column">
-              <section class="card job-card" aria-labelledby="job-title">
-                <div class="card-heading">
-                  <span class="section-num">02 / THE NEXT OPPORTUNITY</span>
-                </div>
-                <h2 id="job-title">What role caught your eye?</h2>
-                <label for="job-description" class="muted small"
-                  >Paste the job description to find relevant skills and useful
-                  next steps.</label
-                >
-                <textarea
-                  id="job-description"
-                  rows="7"
-                  minlength="30"
-                  maxlength="15000"
-                  placeholder="We're looking for someone who…"
-                ></textarea>
-                <p id="provider-disclosure" class="privacy-note"></p>
-                <button class="primary full-width" id="analyze" type="button">
-                  <span>Find my focus</span><span>→</span>
-                </button>
-              </section>
-              <section
-                class="card results-card"
-                id="results"
-                aria-labelledby="results-title"
-                hidden
-              >
-                <div class="card-heading">
-                  <span class="section-num">03 / YOUR NEXT STEPS</span
-                  ><span id="analysis-source" class="subtle-tag"></span>
-                </div>
-                <h2 id="results-title">A clearer path forward.</h2>
+                <h2 id="review-title">Make sure it sounds like you.</h2>
                 <p class="muted small">
-                  Skill overlap is a guide, not an ATS score or hiring
-                  prediction.
+                  Text extraction is a starting point. Check names, sections and
+                  details.
                 </p>
-                <div id="skill-match"></div>
-                <div id="suggestions"></div>
+                <form id="resume-form">
+                  <div class="field-pair">
+                    <label
+                      >Full name<input
+                        id="full-name"
+                        maxlength="120"
+                        autocomplete="name" /></label
+                    ><label
+                      >Email<input
+                        id="email"
+                        type="email"
+                        maxlength="200"
+                        autocomplete="email"
+                    /></label>
+                  </div>
+                  <label
+                    >Profile<textarea
+                      id="summary"
+                      rows="3"
+                      maxlength="3000"
+                      placeholder="What do you do, and what kind of work matters to you?"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Skills <span class="label-note">Separate with commas</span
+                    ><input id="skills" placeholder="Python, FastAPI, Docker"
+                  /></label>
+                  <label
+                    >Experience & projects<textarea
+                      id="experience"
+                      rows="8"
+                      maxlength="12000"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Education<textarea
+                      id="education"
+                      rows="2"
+                      maxlength="3000"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Phone<textarea
+                      id="resume-phone"
+                      rows="2"
+                      maxlength="100"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Location<textarea
+                      id="resume-location"
+                      rows="2"
+                      maxlength="200"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Projects<textarea
+                      id="resume-projects"
+                      rows="2"
+                      maxlength="6000"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Certificates<textarea
+                      id="resume-certificates"
+                      rows="2"
+                      maxlength="3000"
+                    ></textarea>
+                  </label>
+                  <label
+                    >Languages<textarea
+                      id="resume-languages"
+                      rows="2"
+                      maxlength="500"
+                    ></textarea>
+                  </label>
+                  <div class="form-actions">
+                    <button class="primary" type="submit" id="save">
+                      Save your changes <span>✓</span></button
+                    ><button class="secondary" id="download" type="button">
+                      Download PDF ↗
+                    </button>
+                  </div>
+                </form>
+                <section id="version-panel">
+                  <h3>Resume versions</h3>
+                  <label
+                    >Version label<input
+                      id="version-label"
+                      maxlength="160"
+                      value="My reviewed version" /></label
+                  ><button id="save-version" class="secondary" type="button">
+                    Save a version
+                  </button>
+                  <div id="version-list"></div>
+                </section>
               </section>
+              <div class="focus-column">
+                <section class="card job-card" aria-labelledby="job-title">
+                  <div class="card-heading">
+                    <span class="section-num">02 / THE NEXT OPPORTUNITY</span>
+                  </div>
+                  <h2 id="job-title">What role caught your eye?</h2>
+                  <label for="job-description" class="muted small"
+                    >Paste the job description to find relevant skills and
+                    useful next steps.</label
+                  >
+                  <textarea
+                    id="job-description"
+                    rows="7"
+                    minlength="30"
+                    maxlength="15000"
+                    placeholder="We're looking for someone who…"
+                  ></textarea>
+                  <p id="provider-disclosure" class="privacy-note"></p>
+                  <button class="primary full-width" id="analyze" type="button">
+                    <span>Find my focus</span><span>→</span>
+                  </button>
+                </section>
+                <section class="card">
+                  <h2>Adapt to this role</h2>
+                  <p class="muted">
+                    Review specific before / after changes. Only changes you
+                    approve enter a new version.
+                  </p>
+                  <button id="adapt-resume" class="primary" type="button">
+                    Suggest changes
+                  </button>
+                  <div id="adaptations"></div>
+                </section>
+                <section
+                  class="card results-card"
+                  id="results"
+                  aria-labelledby="results-title"
+                  hidden
+                >
+                  <div class="card-heading">
+                    <span class="section-num">03 / YOUR NEXT STEPS</span
+                    ><span id="analysis-source" class="subtle-tag"></span>
+                  </div>
+                  <h2 id="results-title">A clearer path forward.</h2>
+                  <p class="muted small">
+                    Skill overlap is a guide, not an ATS score or hiring
+                    prediction.
+                  </p>
+                  <div id="skill-match"></div>
+                  <div id="suggestions"></div>
+                </section>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
+        <section id="career-pane" hidden></section>
         <footer>
           <span>Built to make the next step feel a little simpler.</span
           ><span
-            >Career Studio <span class="footer-star">✳</span> Open
-            project</span
+            >CareerBot <span class="footer-star">✳</span> Open project</span
           >
         </footer>
       </main>
