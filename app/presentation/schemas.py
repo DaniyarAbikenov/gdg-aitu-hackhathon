@@ -26,7 +26,7 @@ class ProviderAdvice(StrictModel):
 
 
 class Analysis(StrictModel):
-    provider: Literal["local", "gemini"]
+    provider: Literal["local", "gemini", "openai"]
     matched_skills: list[str]
     missing_skills: list[str]
     suggestions: list[Suggestion]

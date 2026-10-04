@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,20 @@ import { useToast } from "@/hooks/use-toast";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { loginWithEmail, loginWithGoogle } from "@/api/auth";
 
+import client from "@/api/client";
+
 export default function Login() {
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    client
+      .get("/auth/options")
+      .then(({ data }) => setGoogleEnabled(data.google))
+      .catch(() => setGoogleEnabled(false));
+  }, []);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -112,15 +122,17 @@ export default function Login() {
             <Button type="submit" className="w-full" disabled={submitting}>
               {t("login.signIn") ?? "Войти"}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={onGoogle}
-              disabled={submitting}
-            >
-              {t("login.signInGoogle") ?? "Войти через Google"}
-            </Button>
+            {googleEnabled && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={onGoogle}
+                disabled={submitting}
+              >
+                {t("login.signInGoogle") ?? "Войти через Google"}
+              </Button>
+            )}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
                 {t("login.noAccount") ?? "Нет аккаунта?"}{" "}

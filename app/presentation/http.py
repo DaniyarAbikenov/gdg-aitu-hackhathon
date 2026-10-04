@@ -98,7 +98,7 @@ def configure_http(app, settings):
         ),
         ProviderUnavailable: (
             502,
-            "AI is unavailable. Configure Gemini on the server or retry later. Your saved data is unchanged.",
+            "AI is unavailable. Configure the AI provider on the server or retry later. Your saved data is unchanged.",
         ),
     }
 

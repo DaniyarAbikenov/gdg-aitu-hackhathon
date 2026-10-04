@@ -163,6 +163,8 @@ def career_router(settings):
         response: Response,
         current: Session = Depends(workspace),
     ):
+        if not settings.google_client_id:
+            raise HTTPException(503, "Google sign-in is not configured on this server.")
         if current.persistent:
             raise HTTPException(409, "Sign out before switching accounts.")
         try:
@@ -185,7 +187,7 @@ def career_router(settings):
 
     @routes.get("/auth/options")
     def auth_options():
-        return {"google": bool(settings.google_client_id)}
+        return {"postgres": True, "google": bool(settings.google_client_id)}
 
     @routes.get("/user/me")
     def me(request: Request, current: Session = Depends(workspace)):

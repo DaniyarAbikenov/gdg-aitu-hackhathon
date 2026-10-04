@@ -17,7 +17,7 @@ from app.contracts import Education, Experience, Project
 from app.domain.errors import InvalidDocument
 from app.domain.models import ResumeFields
 from app.domain.review import extract_fields
-from app.infrastructure.coach import GeminiJSON
+from app.infrastructure.ai import structured_ai
 
 
 def extract_text(filename, data):
@@ -158,10 +158,10 @@ class ExtractedResume(BaseModel):
 class Documents:
     def __init__(self, settings=None, transport=None):
         self.settings = settings
-        self.ai = GeminiJSON(settings, transport) if settings else None
+        self.ai = structured_ai(settings, transport) if settings else None
 
     def extract(self, filename, data):
-        if self.settings and self.settings.provider == "gemini":
+        if self.settings and self.settings.provider in {"gemini", "openai"}:
             pdf = Path(filename).suffix.lower() == ".pdf"
             if pdf:
                 try:

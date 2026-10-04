@@ -10,9 +10,11 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://career:career@localhost:5432/career"
     redis_url: str = "redis://localhost:6379/0"
     redis_namespace: str = "career"
-    provider: Literal["unconfigured", "local", "gemini"] = "unconfigured"
+    provider: Literal["unconfigured", "local", "gemini", "openai"] = "unconfigured"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
+    openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = ""
     google_client_id: str = ""
     secure_cookie: bool = False
     session_hours: int = Field(default=24, ge=1, le=168)
@@ -40,4 +42,7 @@ class Settings(BaseSettings):
                 raise ValueError("Gemini requires CAREER_GEMINI_API_KEY and CAREER_GEMINI_MODEL")
             if not all(c.isalnum() or c in "-._" for c in self.gemini_model):
                 raise ValueError("Use a Gemini model ID, not a URL")
+        if self.provider == "openai":
+            if not self.openai_api_key.get_secret_value() or not self.openai_model:
+                raise ValueError("OpenAI requires CAREER_OPENAI_API_KEY and CAREER_OPENAI_MODEL")
         return self
