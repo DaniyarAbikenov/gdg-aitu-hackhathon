@@ -57,6 +57,25 @@ jobs:
           path: coverage.xml
           retention-days: 7
 
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+
   docker-browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -69,7 +88,9 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npx playwright install --with-deps chromium
-      - run: docker compose up --build --wait --wait-timeout 120
+      - run: docker compose up --build --wait --wait-timeout 180
+        env:
+          CAREER_PROVIDER: local
       - run: curl --fail http://127.0.0.1:8080/health
       - run: npm run test:e2e
       - if: always()

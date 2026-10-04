@@ -35,3 +35,13 @@ Guest records still expire. Registering promotes that guest's records to persist
 The old separate frontend uses Firebase tokens and different shapes. It is not silently redirected to this API and its repository is unchanged. Use the bundled interface or adapt the client using OpenAPI. Original routes and implementations remain in Git history.
 
 There is no automatic Firestore/GCS or Firebase-user migration. Real legacy account/data migration needs an explicit mapping and deployment plan.
+
+## Unified React frontend
+
+The original `skill-pathfinder-151` frontend is now included in `frontend/`; its import commit is recorded in `frontend/UPSTREAM.md`. The Docker entry point serves this React application. The earlier `app/web` replacement UI was removed; it remains in Git history.
+
+React's API adapter uses `/api` with cookie credentials. Nginx strips the prefix for backend endpoints, except `/api/session`, which keeps its historical path. Firebase authentication has been replaced with backend email/password and Google Identity Services login; existing Firebase accounts require a separate migration.
+
+Resume experience, education and projects accept structured lists as well as legacy text. JSONB records retain either format. The frontend maps legacy text into editable entries without inventing dates or employers. Existing database volumes are preserved when the combined stack is rebuilt.
+
+The default AI provider is `unconfigured`; no demo generation is returned by default. Explicit `local` mode is reserved for development/test scenarios. Source frontend environment files and old deployment workflows were not imported.

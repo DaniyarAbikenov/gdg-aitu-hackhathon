@@ -1,9 +1,9 @@
 {
-  "name": "career-studio-browser-tests",
+  "name": "careerbot-monorepo",
   "private": true,
   "scripts": {
     "test:e2e": "playwright test",
-    "format:check": "prettier --check app/web tests/browser playwright.config.js package.json .github/workflows/ci.yml"
+    "format:check": "prettier --check frontend/src frontend/vite.config.ts tests/browser playwright.config.js package.json .github/workflows/ci.yml"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
