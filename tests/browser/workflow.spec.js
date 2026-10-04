@@ -13,9 +13,7 @@ test("original frontend registers, persists profile and supports login", async (
   await page
     .getByPlaceholder("Enter skills separated by commas")
     .fill("Python");
-  await page
-    .getByPlaceholder("Enter skills separated by commas")
-    .press("Enter");
+  await page.getByRole("option", { name: /^Python/ }).click();
   await page.getByRole("button", { name: "Save Profile", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(
