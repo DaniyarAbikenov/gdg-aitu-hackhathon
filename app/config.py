@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     provider: Literal["local", "gemini"] = "local"
     gemini_api_key: SecretStr = SecretStr("")
     gemini_model: str = ""
+    google_client_id: str = ""
     secure_cookie: bool = False
     session_hours: int = Field(default=24, ge=1, le=168)
     max_upload_bytes: int = Field(default=2_000_000, ge=1024, le=10_000_000)

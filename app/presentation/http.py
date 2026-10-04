@@ -67,9 +67,11 @@ def configure_http(app, settings):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Cache-Control"] = "no-store"
         if request.url.path == "/" or request.url.path.startswith("/static/"):
+            google = " https://accounts.google.com" if settings.google_client_id else ""
+            response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
             response.headers["Content-Security-Policy"] = (
-                "default-src 'self'; script-src 'self'; style-src 'self'; "
-                "font-src 'self'; img-src 'self' data:; connect-src 'self'; "
+                f"default-src 'self'; script-src 'self'{google}; style-src 'self'{google}; "
+                f"font-src 'self'; img-src 'self' data:; connect-src 'self'{google}; frame-src 'self'{google}; "
                 "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
             )
         return response

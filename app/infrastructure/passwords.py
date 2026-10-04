@@ -27,5 +27,5 @@ class ScryptPasswords:
                 maxmem=256 * 1024 * 1024,
             )
             return hmac.compare_digest(digest.hex(), expected)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError, AttributeError):
             return False

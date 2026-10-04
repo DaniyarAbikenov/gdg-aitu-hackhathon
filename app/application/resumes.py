@@ -42,6 +42,6 @@ class ResumeService:
         # The repository performs an atomic revision check after a slow provider call.
         return self.repository.review(session.owner, resume_id, revision, analysis, jd_text)
 
-    def export(self, session: Session, resume_id: str):
+    def export(self, session: Session, resume_id: str, template: str = "modern"):
         record = self.repository.get(session.owner, resume_id)
-        return self.documents.pdf(record.fields)
+        return self.documents.pdf(record.fields, template)

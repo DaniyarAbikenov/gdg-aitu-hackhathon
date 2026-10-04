@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile
@@ -116,9 +117,14 @@ def router(settings):
         )
 
     @routes.get("/resume/{resume_id}/pdf")
-    def pdf(resume_id: UUID, request: Request, current: Session = Depends(workspace)):
+    def pdf(
+        resume_id: UUID,
+        request: Request,
+        template: Literal["modern", "classic", "minimalist"] = "modern",
+        current: Session = Depends(workspace),
+    ):
         return Response(
-            request.app.state.service.export(current, str(resume_id)),
+            request.app.state.service.export(current, str(resume_id), template),
             media_type="application/pdf",
             headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
         )

@@ -15,6 +15,7 @@ from app.config import Settings
 from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
+from app.infrastructure.google_login import GoogleLogin
 from app.infrastructure.passwords import ScryptPasswords
 from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
@@ -40,6 +41,7 @@ def create_app(settings=None, reviewer=None):
             settings.max_upload_bytes,
         )
 
+        app.state.google_login = GoogleLogin(settings.google_client_id)
         career_store = PostgresCareerRepository(repository)
         app.state.career = CareerService(
             career_store, repository, sessions, Coach(settings), ScryptPasswords()

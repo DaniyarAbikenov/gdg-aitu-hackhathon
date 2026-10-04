@@ -46,7 +46,8 @@ class AccountRow(Base):
     __tablename__ = "accounts"
     owner: Mapped[str] = mapped_column(String(36), primary_key=True)
     email: Mapped[str] = mapped_column(String(254), unique=True)
-    password_hash: Mapped[str] = mapped_column(String(512))
+    google_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
+    password_hash: Mapped[str | None] = mapped_column(String(512))
 
 
 TABLES = {
@@ -175,3 +176,24 @@ class PostgresCareerRepository:
         with self.sessions.begin() as db:
             for table in [ResumeRow, *TABLES.values()]:
                 db.execute(update(table).where(table.owner == owner).values(expires_at=None))
+
+    def google_account(self, subject, email, guest_owner):
+        try:
+            with self.sessions.begin() as db:
+                existing = db.scalar(select(AccountRow).where(AccountRow.google_subject == subject))
+                if existing:
+                    return existing.owner
+                # Never silently link an existing password account by email.
+                db.add(
+                    AccountRow(
+                        owner=guest_owner, email=email, google_subject=subject, password_hash=None
+                    )
+                )
+                db.flush()
+                for table in [ResumeRow, *TABLES.values()]:
+                    db.execute(
+                        update(table).where(table.owner == guest_owner).values(expires_at=None)
+                    )
+                return guest_owner
+        except IntegrityError as exc:
+            raise Conflict from exc

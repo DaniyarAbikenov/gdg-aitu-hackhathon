@@ -5,7 +5,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
 
 from app.domain.errors import Conflict, NotFound
 from app.domain.models import ResumeFields as DomainFields
@@ -15,6 +15,7 @@ from app.presentation.schemas import ResumeFields, StrictModel
 
 
 class Credentials(StrictModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=12, max_length=256)
 
@@ -25,7 +26,11 @@ class Credentials(StrictModel):
 
         if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
             raise ValueError("Enter a valid email address")
-        return value.casefold()
+        return value.strip().casefold()
+
+
+class GoogleCredential(StrictModel):
+    credential: str = Field(min_length=20, max_length=10000)
 
 
 class Profile(ResumeFields):
@@ -45,7 +50,9 @@ class Adapt(StrictModel):
     jd_text: str = Field(min_length=30, max_length=15000)
 
 
-class VersionSave(Adapt):
+class VersionSave(StrictModel):
+    revision: int = Field(ge=1)
+    jd_text: str = Field(default="", max_length=15000)
     fields: ResumeFields
     label: str = Field(min_length=1, max_length=160)
 
@@ -130,6 +137,49 @@ def career_router(settings):
         if token:
             request.app.state.sessions.delete(token)
         response.delete_cookie(COOKIE, path="/")
+
+    @routes.post("/auth/google/nonce")
+    def google_nonce(request: Request, current: Session = Depends(workspace)):
+        if not settings.google_client_id:
+            raise HTTPException(503, "Google sign-in is not configured on this server.")
+        if current.persistent:
+            raise HTTPException(409, "Sign out before switching accounts.")
+        request.app.state.sessions.consume_auth(client_id(request))
+        return {
+            "nonce": request.app.state.sessions.google_nonce(current.owner),
+            "client_id": settings.google_client_id,
+        }
+
+    @routes.post("/auth/google")
+    def google_signin(
+        payload: GoogleCredential,
+        request: Request,
+        response: Response,
+        current: Session = Depends(workspace),
+    ):
+        if current.persistent:
+            raise HTTPException(409, "Sign out before switching accounts.")
+        try:
+            nonce = request.app.state.sessions.consume_google_nonce(current.owner)
+            identity = request.app.state.google_login.verify(payload.credential, nonce)
+            owner = request.app.state.career.store.google_account(
+                identity["subject"], identity["email"], current.owner
+            )
+        except NotFound as exc:
+            raise HTTPException(
+                401, "Google sign-in expired or could not be verified. Try again."
+            ) from exc
+        except Conflict as exc:
+            raise HTTPException(
+                409, "An account with this email exists. Use its original sign-in method."
+            ) from exc
+        token = request.app.state.sessions.create(client_id(request), owner=owner)
+        set_session(request, response, token)
+        return {"authenticated": True}
+
+    @routes.get("/auth/options")
+    def auth_options():
+        return {"google": bool(settings.google_client_id)}
 
     @routes.get("/user/me")
     def me(current: Session = Depends(workspace)):

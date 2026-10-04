@@ -51,7 +51,8 @@ FONT_PATH = Path(__file__).parents[1] / "assets" / "NotoSans-Regular.ttf"
 pdfmetrics.registerFont(TTFont("CareerSans", str(FONT_PATH)))
 
 
-def render_pdf(fields):
+def render_pdf(fields, template="modern"):
+    accent = {"modern": "#08766f", "classic": "#243943", "minimalist": "#333333"}[template]
     output = io.BytesIO()
     styles = getSampleStyleSheet()
     styles.add(
@@ -68,7 +69,7 @@ def render_pdf(fields):
         ParagraphStyle(
             name="CareerTitle",
             parent=styles["CareerBody"],
-            fontSize=24,
+            fontSize=20 if template == "minimalist" else 24,
             leading=30,
             spaceAfter=8,
         )
@@ -79,7 +80,7 @@ def render_pdf(fields):
             parent=styles["CareerBody"],
             fontSize=12,
             leading=18,
-            textColor=colors.HexColor("#08766f"),
+            textColor=colors.HexColor(accent),
             spaceBefore=14,
             spaceAfter=6,
             keepWithNext=True,
@@ -131,5 +132,5 @@ class Documents:
     def extract(self, filename, data):
         return extract_fields(extract_text(filename, data))
 
-    def pdf(self, fields):
-        return render_pdf(fields)
+    def pdf(self, fields, template="modern"):
+        return render_pdf(fields, template)

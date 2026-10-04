@@ -56,7 +56,10 @@ def skills_in(text):
 def extract_fields(text):
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     email = re.search(r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}", text)
-    sections = {"summary": [], "experience": [], "education": []}
+    sections = {
+        key: []
+        for key in ["summary", "experience", "education", "projects", "certificates", "languages"]
+    }
     current = "experience"
     headings = {
         "summary": "summary",
@@ -65,7 +68,12 @@ def extract_fields(text):
         "experience": "experience",
         "work experience": "experience",
         "experience & projects": "experience",
-        "projects": "experience",
+        "projects": "projects",
+        "certificates": "certificates",
+        "languages": "languages",
+        "проекты": "projects",
+        "сертификаты": "certificates",
+        "языки": "languages",
         "education": "education",
         "образование": "education",
         "опыт работы": "experience",
@@ -87,6 +95,9 @@ def extract_fields(text):
         experience="\n".join(sections["experience"])[:12000],
         education="\n".join(sections["education"])[:3000],
         skills=skills_in(text),
+        projects="\n".join(sections["projects"])[:6000],
+        certificates="\n".join(sections["certificates"])[:3000],
+        languages="\n".join(sections["languages"])[:500],
     )
 
 

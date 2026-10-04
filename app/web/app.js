@@ -51,11 +51,11 @@ async function run(action) {
   if (busy) return;
   busy = true;
   document.body.classList.add("busy");
-  const controls = [...document.querySelectorAll("button, input, textarea")];
+  const controls = [
+    ...document.querySelectorAll("button, input, textarea, select"),
+  ].filter((control) => !control.closest("dialog"));
   controls.forEach((control) => {
-    if (control.tagName === "BUTTON" || control.type === "file")
-      control.disabled = true;
-    else control.inert = true;
+    control.disabled = true;
   });
   notice("");
   try {
@@ -67,7 +67,6 @@ async function run(action) {
     document.body.classList.remove("busy");
     controls.forEach((control) => {
       control.disabled = false;
-      control.inert = false;
     });
   }
 }
@@ -194,9 +193,18 @@ async function upload(file) {
   notice("Resume ready. Check the extracted details before continuing.");
 }
 
+function validateForm(form) {
+  const controls = [...form.querySelectorAll("input, textarea, select")];
+  const previous = controls.map((control) => control.disabled);
+  controls.forEach((control) => (control.disabled = false));
+  const valid = form.reportValidity();
+  controls.forEach((control, index) => (control.disabled = previous[index]));
+  return valid;
+}
+
 async function save() {
   if (!current || !dirty) return;
-  if (!$("resume-form").reportValidity())
+  if (!validateForm($("resume-form")))
     throw new Error("Please check your resume fields.");
   const data = Object.fromEntries(
     Object.entries(fields).map(([name, id]) => [name, $(id).value]),
@@ -269,7 +277,9 @@ $("analyze").addEventListener("click", () =>
 $("download").addEventListener("click", () =>
   run(async () => {
     await save();
-    const response = await fetch("/resume/" + current.resume_id + "/pdf");
+    const response = await fetch(
+      "/resume/" + current.resume_id + "/pdf?template=" + $("pdf-style").value,
+    );
     if (!response.ok)
       throw new Error("Could not export the resume. Please try again.");
     const url = URL.createObjectURL(await response.blob());

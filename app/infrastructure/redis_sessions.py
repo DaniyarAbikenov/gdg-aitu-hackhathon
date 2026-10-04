@@ -78,3 +78,14 @@ class RedisSessions:
 
     def close(self):
         self.client.close()
+
+    def google_nonce(self, owner):
+        nonce = secrets.token_urlsafe(32)
+        self.client.set(f"{self.namespace}:google:{owner}", nonce, ex=300)
+        return nonce
+
+    def consume_google_nonce(self, owner):
+        nonce = self.client.getdel(f"{self.namespace}:google:{owner}")
+        if not nonce:
+            raise NotFound
+        return nonce

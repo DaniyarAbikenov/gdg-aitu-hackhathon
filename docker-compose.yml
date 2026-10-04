@@ -41,6 +41,7 @@ services:
     environment:
       CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
       CAREER_REDIS_URL: redis://redis:6379/0
+      CAREER_GOOGLE_CLIENT_ID: ${CAREER_GOOGLE_CLIENT_ID:-}
       CAREER_PROVIDER: ${CAREER_PROVIDER:-local}
       CAREER_GEMINI_API_KEY: ${CAREER_GEMINI_API_KEY:-}
       CAREER_GEMINI_MODEL: ${CAREER_GEMINI_MODEL:-}

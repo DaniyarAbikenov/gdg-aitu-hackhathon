@@ -232,7 +232,7 @@ async function showAccount() {
     register.type = "submit";
     form.append(register);
     const authenticate = async (path) => {
-      if (!form.reportValidity()) return;
+      if (!validateForm(form)) return;
       await api(
         path,
         jsonRequest({ email: email.value, password: password.value }),
@@ -246,6 +246,48 @@ async function showAccount() {
     });
     form.append(button("Sign in", () => authenticate("/auth/login")));
     c.append(form);
+    const options = await api("/auth/options");
+    if (options.google) {
+      c.append(
+        button("Continue with Google", async () => {
+          const config = await api("/auth/google/nonce", { method: "POST" });
+          if (!window.google?.accounts)
+            await new Promise((resolve, reject) => {
+              const script = document.createElement("script");
+              script.src = "https://accounts.google.com/gsi/client";
+              script.onload = resolve;
+              script.onerror = () =>
+                reject(new Error("Google sign-in could not load."));
+              document.head.append(script);
+            });
+          window.google.accounts.id.initialize({
+            client_id: config.client_id,
+            nonce: config.nonce,
+            callback: (response) =>
+              run(async () => {
+                await api(
+                  "/auth/google",
+                  jsonRequest({ credential: response.credential }),
+                );
+                location.reload();
+              }),
+          });
+          const target = node("div");
+          c.append(target);
+          window.google.accounts.id.renderButton(target, {
+            theme: "outline",
+            size: "large",
+          });
+        }),
+      );
+    } else
+      c.append(
+        node(
+          "p",
+          "Google sign-in is available when the server is configured with a Google web client ID.",
+          "muted small",
+        ),
+      );
     c.append(
       node(
         "p",
