@@ -6,6 +6,7 @@ let careerTab = "resume";
 let activeInterview = null;
 let activePlan = null;
 let adaptation = null;
+let versionRequest = 0;
 let recognition = null;
 const pane = $("career-pane");
 const tabs = [
@@ -771,9 +772,15 @@ for (const [key, title] of tabs) {
 }
 async function loadVersions() {
   const list = $("version-list");
+  const request = ++versionRequest;
+  if (!current) {
+    list.replaceChildren();
+    return;
+  }
+  const resumeId = current.resume_id;
+  const versions = await api(`/resume/${resumeId}/versions`);
+  if (request !== versionRequest || current?.resume_id !== resumeId) return;
   list.replaceChildren();
-  if (!current) return;
-  const versions = await api(`/resume/${current.resume_id}/versions`);
   if (!versions.length)
     list.append(node("p", "No saved versions yet.", "muted"));
   for (const v of versions) {

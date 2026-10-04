@@ -10,3 +10,6 @@
 - Keep the offline reviewer explicitly identified as rule-based. Never fabricate resume facts.
 - Run lint, integration tests, Docker smoke tests, and browser tests before submitting changes.
 - Do not read or modify excluded projects: BAITC-Hacks, AIRings, centralized-pm-management.
+
+- Preserve the full CareerBot concept: accounts/profile, resume adaptation and versions, interview coaching, learning plans, progress and rewards. Do not remove a feature or substitute a demo for its real provider-backed implementation without explicit user direction.
+- Commit completed implementation stages separately, then run the required checks before pushing.

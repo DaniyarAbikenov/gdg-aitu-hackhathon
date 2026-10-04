@@ -94,7 +94,7 @@ def configure_http(app, settings):
         Conflict: (409, "This resume changed in another tab. Reload it before continuing."),
         QuotaExceeded: (
             429,
-            "Workspace limit reached. Delete old resumes or try analysis again in an hour.",
+            "Request or workspace limit reached. Try again later, or remove unused saved items.",
         ),
         ProviderUnavailable: (
             502,

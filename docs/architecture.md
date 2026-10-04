@@ -1,33 +1,35 @@
 # Architecture decisions
 
-## Clean Architecture with a small aggregate
+## Preserve the product boundary
 
-The central aggregate is a resume: user-reviewed fields, source filename, analysis, revision and lifetime. Domain models are dataclasses. Pydantic belongs at the HTTP and external-provider boundaries; SQLAlchemy belongs in infrastructure. An architecture test enforces dependency direction.
+CareerBot connects profile → resume adaptation → interview coaching → learning plan → progress. Architecture changes must preserve those capabilities. `docs/features.md` records the original behavior and restoration status.
 
-The application service coordinates document extraction, persistence, and review through protocols. It owns the rule that editing fields invalidates an earlier analysis. The composition root creates concrete adapters and manages their lifecycle.
+## Clean Architecture with explicit ports
+
+Domain and application modules contain no FastAPI, Pydantic, SQLAlchemy, Redis or HTTP client imports. The application coordinates repositories, sessions, documents and coaching ports. Infrastructure implements the ports; presentation validates external contracts and maps domain errors to HTTP. `app/main.py` is the composition root. An AST test enforces the dependency boundary.
+
+Resumes, profiles, interviews, plans, versions and rewards are separate aggregates. JSONB captures their bounded documents; SQL columns provide ownership, revisions, timestamps and expiration. This avoids dozens of join tables for small documents while keeping transactions and queryable ownership explicit. Separate tables make aggregate lifecycles and quotas visible.
 
 ## PostgreSQL and Redis
 
-PostgreSQL is the source of truth. JSONB is intentional: resume sections form a single document and are versioned together. Owner, revision, creation and expiration remain separate queryable columns. Alembic owns schema changes. A transaction-scoped advisory lock makes the per-owner upload quota correct across workers.
+PostgreSQL is the durable source of truth. There is no SQLite fallback. Redis owns expiring sessions, atomic limits and single-use Google login nonces. No data cache or persistence substitute runs inside a worker process. Temporary upload buffers, UI form state and immutable vocabularies are not data caches.
 
-Redis stores opaque session-token hashes and atomic rate limits with TTLs. It is a separate service, not an application-local cache. Persisted analyses are reused only for an unchanged resume and the same job description; an edit clears them.
+All reads/writes include owner and expiration predicates. Resume limits and aggregate quotas use a PostgreSQL advisory transaction lock per owner. Revisions are checked atomically on updates, including after external coaching requests. Separate version snapshots never overwrite the source resume; restoration explicitly requires the current resume revision.
 
-The application starts only when the schema and Redis are reachable. Readiness checks both dependencies. PostgreSQL and Redis ports are not published by the development Compose file.
+Accounts use salted scrypt password hashes or a verified Google subject. Registration promotes the guest workspace to persistent records in the same database transaction. Redis session tokens rotate at authentication. A Google email never silently links to an existing password account.
 
-## Concurrency and lifecycle
+## Coaching and document adapters
 
-Every update supplies a revision. SQL updates include owner, expiration and revision predicates. A slow reviewer cannot overwrite a newer edit: the revision is checked both before its call and atomically on persistence afterward. Missing or foreign records return 404; stale owned records return 409.
+The actual Gemini adapter implements document extraction, concrete resume rewrites, interview generation/evaluation and learning plans with bounded schemas. A separate deterministic behavior within the adapter makes the demo runnable without credentials and labels every result. Neither mode pretends to calculate hiring probability.
 
-Sessions and their resumes share a deadline. Queries exclude expired records. A periodic cleanup task removes expired database records, including abandoned sessions. Deleting a workspace removes its database rows before deleting the session key so a transient database outage does not leave unreachable personal data.
+AI data is untrusted. Rewrites refer to exact current sections, are shown with before/after/reason and require acceptance. Interview reference answers stay server-side until the corresponding answer is submitted. A failed provider call leaves the stored revision unchanged. PDF rendering escapes user text and performs no network fetches.
 
-## Presentation and external analysis
+## Lifecycle and verification
 
-The interface uses same-origin requests, HttpOnly cookies, safe DOM text insertion and no third-party assets. CSRF protection combines SameSite=Strict with Origin validation. HTTP bodies are bounded even without Content-Length. The transient request buffer is bounded I/O, not a cache or persistence mechanism.
+Guest records expire after a bounded session lifetime; account data survives sign-out. Expired data is filtered immediately and purged periodically. Individual records and full workspaces can be deleted. Resume deletion removes its snapshots.
 
-Gemini is optional and only produces validated suggestions. Deterministic skill matching remains visible. A trusted PDF renderer uses reviewed fields, XML escaping and a bundled Unicode font; no arbitrary model HTML or remote assets are interpreted.
+Tests use real PostgreSQL and Redis. Mock transports isolate external Google/Gemini protocols only. Browser tests exercise complete journeys and reload persistence on desktop/mobile. CI runs migrations, checks schema drift and dependency vulnerabilities, and builds/boots the Docker application.
 
-## Deliberate limits
+## Remaining deployment concerns
 
-This is a single deployable application with external PostgreSQL and Redis. The use case does not justify microservices or a message broker. PDF parsing and review use synchronous adapters executed by FastAPI's worker threads, with bounded input and an HTTP timeout. For sustained public traffic, document work should move to supervised job workers with CPU/time budgets and stronger abuse controls.
-
-The session cookie is a local demo identity. Real account authentication and longer-term document retention should be designed together if the project becomes a hosted product.
+The shipped configuration is for local evaluation. Public hosting needs HTTPS, secure cookies, operational credentials/backups and monitoring. Account recovery, legacy data migration and complete translation of explanatory copy are separate follow-up work. Dictation is a browser integration; NotebookLM is a manual exported-source workflow.
