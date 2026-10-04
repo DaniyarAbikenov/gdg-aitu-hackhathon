@@ -107,7 +107,13 @@ test("versions preserve the original and restore reviewed edits", async ({
   await expect(page.getByLabel("Full name", { exact: true })).toHaveValue(
     "Alex Morgan",
   );
-  await page.locator("#version-list summary").click();
+  await expect(page.locator("#notice")).toContainText("Version restored");
+  if (
+    !(await page
+      .getByRole("button", { name: "Download this version" })
+      .isVisible())
+  )
+    await page.locator("#version-list summary").click();
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download this version" }).click();
   expect((await download).suggestedFilename()).toBe("resume-version.pdf");

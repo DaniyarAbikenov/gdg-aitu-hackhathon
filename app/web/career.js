@@ -780,11 +780,18 @@ async function loadVersions() {
   const resumeId = current.resume_id;
   const versions = await api(`/resume/${resumeId}/versions`);
   if (request !== versionRequest || current?.resume_id !== resumeId) return;
+  const expanded = new Set(
+    [...list.querySelectorAll("details[open]")].map(
+      (item) => item.dataset.version,
+    ),
+  );
   list.replaceChildren();
   if (!versions.length)
     list.append(node("p", "No saved versions yet.", "muted"));
   for (const v of versions) {
     const d = node("details");
+    d.dataset.version = v.id;
+    d.open = expanded.has(v.id);
     d.append(node("summary", v.data.label));
     for (const key of Object.keys(v.data.fields)) {
       if (
