@@ -3,7 +3,9 @@ from sqlalchemy import create_engine, pool
 
 from app.config import Settings
 from app.infrastructure import (
+    activity,  # noqa: F401
     career_store,  # noqa: F401
+    knowledge,  # noqa: F401
     skills,  # noqa: F401
 )
 from app.infrastructure.postgres import Base
