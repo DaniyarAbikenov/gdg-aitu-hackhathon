@@ -129,3 +129,38 @@ test("versions preserve the original and restore reviewed edits", async ({
   );
   await page.request.delete("/api/session");
 });
+
+test("account sign-in preserves language preferences across sessions", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByText("Local reviewer", { exact: true })).toBeVisible();
+  await tab(page, "Account");
+  const email = `browser-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`;
+  await page.getByLabel("Account email", { exact: true }).fill(email);
+  await page
+    .getByLabel("Password (at least 12 characters)")
+    .fill("a long browser test password");
+  await page
+    .getByRole("button", { name: "Create account", exact: true })
+    .click();
+  await expect(page.getByText("Local reviewer", { exact: true })).toBeVisible();
+  await page.locator("#ui-language").selectOption("ru");
+  await expect(
+    page.getByRole("button", { name: "Аккаунт", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Аккаунт", exact: true }).click();
+  await page.getByRole("button", { name: "Выйти", exact: true }).click();
+  await expect(page.getByText("Local reviewer", { exact: true })).toBeVisible();
+  await tab(page, "Account");
+  await page.getByLabel("Account email", { exact: true }).fill(email);
+  await page
+    .getByLabel("Password (at least 12 characters)")
+    .fill("a long browser test password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Аккаунт", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("#ui-language")).toHaveValue("ru");
+  await page.request.delete("/api/session");
+});
