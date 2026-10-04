@@ -1,0 +1,12 @@
+{
+  "name": "career-studio-browser-tests",
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test",
+    "format:check": "prettier --check app/web tests/browser playwright.config.js package.json .github/workflows/ci.yml"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "prettier": "3.6.2"
+  }
+}
