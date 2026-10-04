@@ -9,7 +9,7 @@ from app.presentation.schemas import StrictModel
 
 class NewSkill(StrictModel):
     name: str = Field(min_length=1, max_length=80)
-    description: str = Field(min_length=10, max_length=1000)
+    description: str = Field(default="", max_length=1000)
 
     @field_validator("name")
     @classmethod

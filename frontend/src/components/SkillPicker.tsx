@@ -156,18 +156,14 @@ export function SkillPicker({
               </p>
               <Textarea
                 aria-label="Описание нового навыка"
-                placeholder="Что означает этот навык? Описание увидят другие пользователи."
+                placeholder="Описание (необязательно). Его увидят другие пользователи."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={1000}
               />
               <Button
                 type="button"
-                disabled={
-                  saving ||
-                  description.trim().length < 10 ||
-                  selected.length >= 60
-                }
+                disabled={saving || selected.length >= 60}
                 onClick={create}
               >
                 {saving ? "Сохранение…" : "Добавить новый навык"}

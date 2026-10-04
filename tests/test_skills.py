@@ -48,7 +48,11 @@ def test_catalog_shared_search_description_and_duplicates(client, app):
         client.post("/skills", json={"name": " ", "description": "Valid description"}).status_code
         == 422
     )
-    assert client.post("/skills", json={"name": "New", "description": "short"}).status_code == 422
+    assert client.post("/skills", json={"name": "New", "description": "short"}).status_code == 200
+    for payload in ({"name": "No description"}, {"name": "Empty description", "description": ""}):
+        response = client.post("/skills", json=payload)
+        assert response.status_code == 200
+        assert response.json()["description"] == ""
     assert len(client.get("/skills", params={"q": "%"}).json()["skills"]) == 0
 
 

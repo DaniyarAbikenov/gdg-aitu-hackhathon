@@ -115,8 +115,8 @@ Noto Sans is bundled under the [SIL Open Font License](app/assets/OFL.txt). No l
 
 ### Shared skill catalog
 
-The profile skill picker searches a shared PostgreSQL catalog and displays descriptions contributed by users. Authenticated users can add a missing skill with a 10–1000 character description. Existing descriptions are preserved when a duplicate name is submitted. Creation is limited to 30 requests/hour per account in Redis, independently of AI limits.
+The profile skill picker searches a shared PostgreSQL catalog and displays descriptions contributed by users. Authenticated users can add a missing skill with an optional description of up to 1000 characters. Existing descriptions are preserved when a duplicate name is submitted. Creation is limited to 30 requests/hour per account in Redis, independently of AI limits.
 
 Names are normalized with Unicode NFKC, collapsed whitespace and case folding: `CSS`, `css` and `ＣＳＳ` share one unique identity. Punctuation remains meaningful (`C`, `C++` and `C#` stay distinct). PostgreSQL `pg_trgm` provides indexed fuzzy suggestions; users choose whether a similar name is the intended skill. Similarity alone never silently merges different technologies. Migration `0004` installs `pg_trgm` and seeds eight common skills; managed databases must permit that extension.
 
-API: authenticated `GET /skills?q=...` returns up to 15 matches; `POST /skills` accepts `name` and `description` and returns the existing or newly created canonical skill. Through Docker, use the `/api` prefix.
+API: authenticated `GET /skills?q=...` returns up to 15 matches; `POST /skills` accepts `name` and an optional `description` and returns the existing or newly created canonical skill. Through Docker, use the `/api` prefix.
