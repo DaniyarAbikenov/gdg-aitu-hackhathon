@@ -353,6 +353,7 @@ h2 {
   gap: 7px;
   cursor: pointer;
   min-height: 210px;
+  text-align: center;
 }
 .dropzone:focus-within,
 .dropzone.dragging {
@@ -366,11 +367,14 @@ h2 {
   opacity: 0;
   width: 100%;
   height: 100%;
+  margin: 0;
   cursor: pointer;
 }
 .upload-icon {
-  font-size: 26px;
-  line-height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 45px;
+  line-height: 1;
   width: 45px;
   height: 45px;
   border: 1px solid #dfe7d6;
@@ -378,6 +382,9 @@ h2 {
   color: #608365;
   background: #f0f5e9;
   margin-bottom: 8px;
+}
+.upload-icon svg {
+  display: block;
 }
 .dropzone strong {
   font-size: 12px;
@@ -642,9 +649,24 @@ textarea:focus {
 }
 .form-actions {
   display: flex;
+  align-items: flex-end;
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 21px;
+}
+.form-actions > label {
+  margin: 0;
+  flex: 1 1 140px;
+}
+.form-actions > label select {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  min-height: 42px;
+}
+.form-actions > button {
+  min-height: 42px;
+  justify-content: center;
 }
 .job-card textarea {
   margin: 14px 0;
@@ -927,7 +949,7 @@ body.busy {
   flex-wrap: wrap;
   gap: 8px;
   padding: 0 0 24px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   margin-bottom: 28px;
 }
 #career-nav button {
@@ -963,8 +985,22 @@ body.busy {
 }
 .career-card input[type="checkbox"],
 #adaptations input[type="checkbox"] {
-  width: auto;
-  margin: 0 12px;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin: 0;
+  accent-color: var(--teal);
+}
+.career-card label:has(input[type="checkbox"]),
+#adaptations label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+.career-card input[type="checkbox"],
+#adaptations input[type="checkbox"] {
+  order: -1;
 }
 select {
   padding: 12px;
@@ -1018,6 +1054,18 @@ summary {
   padding-top: 24px;
 }
 @media (max-width: 700px) {
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .form-actions > label {
+    flex: none;
+    order: -1;
+  }
+  .form-actions > button {
+    flex: none;
+    width: 100%;
+  }
   .progress-grid {
     grid-template-columns: 1fr 1fr;
   }
