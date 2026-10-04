@@ -127,6 +127,12 @@ def career_router(settings):
         response: Response,
         current: Session = Depends(workspace),
     ):
+        if payload.email.casefold() in {
+            e.strip().casefold() for e in settings.admin_emails.split(",") if e.strip()
+        }:
+            raise HTTPException(
+                403, "This administrator address must be provisioned on the server."
+            )
         try:
             token = request.app.state.career.register(
                 current, payload.email, payload.password, client_id(request)

@@ -44,7 +44,7 @@ flowchart LR
 
 ### AI configuration
 
-**The default is `CAREER_PROVIDER=unconfigured`.** Accounts, profiles, text-based resume extraction, manual editing, versions and PDF exports work without cloud credentials. AI generation reports that configuration is required; it does not return demo results.
+**The default is `CAREER_PROVIDER=unconfigured`.** Accounts, profiles, manual resume creation/editing, versions and PDF/DOCX exports work without cloud credentials. Importing documents and composing with AI require a configured provider. AI generation reports that configuration is required; it does not return demo results.
 
 For real AI extraction, adaptation, interview questions/evaluation and learning plans, set these values locally:
 
@@ -70,7 +70,7 @@ Screenshots use a fictional account in the explicitly labelled test environment:
 ## Workflows
 
 - Register, log in, edit a profile, save language and dictation preferences, and log out without losing data.
-- Upload a PDF (up to 5 MiB/20 pages), review extracted fields and edit experience, education and projects as structured entries. The API also accepts UTF-8 text files. Original upload bytes are not retained.
+- Upload or drag-and-drop PDF (up to 5 MiB/20 pages), DOCX or TXT, review extracted fields and edit experience, education and projects as structured entries. The API also accepts UTF-8 text files. Original upload bytes are not retained.
 - Adapt to a vacancy with OpenAI or Gemini; inspect before/after proposals, accept selected changes into saved versions, compare snapshots, restore and download PDFs in three styles.
 - Start an interview, receive coaching, reload or resume a saved session from history, and review scores and reference answers. Scores describe practice performance, not hiring suitability.
 - Generate an eight-week plan from a career goal or interview feedback, persist completed modules and export the plan. NotebookLM uses a text download and manual external import.
@@ -120,3 +120,30 @@ The profile skill picker searches a shared PostgreSQL catalog and displays descr
 Names are normalized with Unicode NFKC, collapsed whitespace and case folding: `CSS`, `css` and `ＣＳＳ` share one unique identity. Punctuation remains meaningful (`C`, `C++` and `C#` stay distinct). PostgreSQL `pg_trgm` provides indexed fuzzy suggestions; users choose whether a similar name is the intended skill. Similarity alone never silently merges different technologies. Migration `0004` installs `pg_trgm` and seeds eight common skills; managed databases must permit that extension.
 
 API: authenticated `GET /skills?q=...` returns up to 15 matches; `POST /skills` accepts `name` and an optional `description` and returns the existing or newly created canonical skill. Through Docker, use the `/api` prefix.
+
+## Product workflows and administration
+
+- **Overview:** six removable account-saved widgets: resume counts/assessments, vacancy skill gaps, practiced companies/interviews, weekly learning, 14-day activity and progression. Calendar weeks start Monday using the browser UTC offset. Historical actions are not fabricated; tracking starts when events are first recorded.
+- **Profile → resume:** structured experience (role, dates, location, responsibilities, achievements), education, projects, contacts, certificates and languages. `/resume/new` lets users select profile sections and a target role/vacancy. AI asks clarification questions when facts are insufficient; users can also assemble manually. Creation snapshots profile facts without overwriting existing resumes.
+- **Library:** title, original filename, description, draft/active/archived status, search, version comparison/restore and PDF/DOCX export. Word means `.docx`, not legacy `.doc`. Uploaded bytes are not retained. AI extraction errors never silently fall back to heuristic parsing; the deterministic parser remains limited to explicit test mode.
+- **Learning:** position and multiple preferred technologies are supplied to generation; module evidence can be saved. XP is awarded once per durable action identity, so toggling the same module repeatedly does not earn additional XP. Levels measure preparation activity, not employability.
+- **Interview:** saved private companies/vacancies, catalog-based technology selection, theory/practice multi-selection, resumable history and answer-level feedback. Dictation lives on the interview page. Settings contains account/language controls rather than professional profile or microphone options.
+- **Knowledge:** searchable published articles, categories, article deep links, related reading and an administrator editor with draft/preview/publish/unpublish, optimistic revision protection, and server-side access enforcement. Article text is rendered without executing HTML.
+
+### Administrator provisioning
+
+Set `CAREER_ADMIN_EMAILS=admin@a2d.local` (comma-separated for multiple operators), recreate the backend, then provision the account locally:
+
+```sh
+docker compose exec backend python -m app.manage admin@a2d.local
+```
+
+The command prompts for a password; an existing password is never overwritten. Allowlisted administrator addresses cannot be registered through the public registration endpoint. Never put bootstrap passwords in source control. The editor is at `/admin/knowledge`, also linked from Settings for administrators.
+
+### Live voice interviews
+
+Set `CAREER_OPENAI_API_KEY`, `CAREER_OPENAI_REALTIME_MODEL` and `CAREER_OPENAI_TRANSCRIPTION_MODEL` to models available to your API project. Keep `CAREER_PROVIDER=openai` and a structured-output-capable `CAREER_OPENAI_MODEL` for the final evaluation. The backend uses the [official Realtime WebRTC unified interface](https://developers.openai.com/api/docs/guides/voice-webrtc): server-authenticated `/v1/realtime/calls` signalling, browser WebRTC media/data channel, automatic turn detection and interruptions. Browser clients never receive the ordinary API key. Use HTTPS in deployments; localhost is permitted by browsers for microphone testing.
+
+Completed user and assistant transcripts are saved with revision checks in PostgreSQL and displayed in interview history. No audio blobs are saved by this application. Provider retention rules still apply. Pause/end/unmount closes local tracks and requests call termination. Reconnect restores the saved conversational context. Failed transcript writes remain visible and can be retried; leaving before retrying can lose unsaved browser-held turns. Voice assessment is server-generated from the supplied transcript, which is practice data, not proctored evidence.
+
+Live voice and cloud extraction quality must be checked with real account credentials and representative user documents. CI validates request/response contracts and explicit failures without making paid provider calls. `CAREER_ENVIRONMENT=production` hides global technical status banners; actionable errors remain next to the failed operation. Explicit `local` mode remains clearly labelled as a test provider.

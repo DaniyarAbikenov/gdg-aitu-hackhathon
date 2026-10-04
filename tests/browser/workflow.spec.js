@@ -42,9 +42,30 @@ test("upload, structured edit, saved version and actual PDF download", async ({
 }) => {
   await register(page);
   await page.goto("/resume");
-  await page
-    .locator("#resume-upload")
-    .setInputFiles(path.join(__dirname, "../fixtures/resume.pdf"));
+  if (test.info().project.name === "desktop") {
+    const bytes = [
+      ...require("node:fs").readFileSync(
+        path.join(__dirname, "../fixtures/resume.pdf"),
+      ),
+    ];
+    const transfer = await page.evaluateHandle((data) => {
+      const transfer = new DataTransfer();
+      transfer.items.add(
+        new File([new Uint8Array(data)], "resume.pdf", {
+          type: "application/pdf",
+        }),
+      );
+      return transfer;
+    }, bytes);
+    await page
+      .locator("section")
+      .filter({ has: page.locator("#resume-upload") })
+      .dispatchEvent("drop", { dataTransfer: transfer });
+  } else {
+    await page
+      .locator("#resume-upload")
+      .setInputFiles(path.join(__dirname, "../fixtures/resume.pdf"));
+  }
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/resume\/[^/]+\/edit$/);
   await page

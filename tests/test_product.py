@@ -407,3 +407,11 @@ def test_voice_transcript_persists_finish_evaluation_and_ownership(client, app):
     client.post("/auth/logout")
     member(client)
     assert client.post(f"/interview/{id}/voice/stop").status_code == 404
+
+
+def test_admin_address_cannot_be_claimed_through_registration(client, settings):
+    settings.admin_emails = "admin@a2d.local"
+    response = client.post(
+        "/auth/register", json={"email": "admin@a2d.local", "password": "some long password"}
+    )
+    assert response.status_code == 403

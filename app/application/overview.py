@@ -41,21 +41,19 @@ class Overview:
         while cursor.isoformat() in days:
             streak += 1
             cursor -= timedelta(days=1)
-        gaps = Counter(
-            s
-            for r in resumes
-            if r.analysis and r.lifecycle != "archived"
-            for s in r.analysis.missing_skills
-        )
         assessments = self.career.store.list("assessment", session.owner)
         latest = {}
         for assessment in assessments:
             latest.setdefault(assessment.data["resume_id"], assessment.data)
-        active_ids = {r.resume_id for r in resumes if r.lifecycle != "archived"}
-        gaps = (
-            Counter(s for id, a in latest.items() if id in active_ids for s in a["missing_skills"])
-            + gaps
-        )
+        gaps = Counter()
+        for resume in resumes:
+            if resume.lifecycle == "archived":
+                continue
+            assessment = latest.get(resume.resume_id)
+            if assessment and assessment["resume_revision"] == resume.revision:
+                gaps.update(set(assessment["missing_skills"]))
+            elif resume.analysis:
+                gaps.update(set(resume.analysis.missing_skills))
         return {
             **progress,
             "goal": self.career.profile_data(session).get("career_goal", ""),

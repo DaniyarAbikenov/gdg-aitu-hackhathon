@@ -192,11 +192,17 @@ class PostgresRepository:
         )
 
     def delete(self, owner, resume_id):
-        from app.infrastructure.career_store import VersionRow
+        from app.infrastructure.career_store import AssessmentRow, VersionRow
 
         with self.sessions.begin() as db:
             if not db.execute(delete(ResumeRow).where(*self.visible(owner, resume_id))).rowcount:
                 raise NotFound
+            db.execute(
+                delete(AssessmentRow).where(
+                    AssessmentRow.owner == owner,
+                    AssessmentRow.data["resume_id"].astext == resume_id,
+                )
+            )
             db.execute(
                 delete(VersionRow).where(
                     VersionRow.owner == owner, VersionRow.data["resume_id"].astext == resume_id

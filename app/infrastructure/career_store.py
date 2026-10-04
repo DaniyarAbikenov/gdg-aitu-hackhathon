@@ -182,7 +182,10 @@ class PostgresCareerRepository:
                 raise NotFound
 
     def clear(self, owner):
+        from app.infrastructure.activity import ActivityRow
+
         with self.sessions.begin() as db:
+            db.execute(delete(ActivityRow).where(ActivityRow.owner == owner))
             for table in TABLES.values():
                 db.execute(delete(table).where(table.owner == owner))
 

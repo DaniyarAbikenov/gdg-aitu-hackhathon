@@ -64,17 +64,34 @@ class CareerService:
             raise Conflict
         self.sessions.consume_analysis(session)
         result = self.coach.improvements(asdict(resume.fields), self.profile_data(session), job)
-        self.store.create(
-            "assessment",
-            session,
-            {
-                "resume_id": resume_id,
-                "resume_revision": revision,
-                "missing_skills": compare(resume.fields, job).missing_skills,
-                "job": job,
-                "improvements": result["improvements"],
-            },
+        assessment = {
+            "resume_id": resume_id,
+            "resume_revision": revision,
+            "missing_skills": compare(resume.fields, job).missing_skills,
+            "job": job,
+            "improvements": result["improvements"],
+        }
+        previous = next(
+            (
+                a
+                for a in self.store.list("assessment", session.owner)
+                if a.data["resume_id"] == resume_id
+            ),
+            None,
         )
+        if previous:
+            self.store.update(
+                "assessment", session.owner, previous.id, previous.revision, assessment
+            )
+        else:
+            from uuid import NAMESPACE_URL, uuid5
+
+            self.store.create(
+                "assessment",
+                session,
+                assessment,
+                str(uuid5(NAMESPACE_URL, session.owner + ":assessment:" + resume_id)),
+            )
         return {**result, "revision": revision, "jd_text": job}
 
     def save_version(self, session, resume_id, revision, fields, label, job):
@@ -150,7 +167,11 @@ class CareerService:
 
     def answer(self, session, interview_id, revision, answer):
         record = self.store.get("interview", session.owner, interview_id)
-        if record.revision != revision or record.data["finished"]:
+        if (
+            record.revision != revision
+            or record.data["finished"]
+            or record.data["context"].get("mode") == "voice"
+        ):
             raise Conflict
         data = record.data
         question = data["questions"][len(data["answers"])]

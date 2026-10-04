@@ -83,9 +83,8 @@ test("admin publishes and unpublishes articles", async ({ page }) => {
     ).ok(),
   ).toBeTruthy();
   await page.goto("/admin/knowledge");
-  await page
-    .getByLabel("Заголовок", { exact: true })
-    .fill("Browser verified article");
+  const title = `Browser verified article ${Date.now()}`;
+  await page.getByLabel("Заголовок", { exact: true }).fill(title);
   await page.getByLabel("Категория", { exact: true }).fill("Testing");
   await page
     .getByLabel("Текст статьи", { exact: false })
@@ -98,16 +97,14 @@ test("admin publishes and unpublishes articles", async ({ page }) => {
     page.getByText("Статья опубликована", { exact: true }),
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: /Browser verified article/ }).click();
+  await page.getByRole("button", { name: new RegExp(title) }).click();
   await page.getByRole("checkbox", { name: "Публиковать" }).uncheck();
   await page.getByRole("button", { name: "Сохранить статью" }).click();
   await expect(
     page.getByText("Черновик сохранён", { exact: true }),
   ).toBeVisible();
   await page.goto("/faq");
-  await page
-    .getByRole("textbox", { name: "Поиск в базе знаний" })
-    .fill("Browser verified article");
+  await page.getByRole("textbox", { name: "Поиск в базе знаний" }).fill(title);
   await expect(
     page.getByText(
       "Статей по этому запросу не найдено. Попробуйте другое слово.",

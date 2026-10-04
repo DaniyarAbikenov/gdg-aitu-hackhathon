@@ -78,7 +78,8 @@ def product_router(settings):
             "admin": is_admin(request, current),
             "ai": settings.provider in {"openai", "gemini", "local"},
             "voice": bool(
-                settings.openai_api_key.get_secret_value()
+                settings.provider != "unconfigured"
+                and settings.openai_api_key.get_secret_value()
                 and settings.openai_realtime_model
                 and settings.openai_transcription_model
             ),

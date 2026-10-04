@@ -17,6 +17,8 @@ export default function VoiceInterview() {
   const [busy, setBusy] = useState(false);
   const [connected, setConnected] = useState(false);
   const [muted, setMuted] = useState(false);
+  const [pendingInput, setPendingInput] = useState(false);
+  const [responding, setResponding] = useState(false);
   const peer = useRef<RTCPeerConnection | null>(null);
   const media = useRef<MediaStream | null>(null);
   const audio = useRef<HTMLAudioElement>(null);
@@ -81,6 +83,7 @@ export default function VoiceInterview() {
     if (!role || !event.transcript?.trim()) return;
     const key = `${role}:${event.item_id || event.response_id || event.event_id}`;
     if (log.current.some((t) => t.id === key)) return;
+    if (role === "user") setPendingInput(false);
     log.current.push({ id: key, role, text: event.transcript });
     setTurns([...log.current]);
     void persist().catch(() =>
@@ -93,6 +96,9 @@ export default function VoiceInterview() {
     setBusy(true);
     setError("");
     setStatus("Подключение микрофона…");
+    setPendingInput(false);
+    setResponding(false);
+    setMuted(false);
     try {
       const caps = await client.get("/capabilities");
       if (!caps.data.voice)
@@ -131,6 +137,10 @@ export default function VoiceInterview() {
       channel.onmessage = (e) => {
         try {
           const event = JSON.parse(e.data);
+          if (event.type === "input_audio_buffer.speech_started")
+            setPendingInput(true);
+          if (event.type === "response.created") setResponding(true);
+          if (event.type === "response.done") setResponding(false);
           if (event.type === "error")
             setError(
               "Ошибка голосового диалога. Переподключитесь или сохраните разговор.",
@@ -168,6 +178,7 @@ export default function VoiceInterview() {
       await pc.setRemoteDescription({ type: "answer", sdp: r.data.sdp });
     } catch (e) {
       cleanup();
+      void stopServer();
       setConnected(false);
       setError(e.message || "Не удалось подключить микрофон.");
       setStatus("Подключение не выполнено");
@@ -193,6 +204,8 @@ export default function VoiceInterview() {
     cleanup();
     setConnected(false);
     setStatus("Пауза. Расшифровка сохраняется.");
+    setPendingInput(false);
+    setResponding(false);
     try {
       await stopServer();
       await persist();
@@ -256,7 +269,12 @@ export default function VoiceInterview() {
           )}
           {!record?.finished && (
             <Button
-              disabled={busy || !turns.some((t) => t.role === "user")}
+              disabled={
+                busy ||
+                pendingInput ||
+                responding ||
+                !turns.some((t) => t.role === "user")
+              }
               onClick={finish}
             >
               Завершить и получить оценку
