@@ -1,0 +1,355 @@
+{
+  "app": {
+    "name": "A2D",
+    "tagline": "Your personal career assistant"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "resume": "Resume",
+    "plan": "Learning Plan",
+    "interview": "Interview",
+    "progress": "Progress",
+    "settings": "Settings",
+    "support": "Support",
+    "faq": "FAQ"
+  },
+  "login": {
+    "title": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signInGoogle": "Sign in with Google",
+    "policies": "Policies and Agreements",
+    "fillAll": "Please fill in all fields",
+    "success": "Signed in successfully",
+    "redirect": "Redirecting...",
+    "noAccount": "Don't have an account?",
+    "registerNow": "Register now"
+  },
+  "register": {
+    "title": "Register",
+    "subtitle": "Create a new account",
+    "confirmPassword": "Confirm Password",
+    "passwordMismatch": "Passwords do not match",
+    "passwordWeak": "Password must be at least 6 characters",
+    "success": "Registration successful",
+    "haveAccount": "Already have an account?",
+    "submit": "Register"
+  },
+  "onboarding": {
+    "title": "Profile",
+    "subtitle": "Tell us about yourself",
+    "name": "Name",
+    "languages": "Languages",
+    "languagesPlaceholder": "Select languages...",
+    "targetRoles": "Target Roles",
+    "targetRolesPlaceholder": "Select or enter your role...",
+    "currentSkills": "Current Skills",
+    "currentSkillsPlaceholder": "Enter skills separated by commas",
+    "save": "Save Profile",
+    "evaluateSkills": "Evaluate Skills",
+    "toDashboard": "Go to Dashboard",
+    "normalizedSkills": "Normalized Skills"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Welcome!",
+    "compass": {
+      "title": "Career Compass",
+      "targetRoles": "Target Roles",
+      "skillGaps": "Skill Gaps"
+    },
+    "plan": {
+      "title": "Learning Plan",
+      "create": "Create Plan",
+      "open": "Open Plan",
+      "noPlan": "You don't have a learning plan yet"
+    },
+    "resume": {
+      "title": "Resume",
+      "goto": "Go to Resume",
+      "description": "Upload and adapt your resume"
+    }
+  },
+  "resume": {
+    "title": "Resume",
+    "subtitle": "Upload, analyze and adapt your resume for jobs",
+    "uploadTitle": "Upload your resume",
+    "uploadDescription": "Upload a PDF file to start processing",
+    "fileSelected": "File selected",
+    "errorUpload": "Upload error",
+    "errorUploadDesc": "Could not upload file. Please try again.",
+    "clickToSelect": "Click to select PDF",
+    "onlyPdf": "PDF only, up to 5 MB",
+    "continue": "Continue",
+    "upload": {
+      "title": "Resume Upload",
+      "dragDrop": "Drag and drop file or click to select",
+      "format": "PDF or DOCX, up to 5 MB",
+      "parse": "Parse Resume",
+      "uploaded": "File uploaded",
+      "tooBig": "File too large",
+      "tooBigDesc": "File size must not exceed 5 MB",
+      "processing": "Processing…"
+    },
+    "edit": {
+      "title": "Edit Resume",
+      "loading": "Loading…",
+      "openOriginal": "Open original PDF",
+      "jobDescription": "Job Description",
+      "jobDescriptionPlaceholder": "Paste the job description here…",
+      "continueButton": "Continue → Get Recommendations",
+      "processing": "Processing…"
+    },
+    "improve": {
+      "title": "Improve Resume",
+      "jobDescription": "Job Description",
+      "jobDescriptionPlaceholder": "Paste job description here...",
+      "continue": "Continue",
+      "analyzing": "Analyzing...",
+      "suggestedImprovements": "Suggested Improvements",
+      "section": "Section",
+      "type": "Type",
+      "before": "Before",
+      "after": "After",
+      "reason": "Reason",
+      "generatePdf": "Generate PDF (Coming next)"
+    },
+    "improvements": {
+      "title": "Resume Improvements",
+      "loading": "Loading improvements...",
+      "noImprovements": "No improvements available.",
+      "generateButton": "Generate new CV",
+      "generating": "Generating..."
+    },
+    "editors": {
+      "summary": {
+        "label": "Professional Summary",
+        "placeholder": "Short introduction about yourself..."
+      },
+      "skills": {
+        "label": "Skills",
+        "placeholder": "Enter skill",
+        "add": "Add"
+      },
+      "education": {
+        "label": "Education",
+        "add": "Add",
+        "institution": "Institution",
+        "degree": "Degree",
+        "startYear": "Start year",
+        "endYear": "End year"
+      },
+      "experience": {
+        "label": "Work Experience",
+        "add": "Add Experience",
+        "company": "Company",
+        "role": "Role",
+        "dateFrom": "From (2021-01)",
+        "dateTo": "To (2023-03)",
+        "achievements": "Achievements (comma-separated)"
+      },
+      "projects": {
+        "label": "Projects",
+        "add": "Add",
+        "title": "Project Title",
+        "description": "Description",
+        "tech": "Tech stack (comma-separated)"
+      }
+    },
+    "versions": {
+      "title": "Resume Versions",
+      "description": "Manage different versions of your resume",
+      "version": "Version",
+      "active": "Active",
+      "showDiff": "Show differences",
+      "download": "Download",
+      "makeActive": "Make active",
+      "differences": "Differences",
+      "downloadStarted": "Download started",
+      "versionActivated": "Version activated",
+      "versionNowActive": "is now active",
+      "tips": "Version Tips",
+      "tip1": "Create a separate version for each job category",
+      "tip2": "Use tags for quick version identification",
+      "tip3": "Regularly update your resume with new achievements",
+      "tip4": "Adapt your resume to key requirements in job description"
+    },
+    "generate": {
+      "title": "Generate Resume",
+      "modern": "Modern",
+      "classic": "Classic",
+      "minimalist": "Minimalist",
+      "generatePdf": "Generate PDF",
+      "downloadPdf": "Download PDF"
+    },
+    "parsed": {
+      "title": "Parsed Data",
+      "name": "Full Name",
+      "contacts": "Contacts",
+      "experience": "Experience",
+      "skills": "Skills",
+      "weaknesses": "Weaknesses",
+      "recognized": "Resume parsed",
+      "recognizedDesc": "Data successfully extracted"
+    },
+    "jd": {
+      "title": "Job Adaptation",
+      "label": "Job Description (JD)",
+      "placeholder": "Paste job description...",
+      "analyze": "Analyze JD",
+      "keywords": "Key Skills from JD",
+      "tune": "Rewrite for Job",
+      "analyzed": "JD analyzed",
+      "analyzedDesc": "Key skills identified",
+      "enterText": "Enter job description"
+    },
+    "tuned": {
+      "title": "Adapted Resume",
+      "before": "Before",
+      "after": "After",
+      "download": "Download",
+      "downloadPdf": "Download PDF",
+      "saveVersion": "Save Version"
+    }
+  },
+  "plan": {
+    "title": "Learning Plan",
+    "week": "Week",
+    "goals": "Goals",
+    "sources": "Sources",
+    "done": "Done",
+    "explanation": "Plan Explanation",
+    "export": "Export to Doc",
+    "notebookLM": "Create audio/video overview (NotebookLM)",
+    "exported": "Sent",
+    "exportedDesc": "Link will come in API response"
+  },
+  "interview": {
+    "title": "Interview Practice",
+    "subtitle": "Practice your interview answers",
+    "selectRole": "Select Role",
+    "start": "Start Practice",
+    "session": {
+      "title": "Interview",
+      "noActiveInterview": "No active interview",
+      "yourAnswer": "Your answer…",
+      "send": "Send",
+      "sending": "…",
+      "typing": "Typing",
+      "question": "Question",
+      "answer": "Your Answer",
+      "answerPlaceholder": "Enter your answer...",
+      "prev": "Previous",
+      "next": "Next",
+      "finish": "Finish",
+      "feedback": {
+        "title": "Feedback",
+        "score": "Score",
+        "strengths": "Strengths",
+        "improvements": "Areas to Improve",
+        "examples": "Example Phrases",
+        "resources": "Resources"
+      }
+    },
+    "start": {
+      "title": "Start Interview",
+      "company": "Company description",
+      "companyPlaceholder": "Enter company description...",
+      "job": "Job description",
+      "jobPlaceholder": "Enter job description...",
+      "stack": "Tech stack",
+      "stackPlaceholder": "Enter tech stack (e.g., React, Node.js, PostgreSQL)...",
+      "style": "Interview style",
+      "styleTheoretical": "Theoretical",
+      "stylePractical": "Practical",
+      "styleMixed": "Mixed",
+      "startButton": "Start",
+      "starting": "Starting…"
+    },
+    "result": {
+      "title": "Interview Completed",
+      "questionProgress": "Question {current} / {total}",
+      "feedback": "Feedback",
+      "followUp": "Follow-up question",
+      "nextQuestion": "Next Question",
+      "finishInterview": "Finish Interview",
+      "submitting": "Submitting…"
+    },
+    "summary": {
+      "title": "Interview Summary",
+      "noActiveInterview": "No active interview",
+      "loadingSummary": "Loading summary…",
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "overallSummary": "Overall Summary",
+      "strengths": "Strengths",
+      "weaknesses": "Weaknesses",
+      "recommendations": "Recommendations",
+      "estimatedLevel": "Estimated Level",
+      "restartInterview": "Restart interview",
+      "backToHome": "Back to Home"
+    }
+  },
+  "progress": {
+    "title": "Progress",
+    "subtitle": "Track your achievements",
+    "planSteps": "Plan Steps Completed",
+    "interviewScore": "Average Interview Score",
+    "resumeIndex": "Resume Improvement Index",
+    "rewards": {
+      "title": "Rewards",
+      "claim": "Claim"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage application settings",
+    "language": {
+      "title": "Interface Language",
+      "description": "Select your preferred language"
+    },
+    "interview": {
+      "title": "Interview Mode",
+      "description": "Choose interview answer format",
+      "audioMode": "Audio Interview Mode (beta)",
+      "audioDesc": "Answer questions with voice instead of text",
+      "enabled": "Audio mode enabled",
+      "enabledDesc": "You can now answer with voice",
+      "disabled": "Audio mode disabled",
+      "disabledDesc": "Text answer mode active"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "Account information",
+      "email": "Email",
+      "targetRoles": "Target Roles",
+      "editProfile": "Edit Profile"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Notification settings temporarily unavailable",
+      "inDevelopment": "Feature in development"
+    },
+    "logout": {
+      "title": "Logout",
+      "description": "Sign out of application",
+      "button": "Logout",
+      "success": "Logged out",
+      "successDesc": "See you soon!"
+    }
+  },
+  "legal": {
+    "title": "Policies and Agreements",
+    "loading": "Loading...",
+    "updated": "Updated"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "errorDesc": "Something went wrong. Please try again.",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save"
+  }
+}
