@@ -46,6 +46,8 @@ idna==3.20
     #   anyio
     #   httpx
     #   requests
+lxml==6.1.3
+    # via python-docx
 mako==1.4.3
     # via alembic
 markupsafe==3.0.4
@@ -74,6 +76,8 @@ pydantic-settings==2.15.0
     # via -r requirements.in
 pypdf==6.19.0
     # via -r requirements.in
+python-docx==1.2.0
+    # via -r requirements.in
 python-dotenv==1.2.4
     # via pydantic-settings
 python-multipart==0.0.32
@@ -99,6 +103,7 @@ typing-extensions==4.16.0
     #   psycopg
     #   pydantic
     #   pydantic-core
+    #   python-docx
     #   sqlalchemy
     #   starlette
     #   typing-inspection
@@ -111,7 +116,3 @@ urllib3==2.8.0
     # via requests
 uvicorn==0.54.0
     # via -r requirements.in
-
-python-docx==1.2.0
-
-lxml==6.1.3
