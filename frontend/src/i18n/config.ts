@@ -17,4 +17,10 @@ i18n.use(initReactI18next).init({
   },
 });
 
+const setDocumentLanguage = (language: string) => {
+  document.documentElement.lang = language === "kz" ? "kk" : language;
+};
+setDocumentLanguage(i18n.language || "ru");
+i18n.on("languageChanged", setDocumentLanguage);
+
 export default i18n;
