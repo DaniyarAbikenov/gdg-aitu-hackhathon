@@ -424,7 +424,7 @@
     "c069": "Company",
     "c070": "Role",
     "c071": "Start date",
-    "c072": "End date / present",
+    "c072": "End date",
     "c073": "Location",
     "c074": "Tasks and responsibilities",
     "c075": "Achievements — one per line",
@@ -941,5 +941,30 @@
     "PostgreSQL": "A relational database with SQL, transactions and extensible types.",
     "React": "A library for building user interfaces from components.",
     "Docker": "Tools for building and running applications in containers."
+  },
+  "period": {
+    "year": "Year",
+    "month": "Month",
+    "unknown": "Not specified",
+    "monthUnknown": "Month unknown",
+    "present": "Present",
+    "legacy": "Original date: {{value}}. Confirm it using the month and year controls.",
+    "order": "The end of the period cannot precede its start."
+  },
+  "profileImport": {
+    "title": "Fill profile from PDF",
+    "intro": "Upload a resume: AI extracts contacts, experience, projects, education and skills. Review the facts before applying them to your profile.",
+    "fileError": "Choose a PDF up to 5 MB.",
+    "choose": "Choose profile PDF",
+    "busy": "AI is reading the PDF…",
+    "limit": "Or drop a PDF here · up to 5 MB and 20 pages, without a password.",
+    "unavailable": "AI extraction is currently unavailable. You can fill your profile manually.",
+    "applied": "Facts applied to the form. Review your profile and select Save Profile.",
+    "preview": "Review PDF facts",
+    "mergeHelp": "Selected text fields replace form values. Experience, education, projects and skills are appended without exact duplicates. Existing text fields are unchecked by default. Saving the profile is a separate step.",
+    "select": "What to apply to your profile",
+    "missing": "Not found in PDF",
+    "edit": "Review and edit extracted facts",
+    "apply": "Apply selected facts to profile"
   }
 }

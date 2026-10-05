@@ -1,4 +1,9 @@
 import { tr, useLocale } from "@/i18n/copy";
+import {
+  MonthYearPicker,
+  YearPicker,
+  canonicalPeriod,
+} from "@/components/MonthYearPicker";
 import type { ResumeFields } from "@/types/resume";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -150,6 +155,27 @@ export function ProfileBlocks({
                   const text = Array.isArray(row[key])
                     ? (row[key] as string[]).join("\n")
                     : String(row[key] || "");
+                  if (key === "date_from" || key === "date_to")
+                    return (
+                      <MonthYearPicker
+                        key={key}
+                        label={label}
+                        value={text}
+                        allowPresent={key === "date_to"}
+                        onChange={change}
+                      />
+                    );
+                  if (key.startsWith("year_"))
+                    return (
+                      <label key={key} className="space-y-1">
+                        <span className="text-sm font-medium">{label}</span>
+                        <YearPicker
+                          label={label}
+                          value={Number(text) || 0}
+                          onChange={(v) => change(String(v))}
+                        />
+                      </label>
+                    );
                   return (
                     <label
                       className={`space-y-1 ${multiline ? "sm:col-span-2" : ""}`}
@@ -160,6 +186,7 @@ export function ProfileBlocks({
                       </Label>
                       {multiline ? (
                         <Textarea
+                          aria-label={label}
                           value={text}
                           onChange={(e) => change(e.target.value)}
                         />
@@ -173,6 +200,18 @@ export function ProfileBlocks({
                     </label>
                   );
                 })}
+                {section.key === "experience" &&
+                  row.date_from &&
+                  row.date_to &&
+                  canonicalPeriod(String(row.date_from)) &&
+                  canonicalPeriod(String(row.date_to)) &&
+                  canonicalPeriod(String(row.date_to)) !== "present" &&
+                  canonicalPeriod(String(row.date_from)).padEnd(7, "-01") >
+                    canonicalPeriod(String(row.date_to)).padEnd(7, "-12") && (
+                    <p role="alert" className="text-destructive sm:col-span-2">
+                      {tr("period.order")}
+                    </p>
+                  )}
                 <Button
                   type="button"
                   variant="ghost"

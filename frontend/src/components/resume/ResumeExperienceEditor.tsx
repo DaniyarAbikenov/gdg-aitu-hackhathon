@@ -1,3 +1,4 @@
+import { MonthYearPicker } from "@/components/MonthYearPicker";
 import type { ResumeFields } from "@/types/resume";
 import { useTranslation } from "react-i18next";
 import { useResumeStore } from "@/store/resumeStore";
@@ -61,15 +62,16 @@ export function ResumeExperienceEditor() {
           />
 
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              placeholder={t("resume.editors.experience.dateFrom")}
+            <MonthYearPicker
+              label={t("resume.editors.experience.dateFrom")}
               value={exp.date_from}
-              onChange={(e) => update(i, "date_from", e.target.value)}
+              onChange={(value) => update(i, "date_from", value)}
             />
-            <Input
-              placeholder={t("resume.editors.experience.dateTo")}
+            <MonthYearPicker
+              allowPresent
+              label={t("resume.editors.experience.dateTo")}
               value={exp.date_to}
-              onChange={(e) => update(i, "date_to", e.target.value)}
+              onChange={(value) => update(i, "date_to", value)}
             />
           </div>
 

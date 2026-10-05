@@ -1,3 +1,4 @@
+import { YearPicker } from "@/components/MonthYearPicker";
 import type { ResumeFields } from "@/types/resume";
 import { useTranslation } from "react-i18next";
 import { useResumeStore } from "@/store/resumeStore";
@@ -52,15 +53,15 @@ export function ResumeEducationEditor() {
             onChange={(e) => update(i, "degree", e.target.value)}
           />
           <div className="grid grid-cols-2 gap-2">
-            <Input
-              placeholder={t("resume.editors.education.startYear")}
-              value={ed.year_start || ""}
-              onChange={(e) => update(i, "year_start", Number(e.target.value))}
+            <YearPicker
+              label={t("resume.editors.education.startYear")}
+              value={ed.year_start || 0}
+              onChange={(value) => update(i, "year_start", value)}
             />
-            <Input
-              placeholder={t("resume.editors.education.endYear")}
-              value={ed.year_end || ""}
-              onChange={(e) => update(i, "year_end", Number(e.target.value))}
+            <YearPicker
+              label={t("resume.editors.education.endYear")}
+              value={ed.year_end || 0}
+              onChange={(value) => update(i, "year_end", value)}
             />
           </div>
         </div>

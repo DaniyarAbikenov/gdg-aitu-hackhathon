@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { ProfilePdfImport } from "@/components/ProfilePdfImport";
 import { ProfileBlocks } from "@/components/ProfileBlocks";
 import type { ResumeFields } from "@/types/resume";
 import { useEffect, useState } from "react";
@@ -194,6 +195,20 @@ export default function Onboarding() {
             </CardHeader>
 
             <CardContent className="space-y-6">
+              <ProfilePdfImport
+                current={{ ...details, full_name: name, skills }}
+                onApply={(next) => {
+                  setDetails(next);
+                  setName(next.full_name || "");
+                  setSkills(next.skills || []);
+                  if (next.position && next.position !== details.position)
+                    setSelectedRoles((roles) => [
+                      next.position!,
+                      ...roles.filter((r) => r !== next.position),
+                    ]);
+                }}
+              />
+
               {/* NAME */}
               <div className="space-y-2">
                 <Label htmlFor="name">{t("onboarding.name")}</Label>
