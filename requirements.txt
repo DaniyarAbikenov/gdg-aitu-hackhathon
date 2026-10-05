@@ -82,7 +82,7 @@ python-dotenv==1.2.4
     # via pydantic-settings
 python-multipart==0.0.32
     # via -r requirements.in
-redis==7.4.1
+redis==8.1.0
     # via -r requirements.in
 reportlab==4.5.1
     # via -r requirements.in
