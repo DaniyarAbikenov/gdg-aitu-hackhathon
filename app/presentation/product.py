@@ -12,6 +12,7 @@ from app.presentation.api import workspace
 
 
 class ResumeCreate(StrictModel):
+    vacancy_id: UUID | None = None
     title: str = Field(min_length=1, max_length=200)
     position: str = Field(default="", max_length=200)
     job: str = Field(default="", max_length=15000)
@@ -76,6 +77,9 @@ def product_router(settings):
     def capabilities(request: Request, current: Session = Depends(member)):
         return {
             "admin": is_admin(request, current),
+            "password_account": bool(
+                request.app.state.career.store.account_for_owner(current.owner)["password_hash"]
+            ),
             "ai": settings.provider in {"openai", "gemini", "local"},
             "voice": bool(
                 settings.provider != "unconfigured"
@@ -120,6 +124,8 @@ def product_router(settings):
 
     @routes.post("/resume/create", status_code=201)
     def create_resume(payload: ResumeCreate, request: Request, current: Session = Depends(member)):
+        if payload.vacancy_id:
+            request.app.state.career.store.get("vacancy", current.owner, str(payload.vacancy_id))
         profile = request.app.state.career.profile_data(current)
         fields = {
             k: v
@@ -135,20 +141,17 @@ def product_router(settings):
             if result["questions"]:
                 return {"questions": result["questions"]}
             fields = result["fields"]
+        if payload.vacancy_id:
+            request.app.state.career.store.get("vacancy", current.owner, str(payload.vacancy_id))
         record = request.app.state.repository.create(
-            current, payload.title, DomainFields(**ResumeFields.model_validate(fields).model_dump())
+            current,
+            "Created resume",
+            DomainFields(**ResumeFields.model_validate(fields).model_dump()),
+            title=payload.title,
+            description=payload.job[:2000],
+            vacancy_id=str(payload.vacancy_id) if payload.vacancy_id else None,
         )
-        return {
-            "resume": request.app.state.repository.metadata(
-                current.owner,
-                record.resume_id,
-                record.revision,
-                payload.title,
-                payload.job[:2000],
-                "draft",
-            ),
-            "questions": [],
-        }
+        return {"resume": record, "questions": []}
 
     @routes.patch("/resume/{resume_id}/metadata")
     def metadata(

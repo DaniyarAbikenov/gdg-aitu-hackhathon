@@ -54,3 +54,4 @@ class Session:
     owner: str
     expires_at: datetime
     persistent: bool = False
+    auth_version: int = 0

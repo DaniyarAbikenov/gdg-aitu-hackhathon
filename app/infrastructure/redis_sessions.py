@@ -27,6 +27,7 @@ class RedisSessions:
         self.namespace = settings.redis_namespace
         self.seconds = settings.session_hours * 3600
         self.analysis_limit = settings.analysis_per_hour
+        self.auth_limit = settings.auth_per_15_minutes
         self.increment = self.client.register_script(RATE_SCRIPT)
 
     def key(self, token):
@@ -35,10 +36,10 @@ class RedisSessions:
 
     def consume_auth(self, client_id):
         key = f"{self.namespace}:auth:{hashlib.sha256(client_id.encode()).hexdigest()}"
-        if self.increment(keys=[key], args=[900]) > 15:
+        if self.increment(keys=[key], args=[900]) > self.auth_limit:
             raise QuotaExceeded
 
-    def create(self, client_id, owner=None):
+    def create(self, client_id, owner=None, auth_version=0):
         fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
         key = f"{self.namespace}:new-session:{fingerprint}"
         if self.increment(keys=[key], args=[3600]) > 30:
@@ -46,6 +47,7 @@ class RedisSessions:
         token = secrets.token_urlsafe(32)
         value = {
             "owner": owner or str(uuid4()),
+            "auth_version": auth_version,
             "persistent": owner is not None,
             "expires_at": (datetime.now(UTC) + timedelta(seconds=self.seconds)).isoformat(),
         }
@@ -63,6 +65,7 @@ class RedisSessions:
             owner=data["owner"],
             expires_at=datetime.fromisoformat(data["expires_at"]),
             persistent=data.get("persistent", False),
+            auth_version=data.get("auth_version", 0),
         )
 
     def delete(self, token):

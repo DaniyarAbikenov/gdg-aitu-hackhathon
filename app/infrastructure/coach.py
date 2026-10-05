@@ -5,6 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.contracts import ResumeFields
 from app.domain.errors import ProviderUnavailable
 from app.domain.review import skills_in
 from app.infrastructure.ai import structured_ai
@@ -98,6 +99,15 @@ class Coach:
             result = {"improvements": items}
         for index, item in enumerate(result["improvements"]):
             item["id"] = str(index + 1)
+            try:
+                after = item["after"]
+                if item["section"] == "skills":
+                    after = [s.strip() for s in after.split(",") if s.strip()]
+                elif isinstance(fields.get(item["section"]), list):
+                    after = json.loads(after)
+                ResumeFields.model_validate({**fields, item["section"]: after})
+            except (ValueError, TypeError) as exc:
+                raise ProviderUnavailable from exc
             existing = fields.get(item["section"], "")
             if isinstance(existing, list):
                 existing = (

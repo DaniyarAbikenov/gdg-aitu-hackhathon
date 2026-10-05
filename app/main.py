@@ -8,6 +8,8 @@ from datetime import UTC, datetime
 from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.application.accounts import Accounts
+from app.application.applications import Applications
 from app.application.career import CareerService
 from app.application.overview import Overview
 from app.application.resumes import ResumeService
@@ -26,6 +28,7 @@ from app.infrastructure.reviewer import Reviewer
 from app.infrastructure.skills import PostgresSkillRepository
 from app.infrastructure.voice import RealtimeVoice
 from app.presentation.api import router
+from app.presentation.applications import applications_router
 from app.presentation.career import career_router
 from app.presentation.http import configure_http
 from app.presentation.product import product_router
@@ -57,6 +60,8 @@ def create_app(settings=None, reviewer=None):
         )
 
         app.state.overview = Overview(app.state.career, ActivityRepository(repository.sessions))
+        app.state.applications = Applications(app.state.career)
+        app.state.accounts = Accounts(app.state.career, ActivityRepository(repository.sessions))
         app.state.voice = RealtimeVoice(settings)
         app.state.knowledge = KnowledgeRepository(repository.sessions)
 
@@ -96,6 +101,7 @@ def create_app(settings=None, reviewer=None):
     app.include_router(skill_router())
     app.include_router(product_router(settings))
     app.include_router(voice_router())
+    app.include_router(applications_router())
     return app
 
 

@@ -90,7 +90,7 @@ class PostgresRepository:
             filters.append(ResumeRow.id == resume_id)
         return filters
 
-    def create(self, session, filename, fields):
+    def create(self, session, filename, fields, *, title=None, description="", vacancy_id=None):
         with self.sessions.begin() as db:
             # Serialize the quota check across workers without blocking other owners.
             db.execute(
@@ -108,8 +108,9 @@ class PostgresRepository:
             row = ResumeRow(
                 id=str(uuid4()),
                 owner=session.owner,
-                filename=filename,
-                title=fields.position or filename,
+                filename=filename[:180],
+                title=title if title is not None else fields.position or filename,
+                description=description,
                 fields=asdict(fields),
                 status="extracted",
                 revision=1,
@@ -118,6 +119,18 @@ class PostgresRepository:
                 analysis=None,
                 jd_text="",
             )
+            if vacancy_id:
+                from app.infrastructure.career_store import VacancyRow
+
+                vacancy = db.scalar(
+                    select(VacancyRow)
+                    .where(VacancyRow.id == vacancy_id, VacancyRow.owner == session.owner)
+                    .with_for_update()
+                )
+                if vacancy is None:
+                    raise NotFound
+                vacancy.data = {**vacancy.data, "resume_id": row.id}
+                vacancy.revision += 1
             db.add(row)
             db.flush()
             from app.infrastructure.activity import record_activity

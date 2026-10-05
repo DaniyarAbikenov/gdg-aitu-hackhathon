@@ -63,6 +63,7 @@ class AccountRow(Base):
     owner: Mapped[str] = mapped_column(String(36), primary_key=True)
     email: Mapped[str] = mapped_column(String(254), unique=True)
     google_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
+    auth_version: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
     password_hash: Mapped[str | None] = mapped_column(String(512))
 
 
@@ -173,6 +174,79 @@ class PostgresCareerRepository:
                 record_activity(db, owner, "interview_completed", record_id)
             return record(row)
 
+    def apply_proposal(
+        self,
+        session,
+        resume_id,
+        revision,
+        assessment_id,
+        assessment_revision,
+        fields,
+        remaining,
+        section,
+    ):
+        from app.infrastructure.activity import record_activity
+        from app.infrastructure.postgres import to_record
+
+        with self.sessions.begin() as db:
+            db.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:owner))"), {"owner": session.owner}
+            )
+            resume = db.scalar(
+                select(ResumeRow)
+                .where(ResumeRow.id == resume_id, *self.visible(ResumeRow, session.owner))
+                .with_for_update()
+            )
+            assessment = db.scalar(
+                select(AssessmentRow)
+                .where(
+                    AssessmentRow.id == assessment_id, *self.visible(AssessmentRow, session.owner)
+                )
+                .with_for_update()
+            )
+            if not resume or not assessment:
+                raise NotFound
+            if resume.revision != revision or assessment.revision != assessment_revision:
+                raise Conflict
+            count = db.scalar(
+                select(func.count())
+                .select_from(VersionRow)
+                .where(*self.visible(VersionRow, session.owner))
+            )
+            if count + 2 > 100:
+                raise QuotaExceeded
+            now = datetime.now(UTC)
+            for label, snapshot in [
+                ("До изменения: " + section, resume.fields),
+                ("Адаптация: " + section, fields),
+            ]:
+                version = VersionRow(
+                    id=str(uuid4()),
+                    owner=session.owner,
+                    revision=1,
+                    created_at=now,
+                    expires_at=resume.expires_at,
+                    data={
+                        "resume_id": resume_id,
+                        "fields": snapshot,
+                        "before": resume.fields,
+                        "label": label,
+                        "jd_text": remaining["job"],
+                    },
+                )
+                db.add(version)
+                record_activity(db, session.owner, "version_created", version.id)
+            resume.fields = fields
+            resume.revision += 1
+            resume.status = "edited"
+            resume.analysis = None
+            resume.jd_text = remaining["job"]
+            resume.updated_at = now
+            assessment.data = remaining
+            assessment.revision += 1
+            db.flush()
+            return to_record(resume)
+
     def delete(self, kind, owner, record_id):
         table = TABLES[kind]
         with self.sessions.begin() as db:
@@ -213,7 +287,48 @@ class PostgresCareerRepository:
             row = db.scalar(select(AccountRow).where(AccountRow.email == email))
             if not row:
                 raise NotFound
-            return {"owner": row.owner, "email": row.email, "password_hash": row.password_hash}
+            return {
+                "owner": row.owner,
+                "email": row.email,
+                "password_hash": row.password_hash,
+                "auth_version": row.auth_version,
+            }
+
+    def account_for_owner(self, owner):
+        with self.sessions() as db:
+            row = db.get(AccountRow, owner)
+            if not row:
+                raise NotFound
+            return {
+                "owner": row.owner,
+                "email": row.email,
+                "password_hash": row.password_hash,
+                "auth_version": row.auth_version,
+            }
+
+    def change_password(self, owner, auth_version, password_hash):
+        with self.sessions.begin() as db:
+            if not db.execute(
+                update(AccountRow)
+                .where(AccountRow.owner == owner, AccountRow.auth_version == auth_version)
+                .values(password_hash=password_hash, auth_version=auth_version + 1)
+            ).rowcount:
+                raise Conflict
+
+    def delete_account(self, owner, auth_version):
+        from app.infrastructure.activity import ActivityRow
+
+        with self.sessions.begin() as db:
+            account = db.scalar(
+                select(AccountRow).where(AccountRow.owner == owner).with_for_update()
+            )
+            if account is None:
+                raise NotFound
+            if account.auth_version != auth_version:
+                raise Conflict
+            for table in [ResumeRow, ActivityRow, *TABLES.values()]:
+                db.execute(delete(table).where(table.owner == owner))
+            db.delete(account)
 
     def promote(self, owner):
         with self.sessions.begin() as db:

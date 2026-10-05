@@ -67,6 +67,10 @@ class Revision(StrictModel):
     revision: int = Field(ge=1)
 
 
+class ApplyProposal(Revision):
+    proposal_id: str = Field(min_length=1, max_length=30)
+
+
 class InterviewStart(StrictModel):
     company_name: str = Field(default="", max_length=200)
     vacancy_title: str = Field(default="", max_length=200)
@@ -88,6 +92,7 @@ class Answer(Revision):
 
 
 class PlanCreate(StrictModel):
+    vacancy_id: UUID | None = None
     position: str = Field(default="", max_length=200)
     stacks: list[str] = Field(default_factory=list, max_length=60)
     goal: str = Field(min_length=3, max_length=500)
@@ -197,7 +202,10 @@ def career_router(settings):
             raise HTTPException(
                 409, "An account with this email exists. Use its original sign-in method."
             ) from exc
-        token = request.app.state.sessions.create(client_id(request), owner=owner)
+        account = request.app.state.career.store.account_for_owner(owner)
+        token = request.app.state.sessions.create(
+            client_id(request), owner=owner, auth_version=account["auth_version"]
+        )
         set_session(request, response, token)
         return {"authenticated": True}
 
@@ -307,6 +315,17 @@ def career_router(settings):
             service.answer(current, str(interview_id), payload.revision, payload.answer)
         )
 
+    @routes.post("/resume/{resume_id}/apply")
+    def apply_proposal(
+        resume_id: UUID,
+        payload: ApplyProposal,
+        request: Request,
+        current: Session = Depends(workspace),
+    ):
+        return request.app.state.career.apply_proposal(
+            current, str(resume_id), payload.revision, payload.proposal_id
+        )
+
     @routes.get("/plan")
     def plans(request: Request, current: Session = Depends(workspace)):
         return request.app.state.career.store.list("plan", current.owner)
@@ -320,6 +339,7 @@ def career_router(settings):
             str(payload.interview_id) if payload.interview_id else None,
             payload.position,
             payload.stacks,
+            str(payload.vacancy_id) if payload.vacancy_id else None,
         )
 
     @routes.post("/plan/{plan_id}/modules/{module_id}")

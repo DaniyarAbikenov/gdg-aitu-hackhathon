@@ -21,7 +21,12 @@ SAMPLE_JOB = (
 
 def workspace(request: Request) -> Session:
     try:
-        return request.app.state.sessions.resolve(request.cookies.get(COOKIE))
+        session = request.app.state.sessions.resolve(request.cookies.get(COOKIE))
+        if session.persistent:
+            account = request.app.state.career.store.account_for_owner(session.owner)
+            if account["auth_version"] != session.auth_version:
+                raise NotFound
+        return session
     except NotFound as exc:
         raise HTTPException(401, "Your session expired. Start a new workspace.") from exc
 
@@ -74,6 +79,8 @@ def router(settings):
     @routes.delete("/api/session", status_code=204, include_in_schema=False)
     @routes.delete("/session", status_code=204)
     def end_session(request: Request, response: Response, current: Session = Depends(workspace)):
+        if current.persistent:
+            raise HTTPException(403, "Use account settings to delete registered data.")
         request.app.state.repository.delete_owner(current.owner)
         request.app.state.career.store.clear(current.owner)
         request.app.state.sessions.delete(request.cookies[COOKIE])
