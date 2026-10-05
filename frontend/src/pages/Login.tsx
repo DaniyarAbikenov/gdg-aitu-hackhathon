@@ -96,6 +96,14 @@ export default function Login() {
           <CardDescription>{`${t("app.name")} - ${t("app.tagline")}`}</CardDescription>
         </CardHeader>
         <CardContent>
+          {new URLSearchParams(window.location.search).get("account") && (
+            <p role="status" className="text-sm mb-4 text-primary">
+              {new URLSearchParams(window.location.search).get("account") ===
+              "deleted"
+                ? "Аккаунт и личные данные удалены."
+                : "Пароль изменён. Войдите с новым паролем."}
+            </p>
+          )}
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">{t("login.email") ?? "Email"}</Label>

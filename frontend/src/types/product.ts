@@ -51,3 +51,39 @@ export interface VoiceEvent {
   response_id?: string;
   event_id?: string;
 }
+export interface ApplicationFields {
+  name: string;
+  description: string;
+  company_name: string;
+  company_description: string;
+  company_id: string | null;
+  skills: string[];
+  status:
+    | "saved"
+    | "preparing"
+    | "applied"
+    | "interview"
+    | "offer"
+    | "rejected"
+    | "archived";
+  source_url: string | null;
+  resume_id: string | null;
+  notes: string;
+  next_action: string;
+  follow_up: string | null;
+}
+export interface ApplicationRecord {
+  id: string;
+  revision: number;
+  created_at: string;
+  data: ApplicationFields;
+  next_step: string;
+  resume_title: string | null;
+  interviews: {
+    id: string;
+    finished: boolean;
+    mode: string;
+    score: number | null;
+  }[];
+  plans: { id: string; goal: string }[];
+}

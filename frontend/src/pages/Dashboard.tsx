@@ -6,6 +6,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+import { NextSteps } from "@/components/NextSteps";
 const labels = {
   resumes: "Резюме",
   skills: "Навыки для развития",
@@ -72,6 +73,7 @@ export default function Dashboard() {
             Настроить виджеты
           </Button>
         </header>
+        <NextSteps />
         {editing && (
           <fieldset className="flex flex-wrap gap-4 rounded-lg border p-4">
             <legend>Что показывать</legend>

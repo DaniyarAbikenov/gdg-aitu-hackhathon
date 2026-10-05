@@ -6,7 +6,9 @@ import client from "@/api/client";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
+import { AccountControls } from "@/components/AccountControls";
 export default function Settings() {
+  const [passwordAccount, setPasswordAccount] = useState(false);
   const navigate = useNavigate();
   const [error, setError] = useState("");
   const [admin, setAdmin] = useState(false);
@@ -14,7 +16,10 @@ export default function Settings() {
   useEffect(() => {
     client
       .get("/capabilities")
-      .then((r) => setAdmin(r.data.admin))
+      .then((r) => {
+        setAdmin(r.data.admin);
+        setPasswordAccount(r.data.password_account);
+      })
       .catch((e) => setError(e.message));
   }, []);
   const signout = async () => {
@@ -44,6 +49,7 @@ export default function Settings() {
             Logout
           </Button>
         </section>
+        <AccountControls passwordAccount={passwordAccount} />
         <div className="flex flex-wrap gap-4">
           <Link className="text-primary underline" to="/onboarding">
             Опыт и данные профиля

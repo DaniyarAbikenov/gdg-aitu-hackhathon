@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 const Login = lazy(() => import("./pages/Login"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Applications = lazy(() => import("./pages/Applications"));
+const Index = lazy(() => import("./pages/Index"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ResumeCreate = lazy(() => import("./pages/ResumeCreate"));
 const KnowledgeAdmin = lazy(() => import("./pages/KnowledgeAdmin"));
@@ -45,6 +47,15 @@ const App = () => (
           }
         >
           <Routes>
+            <Route
+              path="/applications"
+              element={
+                <ProtectedRoute>
+                  <Applications />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/about" element={<Index />} />
             <Route
               path="/resume/new"
               element={
@@ -96,14 +107,7 @@ const App = () => (
               }
             />
 
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/" element={<Index />} />
             <Route
               path="/dashboard"
               element={

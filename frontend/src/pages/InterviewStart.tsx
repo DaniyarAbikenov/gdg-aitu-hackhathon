@@ -9,7 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SkillPicker } from "@/components/SkillPicker";
 import i18n from "@/i18n/config";
+import { useVacancyContext } from "@/hooks/useVacancyContext";
+import { VacancyContext } from "@/components/VacancyContext";
+import { useCapabilities } from "@/hooks/useCapabilities";
 export default function InterviewStart() {
+  const capabilities = useCapabilities();
+  const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
   const [companies, setCompanies] = useState<TargetRecord[]>([]);
   const [vacancies, setVacancies] = useState<TargetRecord[]>([]);
@@ -39,6 +44,17 @@ export default function InterviewStart() {
       })
       .catch((e) => setError(e.message));
   }, []);
+  useEffect(() => {
+    if (vacancy) {
+      setVacancyId(vacancy.id);
+      setCompanyId(vacancy.data.company_id || "");
+      setCompanyName(vacancy.data.company_name);
+      setCompany(vacancy.data.company_description || vacancy.data.company_name);
+      setTitle(vacancy.data.name);
+      setJob(vacancy.data.description);
+      setStack(vacancy.data.skills);
+    }
+  }, [vacancy]);
   const start = async () => {
     setBusy(true);
     setError("");
@@ -91,6 +107,8 @@ export default function InterviewStart() {
     <MainLayout>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         <h1 className="text-3xl font-bold">Интервью</h1>
+        <VacancyContext vacancy={vacancy} />
+        {contextError && <p role="alert">{contextError}</p>}
         <p className="text-muted-foreground">
           Тренируйтесь под конкретную компанию и вакансию. Возвращайтесь к
           ответам и отслеживайте результат.
@@ -98,6 +116,12 @@ export default function InterviewStart() {
         {error && (
           <p role="alert" className="text-destructive">
             {error}
+          </p>
+        )}
+        {capabilities && !capabilities.ai && (
+          <p className="text-sm text-muted-foreground">
+            Тренировки с ИИ сейчас недоступны. Вы можете сохранить вакансию и
+            подготовить резюме в разделе «Вакансии».
           </p>
         )}
         <section className="border rounded-xl p-5 space-y-4">
@@ -161,6 +185,7 @@ export default function InterviewStart() {
           <label className="block">
             О компании
             <Textarea
+              aria-label="О компании"
               value={company}
               onChange={(e) => {
                 setCompany(e.target.value);
@@ -181,6 +206,7 @@ export default function InterviewStart() {
           <label className="block">
             Описание вакансии
             <Textarea
+              aria-label="Описание вакансии"
               value={job}
               onChange={(e) => {
                 setJob(e.target.value);
@@ -246,6 +272,8 @@ export default function InterviewStart() {
           </fieldset>
           <Button
             disabled={
+              !capabilities?.ai ||
+              (mode === "voice" && !capabilities?.voice) ||
               busy ||
               companyName.trim().length < 3 ||
               !title.trim() ||

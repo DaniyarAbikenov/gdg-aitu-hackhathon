@@ -1,5 +1,6 @@
 import {
   Home,
+  BriefcaseBusiness,
   UserRound,
   FileText,
   Target,
@@ -33,6 +34,7 @@ export function AppSidebar() {
 
   const menuItems = [
     { title: t("nav.dashboard"), url: "/dashboard", icon: Home },
+    { title: "Вакансии", url: "/applications", icon: BriefcaseBusiness },
     { title: t("nav.resume"), url: "/resume", icon: FileText },
     { title: t("nav.plan"), url: "/plan", icon: Target },
     { title: t("nav.interview"), url: "/interview", icon: MessageSquare },

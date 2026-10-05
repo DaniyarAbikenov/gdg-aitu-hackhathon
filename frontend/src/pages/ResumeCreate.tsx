@@ -15,7 +15,12 @@ const blocks = {
   certificates: "Сертификаты",
   languages: "Языки",
 };
+import { useVacancyContext } from "@/hooks/useVacancyContext";
+import { VacancyContext } from "@/components/VacancyContext";
+import { useCapabilities } from "@/hooks/useCapabilities";
 export default function ResumeCreate() {
+  const capabilities = useCapabilities();
+  const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [position, setPosition] = useState("");
@@ -32,16 +37,30 @@ export default function ResumeCreate() {
       .get("/user/profile")
       .then((r) => {
         setProfile(r.data.data);
-        setPosition(r.data.data.desired_position || "");
+        if (!new URLSearchParams(window.location.search).get("vacancy"))
+          setPosition(r.data.data.desired_position || "");
       })
       .catch((e) => setError(e.message));
   }, []);
+  useEffect(() => {
+    if (vacancy) {
+      setTitle(
+        `${vacancy.data.name} — ${vacancy.data.company_name}`.slice(0, 200),
+      );
+      setPosition(vacancy.data.name);
+      setJob(vacancy.data.description);
+    }
+  }, [vacancy]);
+  useEffect(() => {
+    if (capabilities) setAI(capabilities.ai);
+  }, [capabilities]);
   const create = async () => {
     setBusy(true);
     setError("");
     try {
       const r = await client.post("/resume/create", {
         title,
+        vacancy_id: vacancy?.id || null,
         position,
         job,
         facts,
@@ -60,6 +79,8 @@ export default function ResumeCreate() {
     <MainLayout>
       <div className="max-w-3xl mx-auto p-6 space-y-5">
         <h1 className="text-3xl font-bold">Новое резюме</h1>
+        <VacancyContext vacancy={vacancy} />
+        {contextError && <p role="alert">{contextError}</p>}
         <p className="text-muted-foreground">
           Выберите блоки профиля и целевую позицию. Черновик можно полностью
           отредактировать перед экспортом.
@@ -84,6 +105,7 @@ export default function ResumeCreate() {
         <label className="block space-y-2">
           Описание вакансии
           <Textarea
+            aria-label="Описание вакансии"
             value={job}
             maxLength={15000}
             onChange={(e) => setJob(e.target.value)}
@@ -120,10 +142,17 @@ export default function ResumeCreate() {
           <input
             type="checkbox"
             checked={ai}
+            disabled={!capabilities?.ai}
             onChange={(e) => setAI(e.target.checked)}
           />
           Собрать и адаптировать с ИИ
         </label>
+        {capabilities && !capabilities.ai && (
+          <p className="text-sm text-muted-foreground">
+            Сейчас доступна сборка из выбранных блоков профиля. Готовый черновик
+            можно редактировать и экспортировать.
+          </p>
+        )}
         {questions.length > 0 && (
           <div role="status" className="rounded-lg bg-muted p-4">
             <h2 className="font-semibold">Нужно уточнить факты</h2>

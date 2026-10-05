@@ -1,23 +1,41 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SkillPicker } from "@/components/SkillPicker";
+import { useVacancyContext } from "@/hooks/useVacancyContext";
+import { VacancyContext } from "@/components/VacancyContext";
+import { useCapabilities } from "@/hooks/useCapabilities";
 export function PlanCreator() {
+  const capabilities = useCapabilities();
+  const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
   const [position, setPosition] = useState("");
   const [goal, setGoal] = useState("");
   const [stacks, setStacks] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    if (vacancy) {
+      setPosition(vacancy.data.name);
+      setStacks(vacancy.data.skills);
+      setGoal(
+        `Подготовиться к ${vacancy.data.name} в ${vacancy.data.company_name}`.slice(
+          0,
+          500,
+        ),
+      );
+    }
+  }, [vacancy]);
   const create = async () => {
     setBusy(true);
     setError("");
     try {
       const r = await client.post("/plan", {
         position,
+        vacancy_id: vacancy?.id || null,
         goal: goal || position,
         stacks,
       });
@@ -31,6 +49,8 @@ export function PlanCreator() {
   return (
     <section className="rounded-xl border p-5 space-y-4">
       <h2 className="text-xl font-semibold">Новый учебный план</h2>
+      <VacancyContext vacancy={vacancy} />
+      {contextError && <p role="alert">{contextError}</p>}
       <label className="block space-y-2">
         Целевая позиция
         <Input
@@ -66,13 +86,24 @@ export function PlanCreator() {
           </Button>
         ))}
       </div>
+      {capabilities && !capabilities.ai && (
+        <p className="text-sm text-muted-foreground">
+          Создание плана с ИИ сейчас недоступно. Сохранённые планы и отметки о
+          выполнении остаются доступны.
+        </p>
+      )}
       {error && (
         <p role="alert" className="text-destructive">
           {error}
         </p>
       )}
       <Button
-        disabled={busy || position.trim().length < 3 || !stacks.length}
+        disabled={
+          !capabilities?.ai ||
+          busy ||
+          position.trim().length < 3 ||
+          !stacks.length
+        }
         onClick={create}
       >
         {busy ? "Готовим план…" : "Создать план"}

@@ -1,25 +1,26 @@
+import { resumeText } from "@/lib/resumeText";
 import client from "@/api/client";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  type Improvement,
-  improveResume,
-  getResume,
-  saveVersion,
-  saveResumeFields,
-} from "@/api/resume";
+import { type Improvement, improveResume, getResume } from "@/api/resume";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 
 import { useResumeStore } from "@/store/resumeStore";
 
+import { useVacancyContext } from "@/hooks/useVacancyContext";
+import { VacancyContext } from "@/components/VacancyContext";
+import { useCapabilities } from "@/hooks/useCapabilities";
 export default function ResumeImprove() {
+  const capabilities = useCapabilities();
+  const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { resumeId } = useParams();
   const [jdText, setJdText] = useState(useResumeStore.getState().jdText);
   const [loading, setLoading] = useState(false);
+  const [analyzed, setAnalyzed] = useState(false);
   const [improvements, setImprovements] = useState<Improvement[]>(
     useResumeStore.getState().resumeId === resumeId
       ? useResumeStore.getState().improvements
@@ -39,14 +40,29 @@ export default function ResumeImprove() {
           revision: resume.revision,
           jdText: data?.job || resume.jd_text,
         });
-        if (data) {
+        if (!new URLSearchParams(window.location.search).get("vacancy"))
+          setJdText(data?.job || resume.jd_text);
+        const fromVacancy = new URLSearchParams(window.location.search).has(
+          "vacancy",
+        );
+        setImprovements(fromVacancy ? [] : data?.improvements || []);
+        setAnalyzed(!fromVacancy && Boolean(data));
+        if (data && !fromVacancy) {
           setImprovements(data.improvements);
-          setJdText(data.job);
+          if (!new URLSearchParams(window.location.search).get("vacancy"))
+            setJdText(data.job);
         }
       })
       .catch((e) => setError(e.message));
   }, [resumeId]);
 
+  useEffect(() => {
+    if (vacancy) {
+      setJdText(vacancy.data.description);
+      setImprovements([]);
+      setAnalyzed(false);
+    }
+  }, [vacancy]);
   async function handleAnalyze() {
     setLoading(true);
     setError(null);
@@ -61,6 +77,7 @@ export default function ResumeImprove() {
       });
       const resp = await improveResume(resumeId!, jdText, current.revision);
       setImprovements(resp.improvements);
+      setAnalyzed(true);
     } catch (e) {
       setError(e?.response?.data?.detail || "Error analyzing resume");
     } finally {
@@ -72,6 +89,8 @@ export default function ResumeImprove() {
     <MainLayout>
       <div className="p-8 max-w-4xl mx-auto space-y-8">
         <h1 className="text-2xl font-bold">{t("resume.improve.title")}</h1>
+        <VacancyContext vacancy={vacancy} />
+        {contextError && <p role="alert">{contextError}</p>}
 
         {/* 🔹 Ввод JD */}
         <div className="space-y-2">
@@ -87,15 +106,36 @@ export default function ResumeImprove() {
         </div>
 
         {/* 🔹 Кнопка Continue */}
-        <Button onClick={handleAnalyze} disabled={loading}>
+        <Button
+          onClick={handleAnalyze}
+          disabled={!capabilities?.ai || loading || jdText.trim().length < 30}
+        >
           {loading
             ? t("resume.improve.analyzing")
             : t("resume.improve.continue")}
         </Button>
 
+        {capabilities && !capabilities.ai && (
+          <p className="text-sm text-muted-foreground">
+            ИИ-анализ сейчас недоступен. Резюме можно редактировать вручную и
+            экспортировать.
+          </p>
+        )}
         {/* 🔹 Ошибка */}
         {error && <div className="text-red-600">{error}</div>}
 
+        {analyzed && !loading && improvements.length === 0 && (
+          <p role="status">
+            Неприменённых предложений нет. Проверьте факты и экспортируйте
+            готовое резюме.
+          </p>
+        )}
+        <Link
+          className="text-primary underline"
+          to={`/resume/${resumeId}/generate`}
+        >
+          Экспорт PDF / Word
+        </Link>
         {/* 🔹 Список улучшений */}
         {improvements.length > 0 && (
           <div className="space-y-6 mt-8">
@@ -121,7 +161,7 @@ export default function ResumeImprove() {
                       {t("resume.improve.before")}:
                     </div>
                     <pre className="bg-muted p-2 rounded text-sm whitespace-pre-wrap">
-                      {impr.before}
+                      {resumeText(impr.before)}
                     </pre>
                   </div>
                 )}
@@ -131,8 +171,8 @@ export default function ResumeImprove() {
                     <div className="text-muted-foreground text-sm">
                       {t("resume.improve.after")}:
                     </div>
-                    <pre className="bg-gray-50 p-2 rounded text-sm whitespace-pre-wrap">
-                      {impr.after}
+                    <pre className="bg-muted p-2 rounded text-sm whitespace-pre-wrap">
+                      {resumeText(impr.after)}
                     </pre>
                   </div>
                 )}
@@ -144,39 +184,16 @@ export default function ResumeImprove() {
                     setLoading(true);
                     try {
                       const current = useResumeStore.getState();
-                      const value =
-                        impr.section === "skills"
-                          ? impr.after
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean)
-                          : ["experience", "education", "projects"].includes(
-                                impr.section,
-                              )
-                            ? JSON.parse(impr.after)
-                            : impr.after;
-                      const fields = {
-                        ...current.fields,
-                        [impr.section]: value,
-                      };
-                      await saveVersion(
-                        resumeId!,
-                        fields,
-                        current.revision,
-                        `Адаптация: ${impr.section}`,
-                        jdText,
-                      );
-                      const saved = await saveResumeFields(
-                        resumeId!,
-                        fields,
-                        current.revision,
+                      const { data: saved } = await client.post(
+                        `/resume/${resumeId}/apply`,
+                        { revision: current.revision, proposal_id: impr.id },
                       );
                       useResumeStore.setState({
                         fields: saved.fields,
                         revision: saved.revision,
                       });
                       setImprovements((items) =>
-                        items.filter((item) => item.id !== impr.id),
+                        items.filter((item) => item.section !== impr.section),
                       );
                     } catch (e) {
                       setError(e.message);
