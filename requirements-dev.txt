@@ -127,7 +127,7 @@ pyparsing==3.3.3
     # via pip-requirements-parser
 pypdf==6.19.0
     # via -r requirements.in
-pytest==8.4.2
+pytest==9.1.1
     # via
     #   -r requirements-dev.in
     #   pytest-cov
