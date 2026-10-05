@@ -13,6 +13,7 @@ from app.application.applications import Applications
 from app.application.career import CareerService
 from app.application.companies import Companies
 from app.application.overview import Overview
+from app.application.profile_import import ProfileImport
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.config import Settings
@@ -55,6 +56,9 @@ def create_app(settings=None, reviewer=None):
             settings.max_upload_bytes,
         )
 
+        app.state.profile_import = ProfileImport(
+            app.state.service.documents, sessions, settings.max_upload_bytes
+        )
         app.state.google_login = GoogleLogin(settings.google_client_id)
         career_store = PostgresCareerRepository(repository)
         app.state.career = CareerService(

@@ -1,13 +1,19 @@
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from app.contracts import ResumeFields, StrictModel
+from app.domain.periods import validate_history
 
 
 class SaveRequest(StrictModel):
     fields: ResumeFields
     revision: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        validate_history(self.fields.model_dump())
+        return self
 
 
 class AnalyzeRequest(StrictModel):

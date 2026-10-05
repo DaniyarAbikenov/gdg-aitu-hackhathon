@@ -6,7 +6,7 @@ Reference: original backend commit `82c50c1` and the `skill-pathfinder-151` fron
 |---|---|---|
 | Email registration and login | Firebase frontend auth; auth/user routes | PostgreSQL accounts, salted scrypt, rotating Redis sessions; `/auth/register`, `/auth/login`, `/auth/logout` |
 | Google login | `Login.tsx`, Firebase `loginWithGoogle` | Optional Google Identity Services, verified ID tokens and one-use Redis nonce |
-| Onboarding/profile | `Onboarding.tsx`, `UserProfile` | Structured experience, projects, education, contacts and skills in the UI; snapshot selected blocks into new resumes |
+| Onboarding/profile | `Onboarding.tsx`, `UserProfile` | Structured experience, projects, education, contacts and skills; month/year work periods; reviewable AI PDF-to-profile import; snapshot selected blocks into new resumes |
 | Skill normalization | Frontend trim/dedup | Shared PostgreSQL catalog, optional descriptions, normalized unique names and fuzzy suggestions |
 | Resume upload and AI extraction | Resume routes, Gemini PDF extraction | Drag-and-drop PDF/DOCX/TXT; structured OpenAI/Gemini extraction; explicit errors without cloud configuration, no silent heuristic fallback |
 | Edit and verify resume | Resume editor screens | Editable fields; revision-based saves |

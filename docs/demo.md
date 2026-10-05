@@ -37,3 +37,9 @@ Open **Companies** to show the private company atlas. A saved company can hold i
 In a new vacancy, paste a public job URL and choose AI parsing. Review the preview before applying it to the form; verify the employer, responsibilities, location and salary. If the page blocks access, paste the vacancy text. A real provider must be configured to demonstrate this step; do not present test fixtures as live parsing.
 
 Switch Russian, English and Kazakh while a company draft is open: the interface changes without discarding entered facts. User-authored material remains in its original language.
+
+## Import candidate facts from a PDF
+
+On the profile, choose **Fill profile from PDF** or drop a PDF (up to 5 MB, 20 pages, no password). With OpenAI/Gemini configured, the document itself is sent for structured extraction, including scanned pages; no cloud result is fabricated. Review/edit extracted facts, select the fields to apply, then save the profile. Existing text is unchecked by default; selected experience, education, projects and skills append without exact duplicates. Import alone does not save a profile or create a resume.
+
+Work periods use separate month/year controls and a **Present** checkbox. A year-only source stays year-only; an unknown month is never guessed. Education uses year selectors. Invalid/reversed dates are rejected on write; older free-text dates remain readable for correction.

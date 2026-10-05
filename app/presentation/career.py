@@ -5,11 +5,12 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
-from pydantic import ConfigDict, Field, field_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
 
 from app.domain.errors import Conflict, NotFound
 from app.domain.models import ResumeFields as DomainFields
 from app.domain.models import Session
+from app.domain.periods import validate_history
 from app.presentation.api import COOKIE, workspace
 from app.presentation.schemas import ResumeFields, StrictModel
 
@@ -49,6 +50,11 @@ class Profile(ResumeFields):
 class ProfileSave(StrictModel):
     profile: Profile
     revision: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_dates(self):
+        validate_history(self.profile.model_dump())
+        return self
 
 
 class Adapt(StrictModel):

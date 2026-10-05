@@ -1,7 +1,7 @@
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, UploadFile
 from pydantic import Field
 
 from app.contracts import ResumeFields, StrictModel
@@ -89,6 +89,18 @@ def product_router(settings):
                 and settings.openai_transcription_model
             ),
             "development": settings.environment == "development",
+        }
+
+    @routes.post("/user/profile/import")
+    def import_profile(request: Request, file: UploadFile, current: Session = Depends(member)):
+        data = file.file.read(settings.max_upload_bytes + 1)
+        if len(data) > settings.max_upload_bytes:
+            raise HTTPException(413, "Upload is too large.")
+        result = request.app.state.profile_import.preview(current, file.filename or "", data)
+        return {
+            **result,
+            "provider": settings.provider,
+            "fields": ResumeFields.model_validate(result["fields"]).model_dump(),
         }
 
     @routes.get("/overview")

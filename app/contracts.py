@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.domain.periods import normalize_period
 from app.domain.skills import skill_key, skill_name
 
 
@@ -15,6 +16,15 @@ class Experience(StrictModel):
     location: str = Field(default="", max_length=200)
     responsibilities: str = Field(default="", max_length=6000)
     achievements: list[str] = Field(default_factory=list, max_length=40)
+
+    @field_validator("date_from", "date_to")
+    @classmethod
+    def period_format(cls, value, info):
+        try:
+            return normalize_period(value, end=info.field_name == "date_to")
+        except ValueError:
+            # Legacy free-text periods remain readable; mutation contracts validate new input.
+            return value
 
 
 class Education(StrictModel):

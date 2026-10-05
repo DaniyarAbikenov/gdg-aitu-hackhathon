@@ -7,7 +7,7 @@ from xml.sax.saxutils import escape
 from zipfile import ZipFile
 
 from docx import Document
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from pypdf import PdfReader
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
@@ -19,6 +19,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from app.contracts import Education, Experience, Project
 from app.domain.errors import InvalidDocument
 from app.domain.models import ResumeFields
+from app.domain.periods import validate_history
 from app.domain.review import extract_fields
 from app.infrastructure.ai import structured_ai
 
@@ -220,6 +221,11 @@ class ExtractedResume(BaseModel):
     certificates: str = Field(default="", max_length=3000)
     languages: str = Field(default="", max_length=500)
 
+    @model_validator(mode="after")
+    def validate_dates(self):
+        validate_history(self.model_dump())
+        return self
+
 
 class ComposedResume(BaseModel):
     fields: ExtractedResume
@@ -251,7 +257,7 @@ class Documents:
             else:
                 source = {"text": extract_text(filename, data)}
             fields = self.ai.generate(
-                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. Use structured entries for experience, education and projects. Use zero for unknown years and empty strings for unknown dates. Do not infer or invent missing facts. Empty fields are allowed.",
+                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. Use structured entries for experience, education and projects. For work dates return YYYY-MM when a month is stated, YYYY when only a year is stated, and present for an explicitly ongoing role. Never invent a month or a day. Use zero for unknown education years and empty strings for unknown work dates. Do not infer or invent missing facts. Empty fields are allowed.",
                 source,
                 ExtractedResume,
                 document=data if pdf else None,
