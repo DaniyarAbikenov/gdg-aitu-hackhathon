@@ -263,3 +263,53 @@ def test_failed_atomic_apply_rolls_back_resume_versions_and_assessment(client, a
     assert client.get(path).json()["fields"]["summary"] == ""
     assert client.get(path + "/versions").json() == []
     assert len(client.get(path + "/assessment").json()["improvements"]) == 1
+
+
+def test_resume_exports_group_dates_and_omit_unknown_years():
+    import io
+
+    from docx import Document
+    from pypdf import PdfReader
+
+    from app.domain.models import ResumeFields
+    from app.infrastructure.documents import Documents
+
+    fields = ResumeFields(
+        full_name="Demo Candidate",
+        position="Engineer",
+        education=[
+            {
+                "institution": "University",
+                "degree": "Computer Science",
+                "year_start": 2022,
+                "year_end": 0,
+            }
+        ],
+        experience=[
+            {
+                "company": "Library",
+                "role": "Developer",
+                "date_from": "2024-01",
+                "date_to": "present",
+                "location": "Remote",
+                "responsibilities": "Build APIs",
+                "achievements": ["Delivered a documented API"],
+            }
+        ],
+        projects=[
+            {
+                "title": "Books",
+                "description": "A personal project",
+                "tech": ["Python", "PostgreSQL"],
+            }
+        ],
+    )
+    pdf = "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(Documents().pdf(fields))).pages)
+    word = "\n".join(p.text for p in Document(io.BytesIO(Documents().docx(fields))).paragraphs)
+    for output in [pdf, word]:
+        assert "Developer · Library" in output
+        assert "2024-01 — present · Remote" in output
+        assert "Computer Science · University" in output
+        assert "Python · PostgreSQL" in output
+        assert "2022 — 0" not in output
+        assert "year_start" not in output

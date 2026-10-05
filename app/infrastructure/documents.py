@@ -79,6 +79,64 @@ FONT_PATH = Path(__file__).parents[1] / "assets" / "NotoSans-Regular.ttf"
 pdfmetrics.registerFont(TTFont("CareerSans", str(FONT_PATH)))
 
 
+def resume_sections(fields):
+    """Readable, ordered blocks shared by PDF and Word (never dictionary dumps)."""
+    sections = []
+    for title, key in [
+        ("Profile", "summary"),
+        ("Skills", "skills"),
+        ("Experience", "experience"),
+        ("Education", "education"),
+        ("Projects", "projects"),
+        ("Certificates", "certificates"),
+        ("Languages", "languages"),
+    ]:
+        value = getattr(fields, key)
+        if not value:
+            continue
+        blocks = []
+        if key == "skills":
+            blocks = [" · ".join(value)]
+        elif isinstance(value, str):
+            blocks = [line for line in value.splitlines() if line.strip()]
+        else:
+            for entry in value:
+                if key == "experience":
+                    lines = [
+                        " · ".join(v for v in [entry.get("role"), entry.get("company")] if v),
+                        " · ".join(
+                            v
+                            for v in [
+                                " — ".join(
+                                    str(v)
+                                    for v in [entry.get("date_from"), entry.get("date_to")]
+                                    if v
+                                ),
+                                entry.get("location"),
+                            ]
+                            if v
+                        ),
+                        entry.get("responsibilities", ""),
+                        *["• " + item for item in entry.get("achievements", [])],
+                    ]
+                elif key == "education":
+                    lines = [
+                        " · ".join(v for v in [entry.get("degree"), entry.get("institution")] if v),
+                        " — ".join(
+                            str(v) for v in [entry.get("year_start"), entry.get("year_end")] if v
+                        ),
+                    ]
+                else:
+                    lines = [
+                        entry.get("title", ""),
+                        entry.get("description", ""),
+                        " · ".join(entry.get("tech", [])),
+                    ]
+                blocks.append("\n".join(line for line in lines if line))
+        sections.append((title, blocks))
+    return sections
+
+
 def render_pdf(fields, template="modern"):
     accent = {"modern": "#08766f", "classic": "#243943", "minimalist": "#333333"}[template]
     output = io.BytesIO()
@@ -127,29 +185,10 @@ def render_pdf(fields, template="modern"):
     contact = " · ".join(v for v in [fields.phone, fields.location] if v)
     if contact:
         story.append(paragraph(contact))
-    sections = [
-        ("Profile", fields.summary),
-        ("Skills", " · ".join(fields.skills)),
-        ("Experience & projects", fields.experience),
-        ("Education", fields.education),
-        ("Projects", fields.projects),
-        ("Certificates", fields.certificates),
-        ("Languages", fields.languages),
-    ]
-    for title, value in sections:
-        if value:
-            story.append(paragraph(title, "CareerSection"))
-            # Split long user text into flowable paragraphs to allow page breaks.
-            if isinstance(value, list):
-                value = "\n\n".join(
-                    "\n".join(
-                        ", ".join(str(v) for v in item) if isinstance(item, list) else str(item)
-                        for item in row.values()
-                        if item
-                    )
-                    for row in value
-                )
-            for line in value.splitlines():
+    for title, blocks in resume_sections(fields):
+        story.append(paragraph(title, "CareerSection"))
+        for block in blocks:
+            for line in block.splitlines():
                 if line.strip():
                     story.append(paragraph(line))
             story.append(Spacer(1, 3))
@@ -244,32 +283,19 @@ class Documents:
         document.add_paragraph(
             " · ".join(v for v in [fields.email, fields.phone, fields.location] if v)
         )
-        for title, key in [
-            ("Profile", "summary"),
-            ("Skills", "skills"),
-            ("Experience", "experience"),
-            ("Education", "education"),
-            ("Projects", "projects"),
-            ("Certificates", "certificates"),
-            ("Languages", "languages"),
-        ]:
-            value = getattr(fields, key)
-            if not value:
-                continue
+        from docx.shared import Inches, Pt
+
+        section = document.sections[0]
+        section.top_margin = section.bottom_margin = Inches(0.65)
+        section.left_margin = section.right_margin = Inches(0.7)
+        normal = document.styles["Normal"]
+        normal.font.name = "Calibri"
+        normal.font.size = Pt(11)
+        normal.paragraph_format.space_after = Pt(6)
+        for title, blocks in resume_sections(fields):
             document.add_heading(title, 1)
-            if isinstance(value, list):
-                for item in value:
-                    if isinstance(item, dict):
-                        for v in item.values():
-                            if isinstance(v, list):
-                                for entry in v:
-                                    document.add_paragraph(str(entry), style="List Bullet")
-                            elif v:
-                                document.add_paragraph(str(v))
-                    else:
-                        document.add_paragraph(str(item), style="List Bullet")
-            else:
-                document.add_paragraph(value)
+            for block in blocks:
+                document.add_paragraph(block)
         output = io.BytesIO()
         document.save(output)
         return output.getvalue()

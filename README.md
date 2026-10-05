@@ -65,9 +65,9 @@ Then run `docker compose up --build --wait`. Never commit `.env`. The selected p
 
 Google login separately requires `CAREER_GOOGLE_CLIENT_ID` and an authorized web origin in Google Cloud. Email/password registration and login use PostgreSQL accounts and Redis sessions, and work independently without Google credentials. Leave `CAREER_GOOGLE_CLIENT_ID` empty to use only email/password; the Google button is hidden. Set it to enable Google alongside email/password. No accounts or saved data are deleted when changing providers. Passwords need at least 12 characters. Google ID tokens are verified server-side, with a single-use Redis nonce. Existing Firebase accounts are not automatically migrated.
 
-![Original React dashboard](docs/screenshots/studio.png)
+![Career preparation dashboard](docs/screenshots/studio.png)
 
-Screenshots use a fictional account in the explicitly labelled test environment: [resume editor](docs/screenshots/resume.png), [interview](docs/screenshots/interview.png), [plan](docs/screenshots/plan.png).
+Screenshots show a separate fictional account persisted in the local production configuration, with no fabricated AI scores: [vacancy workspace](docs/screenshots/vacancy.png), [resume editor](docs/screenshots/resume.png), [product introduction](docs/screenshots/landing.png). AI actions are unavailable until the server provider is configured.
 
 ## Workflows
 
