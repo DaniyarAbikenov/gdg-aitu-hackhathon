@@ -47,6 +47,7 @@ class Target(StrictModel):
 
 
 class Article(StrictModel):
+    language: Literal["ru", "en", "kk"] = "ru"
     title: str = Field(min_length=3, max_length=200)
     category: str = Field(min_length=1, max_length=100)
     body: str = Field(min_length=20, max_length=50000)
@@ -209,8 +210,12 @@ def product_router(settings):
         return request.app.state.career.store.create(kind, current, payload.model_dump())
 
     @routes.get("/knowledge")
-    def knowledge(request: Request, q: str = Query(default="", max_length=200)):
-        return request.app.state.knowledge.list(q)
+    def knowledge(
+        request: Request,
+        q: str = Query(default="", max_length=200),
+        language: Literal["ru", "en", "kk"] | None = None,
+    ):
+        return request.app.state.knowledge.list(q, language=language)
 
     @routes.get("/admin/knowledge")
     def articles(request: Request, current: Session = Depends(admin)):

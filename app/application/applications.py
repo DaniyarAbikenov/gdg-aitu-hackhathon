@@ -15,7 +15,9 @@ class Applications:
         if data.get("resume_id"):
             self.career.resumes.get(session.owner, data["resume_id"])
         if data.get("company_id"):
-            self.store.get("company", session.owner, data["company_id"])
+            selected_company = self.store.get("company", session.owner, data["company_id"])
+            data["company_name"] = selected_company.data["name"]
+            data["company_description"] = selected_company.data.get("description", "")
         if record_id:
             current = self.store.get("vacancy", session.owner, record_id)
             if current.revision != revision:
@@ -40,7 +42,7 @@ class Applications:
                 {
                     "name": data["company_name"],
                     "description": data.get("company_description") or data["company_name"],
-                    "skills": [],
+                    "skills": data.get("skills", []),
                 },
             )
         data["company_id"] = company.id
@@ -71,34 +73,40 @@ class Applications:
                 **record.data,
             }
             company = companies.get(data.get("company_id"), {})
-            data["company_name"] = data["company_name"] or company.get("name", "")
-            data["company_description"] = data["company_description"] or company.get(
-                "description", ""
-            )
+            data["company_name"] = company.get("name") or data["company_name"]
+            data["company_description"] = company.get("description") or data["company_description"]
             related_interviews = [
                 i for i in interviews if i.data["context"].get("vacancy_id") == record.id
             ]
             related_plans = [p for p in plans if p.data.get("vacancy_id") == record.id]
             resume = resumes.get(data["resume_id"])
+            next_step_key = "custom"
             if data["status"] in {"offer", "rejected", "archived"}:
                 next_step = "Подведите итоги и сохраните полезные выводы."
+                next_step_key = "wrapUp"
             elif data["next_action"]:
                 next_step = data["next_action"]
             elif not resume:
                 next_step = "Выберите резюме для этой вакансии."
+                next_step_key = "chooseResume"
             elif not related_interviews:
                 next_step = "Пройдите тренировку по требованиям вакансии."
+                next_step_key = "practice"
             elif not any(i.data["finished"] for i in related_interviews):
                 next_step = "Завершите начатую тренировку."
+                next_step_key = "finish"
             elif not related_plans:
                 next_step = "Составьте план по результатам подготовки."
+                next_step_key = "plan"
             else:
                 next_step = "Запланируйте отклик или следующий контакт."
+                next_step_key = "contact"
             results.append(
                 {
                     **asdict(record),
                     "data": data,
                     "next_step": next_step,
+                    "next_step_key": next_step_key,
                     "resume_title": resume.title if resume else None,
                     "interviews": [
                         {

@@ -182,7 +182,15 @@ class CareerService:
         self.sessions.consume_analysis(session)
         for kind in ["company", "vacancy"]:
             if context.get(kind + "_id"):
-                self.store.get(kind, session.owner, context[kind + "_id"])
+                record = self.store.get(kind, session.owner, context[kind + "_id"])
+                if kind == "company":
+                    context = {
+                        **context,
+                        "company_research": {
+                            k: record.data.get(k, [] if k in {"skills", "assignments"} else "")
+                            for k in ["skills", "assignments", "hiring_process"]
+                        },
+                    }
         if context.get("mode") == "voice":
             return self.store.create(
                 "interview",

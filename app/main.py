@@ -11,6 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.application.accounts import Accounts
 from app.application.applications import Applications
 from app.application.career import CareerService
+from app.application.companies import Companies
 from app.application.overview import Overview
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
@@ -26,6 +27,7 @@ from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
 from app.infrastructure.reviewer import Reviewer
 from app.infrastructure.skills import PostgresSkillRepository
+from app.infrastructure.vacancy_reader import VacancyReader
 from app.infrastructure.voice import RealtimeVoice
 from app.presentation.api import router
 from app.presentation.applications import applications_router
@@ -61,6 +63,8 @@ def create_app(settings=None, reviewer=None):
 
         app.state.overview = Overview(app.state.career, ActivityRepository(repository.sessions))
         app.state.applications = Applications(app.state.career)
+        app.state.companies = Companies(career_store)
+        app.state.vacancy_reader = VacancyReader(settings)
         app.state.accounts = Accounts(app.state.career, ActivityRepository(repository.sessions))
         app.state.voice = RealtimeVoice(settings)
         app.state.knowledge = KnowledgeRepository(repository.sessions)

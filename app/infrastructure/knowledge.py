@@ -11,6 +11,7 @@ from app.infrastructure.postgres import Base
 class ArticleRow(Base):
     __tablename__ = "knowledge_articles"
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    language: Mapped[str] = mapped_column(String(2), default="ru", server_default="ru")
     title: Mapped[str] = mapped_column(String(200))
     category: Mapped[str] = mapped_column(String(100))
     body: Mapped[str] = mapped_column(Text)
@@ -22,7 +23,16 @@ class ArticleRow(Base):
 def article(row):
     return {
         k: getattr(row, k)
-        for k in ["id", "title", "category", "body", "published", "revision", "updated_at"]
+        for k in [
+            "id",
+            "title",
+            "category",
+            "body",
+            "published",
+            "revision",
+            "updated_at",
+            "language",
+        ]
     }
 
 
@@ -30,7 +40,7 @@ class KnowledgeRepository:
     def __init__(self, sessions):
         self.sessions = sessions
 
-    def list(self, query, admin=False):
+    def list(self, query, admin=False, language=None):
         with self.sessions() as db:
             q = query.replace("%", "\\%").replace("_", "\\_")
             statement = select(ArticleRow).where(
@@ -40,6 +50,8 @@ class KnowledgeRepository:
                     ArticleRow.category.ilike(f"%{q}%"),
                 )
             )
+            if language:
+                statement = statement.where(ArticleRow.language == language)
             if not admin:
                 statement = statement.where(ArticleRow.published.is_(True))
             return [
