@@ -131,7 +131,7 @@ pytest==8.4.2
     # via
     #   -r requirements-dev.in
     #   pytest-cov
-pytest-cov==7.0.0
+pytest-cov==7.1.0
     # via -r requirements-dev.in
 python-docx==1.2.0
     # via -r requirements.in
