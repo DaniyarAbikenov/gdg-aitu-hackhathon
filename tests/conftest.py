@@ -3,7 +3,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 
 from app.config import Settings
@@ -30,14 +30,17 @@ def app(settings):
 
 
 @pytest.fixture
-def client(app):
-    with TestClient(app) as client:
-        with app.state.repository.engine.begin() as db:
-            db.execute(
-                text(
-                    "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards, career_preferences, career_companies, career_vacancies, career_activity, career_assessments"
-                )
+def client(app, settings):
+    engine = create_engine(settings.database_url)
+    with engine.begin() as db:
+        db.execute(
+            text(
+                "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards, career_preferences, career_companies, career_vacancies, career_activity, career_assessments"
             )
+        )
+    engine.dispose()
+    # Start expiry cleanup only after the exclusive fixture reset has finished.
+    with TestClient(app) as client:
         client.post("/api/session")
         yield client
         keys = list(app.state.sessions.client.scan_iter(app.state.sessions.namespace + ":*"))

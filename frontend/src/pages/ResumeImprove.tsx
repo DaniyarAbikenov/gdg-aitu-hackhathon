@@ -131,6 +131,12 @@ export default function ResumeImprove() {
           </p>
         )}
         <Link
+          className="text-primary underline block"
+          to={`/resume/${resumeId}/edit`}
+        >
+          Редактировать вручную
+        </Link>
+        <Link
           className="text-primary underline"
           to={`/resume/${resumeId}/generate`}
         >

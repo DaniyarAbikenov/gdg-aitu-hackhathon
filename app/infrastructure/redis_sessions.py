@@ -28,6 +28,7 @@ class RedisSessions:
         self.seconds = settings.session_hours * 3600
         self.analysis_limit = settings.analysis_per_hour
         self.auth_limit = settings.auth_per_15_minutes
+        self.creation_limit = settings.session_creations_per_hour
         self.increment = self.client.register_script(RATE_SCRIPT)
 
     def key(self, token):
@@ -42,7 +43,7 @@ class RedisSessions:
     def create(self, client_id, owner=None, auth_version=0):
         fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
         key = f"{self.namespace}:new-session:{fingerprint}"
-        if self.increment(keys=[key], args=[3600]) > 30:
+        if self.increment(keys=[key], args=[3600]) > self.creation_limit:
             raise QuotaExceeded
         token = secrets.token_urlsafe(32)
         value = {

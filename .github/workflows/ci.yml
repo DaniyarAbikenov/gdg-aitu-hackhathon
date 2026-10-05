@@ -45,8 +45,8 @@ jobs:
           cache: pip
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
-      - run: ruff check app tests migrations
-      - run: ruff format --check app tests migrations
+      - run: ruff check app tests migrations scripts
+      - run: ruff format --check app tests migrations scripts
       - run: alembic upgrade head
       - run: alembic check
       - run: pytest --cov=app --cov-report=term-missing --cov-report=xml
@@ -92,6 +92,8 @@ jobs:
         env:
           CAREER_PROVIDER: local
           CAREER_ADMIN_EMAILS: admin-e2e@example.test
+          CAREER_AUTH_PER_15_MINUTES: 100
+          CAREER_SESSION_CREATIONS_PER_HOUR: 100
       - run: printf '%s\n' 'Portfolio-test-password-42' | docker compose exec -T backend python -m app.manage admin-e2e@example.test --password-stdin
       - run: curl --fail http://127.0.0.1:8080/health
       - run: npm run test:e2e

@@ -1,6 +1,8 @@
-# CareerBot
+# A2D Career Studio
 
-A career preparation application from the GDG AITU hackathon: profile → resume adaptation → interview practice → learning plan → progress.
+A vacancy-centred career preparation MVP for early-career IT candidates. Connect confirmed profile facts, a tailored resume, interview practice and a learning plan around one saved job opportunity. Evolved from the GDG AITU hackathon CareerBot.
+
+[Product decisions and market context](docs/product.md) · [Five-minute demo](docs/demo.md) · [Operating notes](docs/operations.md)
 
 [![CI](https://github.com/DaniyarAbikenov/gdg-aitu-hackhathon/actions/workflows/ci.yml/badge.svg)](https://github.com/DaniyarAbikenov/gdg-aitu-hackhathon/actions/workflows/ci.yml)
 
@@ -69,7 +71,8 @@ Screenshots use a fictional account in the explicitly labelled test environment:
 
 ## Workflows
 
-- Register, log in, edit a profile, save language and dictation preferences, and log out without losing data.
+- Register, log in, edit a profile, save language, and log out without losing data. Export private records, change a password (revoking old sessions), or delete a password account with confirmation.
+- Save vacancies, track application stages and next-contact dates, and reuse the same context across resume, interview and learning workflows. No messages or applications are sent automatically.
 - Upload or drag-and-drop PDF (up to 5 MiB/20 pages), DOCX or TXT, review extracted fields and edit experience, education and projects as structured entries. The API also accepts UTF-8 text files. Original upload bytes are not retained.
 - Adapt to a vacancy with OpenAI or Gemini; inspect before/after proposals, accept selected changes into saved versions, compare snapshots, restore and download PDFs in three styles.
 - Start an interview, receive coaching, reload or resume a saved session from history, and review scores and reference answers. Scores describe practice performance, not hiring suitability.
@@ -101,13 +104,18 @@ docker compose -p career-tests -f compose.test.yml up --build --abort-on-contain
 docker compose -p career-tests -f compose.test.yml down --volumes
 
 # Browser tests against a disposable stack with an explicitly selected test provider:
-CAREER_PROVIDER=local CAREER_PORT=8091 docker compose -p career-browser up --build --wait
+CAREER_PROVIDER=local CAREER_PORT=8091 CAREER_SESSION_CREATIONS_PER_HOUR=100 CAREER_AUTH_PER_15_MINUTES=100 CAREER_ADMIN_EMAILS=admin-e2e@example.test docker compose -p career-browser up --build --wait
+printf '%s\n' 'Portfolio-test-password-42' | docker compose -p career-browser exec -T backend python -m app.manage admin-e2e@example.test --password-stdin
 npm ci
 npx playwright install chromium
 BASE_URL=http://127.0.0.1:8091 npm run test:e2e
 ```
 
+The isolated browser stack raises auth attempts to 100 per 15 minutes and session creation to 100 per hour because all browser accounts share one test IP; the default runtime limits remain 15 auth attempts per 15 minutes and 30 new sessions per hour.
+
 GitHub Actions validates frontend types/lint/build/runtime dependency audit, Python lint/format/migrations/tests/coverage/audit, and a complete Docker stack with desktop/mobile browser journeys. The integration suite refuses to truncate a database not named `career_test`.
+
+The home page explains the product before sign-in. Run `python3 scripts/seed_demo.py --url http://localhost:8080` to create a separate fictional presentation account with manual profile/vacancy/resume data and no invented AI results.
 
 API schema: **http://localhost:8080/api/openapi.json**. Swagger: **http://localhost:8080/api/docs**.
 

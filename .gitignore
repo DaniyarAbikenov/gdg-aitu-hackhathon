@@ -25,3 +25,6 @@ firebase-key.json
 !frontend/src/data/**
 
 .admin-initial-password
+
+.demo-initial-password
+work/backups/

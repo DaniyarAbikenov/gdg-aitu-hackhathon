@@ -20,7 +20,7 @@ Accounts use salted scrypt password hashes or a verified Google subject. Registr
 
 ## Coaching and document adapters
 
-The actual Gemini adapter implements document extraction, concrete resume rewrites, interview generation/evaluation and learning plans with bounded schemas. A separate deterministic behavior within the adapter makes the demo runnable without credentials and labels every result. Neither mode pretends to calculate hiring probability.
+The OpenAI Responses and Gemini adapters implement document extraction, concrete resume rewrites, interview generation/evaluation and learning plans with bounded schemas. An explicit deterministic provider is used only in isolated tests and labels every result. The presentation account uses manual workflows; AI is never silently replaced. No adapter claims to calculate hiring probability.
 
 AI data is untrusted. Rewrites refer to exact current sections, are shown with before/after/reason and require acceptance. Interview reference answers stay server-side until the corresponding answer is submitted. A failed provider call leaves the stored revision unchanged. PDF rendering escapes user text and performs no network fetches.
 
@@ -28,8 +28,18 @@ AI data is untrusted. Rewrites refer to exact current sections, are shown with b
 
 Guest records expire after a bounded session lifetime; account data survives sign-out. Expired data is filtered immediately and purged periodically. Individual records and full workspaces can be deleted. Resume deletion removes its snapshots.
 
-Tests use real PostgreSQL and Redis. Mock transports isolate external Google/Gemini protocols only. Browser tests exercise complete journeys and reload persistence on desktop/mobile. CI runs migrations, checks schema drift and dependency vulnerabilities, and builds/boots the Docker application.
+Tests use real PostgreSQL and Redis. Mock transports isolate external Google/OpenAI/Gemini protocols only. Browser tests exercise complete journeys and reload persistence on desktop/mobile. CI runs migrations, checks schema drift and dependency vulnerabilities, and builds/boots the Docker application.
 
 ## Remaining deployment concerns
 
 The shipped configuration is for local evaluation. Public hosting needs HTTPS, secure cookies, operational credentials/backups and monitoring. Account recovery, legacy data migration and complete translation of explanatory copy are separate follow-up work. Dictation is a browser integration; NotebookLM is a manual exported-source workflow.
+
+## Vacancy-centred preparation
+
+A saved vacancy remains one `career_vacancies` aggregate shared with the original interview catalog. Its bounded document includes application status, company identity, requirements, selected resume, next action/date and private notes. Existing catalog records acquire defaults at read time. The application layer derives related interviews and plans from owner-scoped references; the UI passes the vacancy ID across workflows. Learning incorporates the selected resume assessment and latest completed interview, rather than only a generic position string. Creating a resume and attaching it to the vacancy is one database transaction.
+
+## Accepted AI edits and account controls
+
+A proposal is selected by its server-issued ID from the saved assessment. The service requires the assessment's source revision to match the resume. The infrastructure transaction checks both revisions, reserves the version quota, stores before/after snapshots, updates the current resume and advances the remaining assessment together. A failing write rolls everything back. Proposed structured fields are validated against the resume contract before being presented.
+
+`accounts.auth_version` provides durable revocation of previously issued sessions. Redis carries the version issued at login; authenticated requests compare it with PostgreSQL. Changing a password increments the version. Account deletion removes private aggregates and the account in one transaction; old sessions cannot regain access because the account no longer exists. The legacy guest-workspace deletion endpoint refuses persistent accounts. Password hashes, session tokens and server credentials are excluded from account exports.

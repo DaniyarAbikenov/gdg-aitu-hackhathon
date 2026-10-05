@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     secure_cookie: bool = False
     session_hours: int = Field(default=24, ge=1, le=168)
     max_upload_bytes: int = Field(default=5 * 1024 * 1024, ge=1024, le=10_000_000)
+    session_creations_per_hour: int = Field(default=30, ge=1, le=500)
     auth_per_15_minutes: int = Field(default=15, ge=1, le=100)
     analysis_per_hour: int = Field(default=30, ge=1, le=1000)
 

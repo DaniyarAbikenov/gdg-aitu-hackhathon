@@ -52,7 +52,7 @@ def router(settings):
         request.app.state.sessions.health()
         return {
             "status": "ok",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "provider": settings.provider,
             "development": settings.environment == "development",
         }

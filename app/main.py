@@ -91,7 +91,7 @@ def create_app(settings=None, reviewer=None):
     app = FastAPI(
         title="CareerBot",
         servers=[{"url": "/api", "description": "Docker gateway"}],
-        version="0.3.0",
+        version="0.4.0",
         lifespan=lifespan,
         description="Upload, review, compare and export a factual resume. Start with /api/session.",
     )

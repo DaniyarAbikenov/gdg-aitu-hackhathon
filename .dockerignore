@@ -18,3 +18,7 @@ firebase-key.json
 *.key
 
 frontend
+
+.*-initial-password
+work/backups
+*.dump

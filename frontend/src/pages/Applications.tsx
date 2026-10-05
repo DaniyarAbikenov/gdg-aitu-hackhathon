@@ -212,6 +212,7 @@ export default function Applications() {
               <label>
                 Статус отклика
                 <select
+                  aria-label="Статус отклика"
                   className="block w-full p-2 border rounded bg-background"
                   value={draft.status}
                   onChange={(e) => change("status", e.target.value)}
@@ -226,6 +227,7 @@ export default function Applications() {
               <label>
                 Резюме для вакансии
                 <select
+                  aria-label="Резюме для вакансии"
                   className="block w-full p-2 border rounded bg-background"
                   value={draft.resume_id || ""}
                   onChange={(e) => change("resume_id", e.target.value)}
@@ -323,6 +325,20 @@ export default function Applications() {
               >
                 Открыть исходную вакансию ↗
               </a>
+            )}
+            {selected.resume_title && (
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline">
+                  <Link to={`/resume/${selected.data.resume_id}/edit`}>
+                    Редактировать резюме
+                  </Link>
+                </Button>
+                <Button asChild variant="outline">
+                  <Link to={`/resume/${selected.data.resume_id}/generate`}>
+                    Экспорт PDF / Word
+                  </Link>
+                </Button>
+              </div>
             )}
             <div className="grid md:grid-cols-3 gap-4">
               {[

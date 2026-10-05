@@ -1,0 +1,38 @@
+{
+  "full_name": "Демо Кандидат",
+  "email": "demo.candidate@example.com",
+  "location": "Алматы / удалённо",
+  "desired_position": "Junior Backend Developer",
+  "career_goal": "Подготовиться к первой backend-позиции на Python",
+  "language": "ru",
+  "summary": "Демонстрационный профиль: все данные вымышлены. Начинающий backend-разработчик. Учебные проекты на Python, FastAPI и PostgreSQL; умею описывать API и покрывать основные сценарии тестами.",
+  "skills": [
+    "Python",
+    "FastAPI",
+    "PostgreSQL",
+    "Git",
+    "Docker"
+  ],
+  "experience": [],
+  "education": [
+    {
+      "institution": "Демонстрационный университет",
+      "degree": "Бакалавриат Computer Science",
+      "year_start": 2022,
+      "year_end": 2026
+    }
+  ],
+  "projects": [
+    {
+      "title": "Учебная библиотека",
+      "description": "Учебный API для каталога книг: поиск, регистрация, учёт выдачи, миграции и тесты. Вымышленный пример для демонстрации интерфейса.",
+      "tech": [
+        "Python",
+        "FastAPI",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "languages": "Русский, английский",
+  "certificates": ""
+}

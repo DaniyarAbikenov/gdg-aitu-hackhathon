@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import client from "@/api/client";
 import { useAuthStore } from "@/store/auth";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ export function AccountControls({
 }: {
   passwordAccount: boolean;
 }) {
-  const navigate = useNavigate();
   const email = useAuthStore((s) => s.email);
   const [mode, setMode] = useState<"password" | "delete" | null>(null);
   const [password, setPassword] = useState(""),
@@ -29,8 +27,7 @@ export function AccountControls({
           password,
           new_password: next,
         });
-      useAuthStore.getState().setUnauthenticated();
-      navigate(
+      window.location.replace(
         `/login?account=${mode === "delete" ? "deleted" : "password-changed"}`,
       );
     } catch (e) {
