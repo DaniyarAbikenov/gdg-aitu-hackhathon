@@ -1,0 +1,22 @@
+Alex Morgan
+alex.morgan@example.com
+
+Summary
+Backend developer building clear, reliable web services. I enjoy turning a product idea into a tested API.
+
+Skills
+Python, FastAPI, PostgreSQL, Docker, Git, REST
+
+Experience
+Backend developer — Community Library, 2024–2025
+Built a book reservation API with FastAPI and PostgreSQL.
+Added Docker containers to make development setup reproducible.
+Worked with a designer on the member registration flow.
+
+Projects
+Local Events API
+Designed REST endpoints for searching events and saving favorites.
+Documented setup instructions and API examples.
+
+Education
+BSc Computer Science, Example University, 2025

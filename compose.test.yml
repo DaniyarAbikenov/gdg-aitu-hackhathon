@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: career_test
+      POSTGRES_USER: career
+      POSTGRES_PASSWORD: test-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U career -d career_test"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+  tests:
+    build:
+      context: .
+      target: test
+    environment:
+      CAREER_DATABASE_URL: postgresql+psycopg://career:test-only@postgres:5432/career_test
+      CAREER_REDIS_URL: redis://redis:6379/15
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

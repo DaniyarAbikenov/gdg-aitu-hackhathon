@@ -1,32 +1,83 @@
-version: "3.9"
-
 services:
-#  postgres:
-#    image: postgres:15
-#    container_name: careerbot_postgres
-#    restart: always
-#    environment:
-#      POSTGRES_USER: careerbot
-#      POSTGRES_PASSWORD: careerpass
-#      POSTGRES_DB: careerbot_db
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - pg_data:/var/lib/postgresql/data   # постоянные данные
-
-  backend:
-    build: .
-    container_name: careerbot_api
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./app:/app
-      - ./uploads:/uploads                 # пользовательские файлы не удаляются
+  postgres:
+    image: postgres:17-alpine
     environment:
-      - DATABASE_URL=postgresql+asyncpg://careerbot:careerpass@postgres:5432/careerbot_db
+      POSTGRES_DB: career
+      POSTGRES_USER: career
+      POSTGRES_PASSWORD: ${CAREER_DB_PASSWORD:-career-local-only}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U career -d career"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "128mb", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  migrate:
+    build:
+      context: .
+      target: runtime
+    command: ["alembic", "upgrade", "head"]
+    environment:
+      CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
     depends_on:
-      - postgres
-
-#volumes:
-#  pg_data:
+      postgres:
+        condition: service_healthy
+  backend:
+    build:
+      context: .
+      target: runtime
+    environment:
+      CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
+      CAREER_REDIS_URL: redis://redis:6379/0
+      CAREER_GOOGLE_CLIENT_ID: ${CAREER_GOOGLE_CLIENT_ID:-}
+      CAREER_ENVIRONMENT: ${CAREER_ENVIRONMENT:-production}
+      CAREER_SESSION_CREATIONS_PER_HOUR: ${CAREER_SESSION_CREATIONS_PER_HOUR:-30}
+      CAREER_AUTH_PER_15_MINUTES: ${CAREER_AUTH_PER_15_MINUTES:-15}
+      CAREER_ADMIN_EMAILS: ${CAREER_ADMIN_EMAILS:-}
+      CAREER_OPENAI_REALTIME_MODEL: ${CAREER_OPENAI_REALTIME_MODEL:-}
+      CAREER_OPENAI_TRANSCRIPTION_MODEL: ${CAREER_OPENAI_TRANSCRIPTION_MODEL:-}
+      CAREER_PROVIDER: ${CAREER_PROVIDER:-unconfigured}
+      CAREER_OPENAI_API_KEY: ${CAREER_OPENAI_API_KEY:-}
+      CAREER_OPENAI_MODEL: ${CAREER_OPENAI_MODEL:-}
+      CAREER_GEMINI_API_KEY: ${CAREER_GEMINI_API_KEY:-}
+      CAREER_GEMINI_MODEL: ${CAREER_GEMINI_MODEL:-}
+      CAREER_SECURE_COOKIE: ${CAREER_SECURE_COOKIE:-false}
+      CAREER_SESSION_HOURS: ${CAREER_SESSION_HOURS:-24}
+      CAREER_ANALYSIS_PER_HOUR: ${CAREER_ANALYSIS_PER_HOUR:-30}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:${CAREER_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  redis_data:
