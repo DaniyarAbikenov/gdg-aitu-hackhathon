@@ -1,9 +1,11 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import client from "@/api/client";
 import type { ApplicationRecord } from "@/types/product";
 export function NextSteps() {
+  useLocale();
   const [items, setItems] = useState<ApplicationRecord[] | null>(null),
     [error, setError] = useState("");
   useEffect(() => {
@@ -27,18 +29,18 @@ export function NextSteps() {
   return (
     <section
       className="rounded-xl border bg-primary/5 p-5 space-y-3"
-      aria-label="Следующие действия"
+      aria-label={tr("copy.c052")}
     >
       <div className="flex flex-wrap gap-3 justify-between">
-        <h2 className="text-xl font-semibold">Следующий шаг к работе</h2>
+        <h2 className="text-xl font-semibold">{tr("copy.c053")}</h2>
         <Link to="/applications" className="text-primary underline">
-          Все вакансии
+          {tr("copy.c054")}
         </Link>
       </div>
       {error ? (
         <p role="alert">{error}</p>
       ) : !items ? (
-        <p>Загрузка…</p>
+        <p>{tr("copy.c000")}</p>
       ) : items.length ? (
         items.slice(0, 3).map((a) => (
           <Link
@@ -50,9 +52,15 @@ export function NextSteps() {
               <p className="font-medium">
                 {a.data.company_name} · {a.data.name}
               </p>
-              <p className="text-sm text-muted-foreground">{a.next_step}</p>
+              <p className="text-sm text-muted-foreground">
+                {a.next_step_key && a.next_step_key !== "custom"
+                  ? tr("nextStep." + a.next_step_key)
+                  : a.next_step}
+              </p>
               {a.data.follow_up && (
-                <p className="text-sm">Следующий контакт: {a.data.follow_up}</p>
+                <p className="text-sm">
+                  {tr("copy.c055")} {a.data.follow_up}
+                </p>
               )}
             </div>
             <ArrowRight className="shrink-0" size={18} />
@@ -60,15 +68,12 @@ export function NextSteps() {
         ))
       ) : (
         <>
-          <p>
-            Выберите реальную вакансию. Её требования станут основой резюме,
-            интервью и учебного плана.
-          </p>
+          <p>{tr("copy.c056")}</p>
           <Link
             className="inline-flex items-center gap-2 font-medium text-primary underline"
             to="/applications"
           >
-            Сохранить первую вакансию
+            {tr("copy.c057")}
             <ArrowRight size={16} />
           </Link>
         </>

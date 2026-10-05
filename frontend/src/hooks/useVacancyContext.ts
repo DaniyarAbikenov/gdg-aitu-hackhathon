@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import client from "@/api/client";
@@ -18,10 +19,7 @@ export function useVacancyContext() {
           if (!active) return;
           const item = r.data.find((v) => v.id === id);
           if (item) setVacancy(item);
-          else
-            setError(
-              "Вакансия не найдена. Откройте её из списка ваших вакансий.",
-            );
+          else setError(tr("copy.c129"));
         })
         .catch((e) => {
           if (active) setError(e.message);

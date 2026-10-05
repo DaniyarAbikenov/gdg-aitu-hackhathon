@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import type { VoiceEvent } from "@/types/product";
 import type { InterviewRecord } from "@/api/interview";
 import { useEffect, useRef, useState } from "react";
@@ -7,13 +8,14 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 type Turn = { id: string; role: "user" | "assistant"; text: string };
 export default function VoiceInterview() {
+  useLocale();
   const [params] = useSearchParams();
   const id = params.get("id");
   const navigate = useNavigate();
   const [record, setRecord] = useState<InterviewRecord | null>(null);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [error, setError] = useState("");
-  const [status, setStatus] = useState("Готово к подключению");
+  const [status, setStatus] = useState(tr("copy.c497"));
   const [busy, setBusy] = useState(false);
   const [connected, setConnected] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -86,25 +88,18 @@ export default function VoiceInterview() {
     if (role === "user") setPendingInput(false);
     log.current.push({ id: key, role, text: event.transcript });
     setTurns([...log.current]);
-    void persist().catch(() =>
-      setError(
-        "Расшифровка ещё не сохранена. Нажмите «Повторить сохранение» перед выходом.",
-      ),
-    );
+    void persist().catch(() => setError(tr("copy.c498")));
   };
   const start = async () => {
     setBusy(true);
     setError("");
-    setStatus("Подключение микрофона…");
+    setStatus(tr("copy.c499"));
     setPendingInput(false);
     setResponding(false);
     setMuted(false);
     try {
       const caps = await client.get("/capabilities");
-      if (!caps.data.voice)
-        throw new Error(
-          "Голосовое интервью сейчас недоступно. Можно пройти текстовую тренировку.",
-        );
+      if (!caps.data.voice) throw new Error(tr("copy.c500"));
       media.current = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true },
       });
@@ -117,18 +112,14 @@ export default function VoiceInterview() {
       pc.ontrack = (e) => {
         if (audio.current) {
           audio.current.srcObject = e.streams[0];
-          void audio.current
-            .play()
-            .catch(() =>
-              setStatus("Нажмите воспроизведение, чтобы услышать интервьюера."),
-            );
+          void audio.current.play().catch(() => setStatus(tr("copy.c501")));
         }
       };
       pc.onconnectionstatechange = () => {
         if (["failed", "disconnected"].includes(pc.connectionState)) {
           cleanup();
           setConnected(false);
-          setStatus("Связь прервалась. Можно подключиться снова.");
+          setStatus(tr("copy.c502"));
           void stopServer();
         }
       };
@@ -141,18 +132,15 @@ export default function VoiceInterview() {
             setPendingInput(true);
           if (event.type === "response.created") setResponding(true);
           if (event.type === "response.done") setResponding(false);
-          if (event.type === "error")
-            setError(
-              "Ошибка голосового диалога. Переподключитесь или сохраните разговор.",
-            );
+          if (event.type === "error") setError(tr("copy.c503"));
           else capture(event);
         } catch {
-          setError("Не удалось прочитать событие диалога.");
+          setError(tr("copy.c504"));
         }
       };
       channel.onopen = () => {
         setConnected(true);
-        setStatus("Интервью идёт — можно говорить и перебивать интервьюера.");
+        setStatus(tr("copy.c505"));
         channel.send(
           JSON.stringify({
             type: "response.create",
@@ -180,8 +168,8 @@ export default function VoiceInterview() {
       cleanup();
       void stopServer();
       setConnected(false);
-      setError(e.message || "Не удалось подключить микрофон.");
-      setStatus("Подключение не выполнено");
+      setError(e.message || tr("copy.c506"));
+      setStatus(tr("copy.c507"));
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -203,7 +191,7 @@ export default function VoiceInterview() {
   const pause = async () => {
     cleanup();
     setConnected(false);
-    setStatus("Пауза. Расшифровка сохраняется.");
+    setStatus(tr("copy.c508"));
     setPendingInput(false);
     setResponding(false);
     try {
@@ -216,11 +204,8 @@ export default function VoiceInterview() {
   return (
     <MainLayout>
       <div className="max-w-4xl mx-auto p-6 space-y-5">
-        <h1 className="text-3xl font-bold">Голосовое интервью</h1>
-        <p className="text-muted-foreground">
-          Разговор с ИИ-интервьюером. Голос передаётся в OpenAI; сервис
-          сохраняет расшифровку и оценку, но не аудиозапись.
-        </p>
+        <h1 className="text-3xl font-bold">{tr("copy.c509")}</h1>
+        <p className="text-muted-foreground">{tr("copy.c510")}</p>
         {record && (
           <p>
             {record.context.company_name} · {record.context.vacancy_title}
@@ -238,7 +223,7 @@ export default function VoiceInterview() {
                   .catch((e) => setError(e.message))
               }
             >
-              Повторить сохранение
+              {tr("copy.c511")}
             </Button>
           </div>
         )}
@@ -246,7 +231,7 @@ export default function VoiceInterview() {
         <div className="flex flex-wrap gap-3">
           {!connected && !record?.finished && (
             <Button disabled={busy || !record} onClick={start}>
-              Начать голосовой диалог
+              {tr("copy.c512")}
             </Button>
           )}
           {connected && (
@@ -260,10 +245,10 @@ export default function VoiceInterview() {
                   setMuted(!muted);
                 }}
               >
-                {muted ? "Включить микрофон" : "Выключить микрофон"}
+                {muted ? tr("copy.c513") : tr("copy.c514")}
               </Button>
               <Button variant="outline" onClick={pause}>
-                Пауза
+                {tr("copy.c515")}
               </Button>
             </>
           )}
@@ -277,19 +262,17 @@ export default function VoiceInterview() {
               }
               onClick={finish}
             >
-              Завершить и получить оценку
+              {tr("copy.c516")}
             </Button>
           )}
-          <Link to="/interview">К истории</Link>
+          <Link to="/interview">{tr("copy.c517")}</Link>
         </div>
         <section
-          aria-label="Расшифровка интервью"
+          aria-label={tr("copy.c518")}
           className="border rounded-xl p-4 space-y-4 min-h-64"
         >
           {!turns.length && (
-            <p className="text-muted-foreground">
-              Здесь появится расшифровка разговора.
-            </p>
+            <p className="text-muted-foreground">{tr("copy.c519")}</p>
           )}
           {turns.map((t) => (
             <div
@@ -297,7 +280,7 @@ export default function VoiceInterview() {
               className={`rounded-lg p-3 ${t.role === "user" ? "bg-primary/10 ml-6" : "bg-muted mr-6"}`}
             >
               <p className="font-medium text-sm mb-1">
-                {t.role === "user" ? "Вы" : "ИИ-интервьюер"}
+                {t.role === "user" ? tr("copy.c033") : tr("copy.c520")}
               </p>
               <p className="whitespace-pre-wrap break-words">{t.text}</p>
             </div>

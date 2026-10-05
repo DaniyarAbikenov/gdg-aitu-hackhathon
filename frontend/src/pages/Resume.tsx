@@ -1,3 +1,4 @@
+import { tr, useLocale, displayLocale } from "@/i18n/copy";
 import type { ResumeRecord } from "@/api/resume";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -12,6 +13,7 @@ import { uploadResume, listResumes } from "@/api/resume";
 import client from "@/api/client";
 
 export default function Resume() {
+  useLocale();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
@@ -32,7 +34,7 @@ export default function Resume() {
   const choose = (f?: File) => {
     if (!f) return;
     if (f.size > 5 * 1024 * 1024 || !/\.(pdf|docx|txt)$/i.test(f.name)) {
-      setError("Выберите PDF, DOCX или TXT размером до 5 МБ.");
+      setError(tr("copy.c421"));
       return;
     }
     setFile(f);
@@ -73,9 +75,9 @@ export default function Resume() {
     }
   };
   const status = {
-    draft: "Черновик",
-    active: "Актуально",
-    archived: "В архиве",
+    draft: tr("copy.c354"),
+    active: tr("copy.c422"),
+    archived: tr("copy.c226"),
   };
   const visible = saved.filter(
     (r) =>
@@ -90,13 +92,10 @@ export default function Resume() {
         <header className="flex flex-wrap gap-4 items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{t("resume.title")}</h1>
-            <p className="text-muted-foreground">
-              Создавайте отдельное резюме для каждой позиции и храните его
-              версии.
-            </p>
+            <p className="text-muted-foreground">{tr("copy.c423")}</p>
           </div>
           <Button asChild>
-            <Link to="/resume/new">Создать с нуля</Link>
+            <Link to="/resume/new">{tr("copy.c424")}</Link>
           </Button>
         </header>
         {error && (
@@ -130,38 +129,31 @@ export default function Resume() {
             className="cursor-pointer flex flex-col items-center gap-3"
           >
             <Upload className="h-10 w-10 text-primary" />
-            <span>
-              {file
-                ? file.name
-                : "Перетащите файл сюда или выберите на устройстве"}
-            </span>
+            <span>{file ? file.name : tr("copy.c425")}</span>
             <span className="text-sm text-muted-foreground">
-              PDF, Word (.docx), TXT · до 5 МБ
+              {tr("copy.c426")}
             </span>
           </label>
           <Button disabled={!file || busy} onClick={upload}>
-            {busy ? "Извлекаем структуру резюме…" : t("resume.continue")}
+            {busy ? tr("copy.c427") : t("resume.continue")}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            После загрузки проверьте извлечённые должности, задачи, даты и
-            контакты.
-          </p>
+          <p className="text-xs text-muted-foreground">{tr("copy.c428")}</p>
         </section>
         <div className="flex flex-wrap gap-3">
           <Input
             className="sm:max-w-sm"
-            aria-label="Поиск резюме"
-            placeholder="Поиск по названию и описанию"
+            aria-label={tr("copy.c429")}
+            placeholder={tr("copy.c430")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <select
-            aria-label="Статус резюме"
+            aria-label={tr("copy.c431")}
             className="border rounded px-3 bg-background"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="all">Все статусы</option>
+            <option value="all">{tr("copy.c432")}</option>
             {Object.entries(status).map(([k, v]) => (
               <option key={k} value={k}>
                 {v}
@@ -169,10 +161,10 @@ export default function Resume() {
             ))}
           </select>
         </div>
-        {loading && <p role="status">Загрузка истории…</p>}
+        {loading && <p role="status">{tr("copy.c433")}</p>}
         {!loading && !visible.length && (
           <p className="rounded-lg border p-6 text-muted-foreground">
-            Резюме не найдено. Создайте новое или измените фильтр.
+            {tr("copy.c434")}
           </p>
         )}
         <div className="grid md:grid-cols-2 gap-4">
@@ -189,7 +181,7 @@ export default function Resume() {
                       {r.title || r.filename}
                     </Link>
                     <p className="text-sm text-muted-foreground break-words">
-                      Файл: {r.filename}
+                      {tr("copy.c435")} {r.filename}
                     </p>
                   </div>
                   <span className="ml-auto text-xs rounded-full bg-muted px-2 py-1 whitespace-nowrap">
@@ -197,21 +189,22 @@ export default function Resume() {
                   </span>
                 </div>
                 <p className="text-sm whitespace-pre-wrap break-words">
-                  {r.description || "Без описания"}
+                  {r.description || tr("copy.c436")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Обновлено{" "}
-                  {new Date(r.updated_at || r.created_at).toLocaleString()} ·{" "}
-                  {r.status === "reviewed"
-                    ? "Проанализировано"
-                    : "Проверьте содержание"}
+                  {tr("copy.c286")}{" "}
+                  {new Date(r.updated_at || r.created_at).toLocaleString(
+                    displayLocale(),
+                  )}{" "}
+                  ·{" "}
+                  {r.status === "reviewed" ? tr("copy.c437") : tr("copy.c438")}
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm">
                   <Link
                     className="text-primary underline"
                     to={`/resume/${r.resume_id}`}
                   >
-                    История версий
+                    {tr("copy.c439")}
                   </Link>
                   <a href={`/api/resume/${r.resume_id}/pdf`}>PDF</a>
                   <a href={`/api/resume/${r.resume_id}/docx`}>Word</a>
@@ -219,7 +212,7 @@ export default function Resume() {
                     className="text-primary"
                     onClick={() => setEditing(r)}
                   >
-                    Название и статус
+                    {tr("copy.c440")}
                   </button>
                 </div>
               </CardContent>
@@ -228,12 +221,12 @@ export default function Resume() {
         </div>
         {editing && (
           <section
-            aria-label="Свойства резюме"
+            aria-label={tr("copy.c441")}
             className="border rounded-xl p-5 space-y-3"
           >
-            <h2 className="font-semibold">Название и статус</h2>
+            <h2 className="font-semibold">{tr("copy.c440")}</h2>
             <label className="block">
-              Название
+              {tr("copy.c137")}
               <Input
                 value={editing.title}
                 maxLength={200}
@@ -243,7 +236,7 @@ export default function Resume() {
               />
             </label>
             <label className="block">
-              Описание
+              {tr("copy.c138")}
               <Textarea
                 value={editing.description}
                 maxLength={2000}
@@ -253,7 +246,7 @@ export default function Resume() {
               />
             </label>
             <select
-              aria-label="Новый статус"
+              aria-label={tr("copy.c442")}
               value={editing.lifecycle}
               onChange={(e) =>
                 setEditing({
@@ -274,10 +267,10 @@ export default function Resume() {
                 disabled={busy || !editing.title.trim()}
                 onClick={saveMeta}
               >
-                Сохранить свойства
+                {tr("copy.c443")}
               </Button>
               <Button variant="outline" onClick={() => setEditing(null)}>
-                Отмена
+                {tr("copy.c023")}
               </Button>
             </div>
           </section>

@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { ProfileBlocks } from "@/components/ProfileBlocks";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -14,6 +15,7 @@ import { ResumeExperienceEditor } from "@/components/resume/ResumeExperienceEdit
 import { ResumeProjectsEditor } from "@/components/resume/ResumeProjectsEditor";
 
 export default function ResumeEdit() {
+  useLocale();
   const { t } = useTranslation();
   const { resumeId } = useParams();
   const navigate = useNavigate();
@@ -137,13 +139,13 @@ export default function ResumeEdit() {
             }
           }}
         >
-          Сохранить
+          {tr("copy.c460")}
         </Button>
         <Button
           variant="outline"
           onClick={() => navigate(`/resume/${resumeId}`)}
         >
-          Версии
+          {tr("copy.c461")}
         </Button>
         <Button
           variant="outline"

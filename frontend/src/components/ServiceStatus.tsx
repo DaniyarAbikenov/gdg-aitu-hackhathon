@@ -1,6 +1,8 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import client from "@/api/client";
 export function ServiceStatus() {
+  useLocale();
   const [provider, setProvider] = useState("");
   useEffect(() => {
     client
@@ -18,12 +20,12 @@ export function ServiceStatus() {
   return (
     <p role="status" className="border-b bg-muted px-4 py-2 text-sm">
       {provider === "gemini"
-        ? "ИИ: Gemini. Загружаемые резюме, описание вакансии и ответы отправляются в Google для обработки."
+        ? tr("copy.c096")
         : provider === "openai"
-          ? "ИИ: OpenAI. Загружаемые резюме, описание вакансии и ответы отправляются в OpenAI для обработки."
+          ? tr("copy.c097")
           : provider === "local"
-            ? "Включён тестовый режим с шаблонными ответами."
-            : "ИИ пока недоступен. Нужна настройка OpenAI или Gemini на сервере. Профиль, редактирование резюме и экспорт работают."}
+            ? tr("copy.c098")
+            : tr("copy.c099")}
     </p>
   );
 }

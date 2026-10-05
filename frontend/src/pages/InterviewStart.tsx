@@ -1,7 +1,8 @@
+import { tr, useLocale, displayLocale } from "@/i18n/copy";
 import type { TargetRecord } from "@/types/product";
 import type { InterviewRecord } from "@/api/interview";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import client from "@/api/client";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,8 @@ import { useVacancyContext } from "@/hooks/useVacancyContext";
 import { VacancyContext } from "@/components/VacancyContext";
 import { useCapabilities } from "@/hooks/useCapabilities";
 export default function InterviewStart() {
+  useLocale();
+  const [params] = useSearchParams();
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
@@ -55,6 +58,15 @@ export default function InterviewStart() {
       setStack(vacancy.data.skills);
     }
   }, [vacancy]);
+  useEffect(() => {
+    const c = companies.find((c) => c.id === params.get("company"));
+    if (c) {
+      setCompanyId(c.id);
+      setCompanyName(c.data.name);
+      setCompany(c.data.description || c.data.name);
+      setStack(c.data.skills || []);
+    }
+  }, [companies, params]);
   const start = async () => {
     setBusy(true);
     setError("");
@@ -106,29 +118,23 @@ export default function InterviewStart() {
   return (
     <MainLayout>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-        <h1 className="text-3xl font-bold">Интервью</h1>
+        <h1 className="text-3xl font-bold">{tr("copy.c322")}</h1>
         <VacancyContext vacancy={vacancy} />
         {contextError && <p role="alert">{contextError}</p>}
-        <p className="text-muted-foreground">
-          Тренируйтесь под конкретную компанию и вакансию. Возвращайтесь к
-          ответам и отслеживайте результат.
-        </p>
+        <p className="text-muted-foreground">{tr("copy.c323")}</p>
         {error && (
           <p role="alert" className="text-destructive">
             {error}
           </p>
         )}
         {capabilities && !capabilities.ai && (
-          <p className="text-sm text-muted-foreground">
-            Тренировки с ИИ сейчас недоступны. Вы можете сохранить вакансию и
-            подготовить резюме в разделе «Вакансии».
-          </p>
+          <p className="text-sm text-muted-foreground">{tr("copy.c324")}</p>
         )}
         <section className="border rounded-xl p-5 space-y-4">
-          <h2 className="text-xl font-semibold">Новая тренировка</h2>
+          <h2 className="text-xl font-semibold">{tr("copy.c325")}</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2">
-              Сохранённая компания
+              {tr("copy.c326")}
               <select
                 className="w-full border rounded p-2 bg-background"
                 value={companyId}
@@ -138,9 +144,10 @@ export default function InterviewStart() {
                   const c = companies.find((c) => c.id === e.target.value);
                   setCompanyName(c?.data.name || "");
                   setCompany(c?.data.description || "");
+                  setStack(c?.data.skills || []);
                 }}
               >
-                <option value="">Новая компания</option>
+                <option value="">{tr("copy.c156")}</option>
                 {companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.data.name}
@@ -149,7 +156,7 @@ export default function InterviewStart() {
               </select>
             </label>
             <label className="space-y-2">
-              Сохранённая вакансия
+              {tr("copy.c327")}
               <select
                 className="w-full border rounded p-2 bg-background"
                 value={vacancyId}
@@ -161,7 +168,7 @@ export default function InterviewStart() {
                   setStack(v?.data.skills || []);
                 }}
               >
-                <option value="">Новая вакансия</option>
+                <option value="">{tr("copy.c154")}</option>
                 {vacancies
                   .filter((v) => !companyId || v.data.company_id === companyId)
                   .map((v) => (
@@ -172,8 +179,14 @@ export default function InterviewStart() {
               </select>
             </label>
           </div>
+          <Link
+            className="text-primary underline"
+            to={companyId ? `/companies?id=${companyId}` : "/companies"}
+          >
+            {tr("copy.c328")}
+          </Link>
           <label className="block">
-            Название компании
+            {tr("copy.c210")}
             <Input
               value={companyName}
               onChange={(e) => {
@@ -183,9 +196,9 @@ export default function InterviewStart() {
             />
           </label>
           <label className="block">
-            О компании
+            {tr("copy.c212")}
             <Textarea
-              aria-label="О компании"
+              aria-label={tr("copy.c212")}
               value={company}
               onChange={(e) => {
                 setCompany(e.target.value);
@@ -194,7 +207,7 @@ export default function InterviewStart() {
             />
           </label>
           <label className="block">
-            Название вакансии
+            {tr("copy.c329")}
             <Input
               value={title}
               onChange={(e) => {
@@ -204,9 +217,9 @@ export default function InterviewStart() {
             />
           </label>
           <label className="block">
-            Описание вакансии
+            {tr("copy.c157")}
             <Textarea
-              aria-label="Описание вакансии"
+              aria-label={tr("copy.c157")}
               value={job}
               onChange={(e) => {
                 setJob(e.target.value);
@@ -214,11 +227,11 @@ export default function InterviewStart() {
               }}
             />
           </label>
-          <p>Стек для интервью</p>
+          <p>{tr("copy.c330")}</p>
           <SkillPicker
             selected={stack}
             onChange={setStack}
-            placeholder="Найти навык"
+            placeholder={tr("copy.c331")}
           />
           <div className="flex flex-wrap gap-2">
             {stack.map((s) => (
@@ -232,10 +245,10 @@ export default function InterviewStart() {
             ))}
           </div>
           <fieldset className="flex flex-wrap gap-4">
-            <legend>Тип вопросов — можно выбрать оба</legend>
+            <legend>{tr("copy.c332")}</legend>
             {[
-              ["theoretical", "Теория"],
-              ["practical", "Практика"],
+              ["theoretical", tr("copy.c333")],
+              ["practical", tr("copy.c334")],
             ].map(([key, label]) => (
               <label className="flex gap-2" key={key}>
                 <input
@@ -254,10 +267,10 @@ export default function InterviewStart() {
             ))}
           </fieldset>
           <fieldset className="flex flex-wrap gap-4">
-            <legend>Формат разговора</legend>
+            <legend>{tr("copy.c335")}</legend>
             {[
-              ["text", "Текст и микрофон"],
-              ["voice", "Живой голосовой диалог"],
+              ["text", tr("copy.c336")],
+              ["voice", tr("copy.c337")],
             ].map(([key, label]) => (
               <label className="flex gap-2" key={key}>
                 <input
@@ -283,14 +296,14 @@ export default function InterviewStart() {
             }
             onClick={start}
           >
-            {busy ? "Подготовка…" : "Начать интервью"}
+            {busy ? tr("copy.c338") : tr("copy.c339")}
           </Button>
         </section>
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold">История интервью</h2>
+          <h2 className="text-2xl font-semibold">{tr("copy.c340")}</h2>
           <Input
-            aria-label="Поиск интервью"
-            placeholder="Компания или вакансия"
+            aria-label={tr("copy.c341")}
+            placeholder={tr("copy.c342")}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
@@ -312,21 +325,21 @@ export default function InterviewStart() {
                     h.context.job_description.slice(0, 100)}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {new Date(h.created_at).toLocaleString()} ·{" "}
-                  {h.context.mode === "voice" ? "Голос" : "Текст"} ·{" "}
-                  {h.finished ? `Завершено: ${h.score}/100` : "Продолжить"}
+                  {new Date(h.created_at).toLocaleString(displayLocale())} ·{" "}
+                  {h.context.mode === "voice"
+                    ? tr("copy.c343")
+                    : tr("copy.c344")}{" "}
+                  ·{" "}
+                  {h.finished
+                    ? tr("dynamic.completed", { score: h.score })
+                    : tr("copy.c191")}
                 </p>
                 <p className="text-sm">
-                  Ответов: {h.answers.length} · {h.context.tech_stack}
+                  {tr("copy.c345")} {h.answers.length} · {h.context.tech_stack}
                 </p>
               </Link>
             ))}
-          {!history.length && (
-            <p>
-              Первые тренировки появятся здесь. Незавершённое интервью можно
-              продолжить позже.
-            </p>
-          )}
+          {!history.length && <p>{tr("copy.c346")}</p>}
         </section>
       </div>
     </MainLayout>

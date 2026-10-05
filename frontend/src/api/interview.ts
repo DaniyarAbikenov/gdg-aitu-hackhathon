@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/copy";
 import client from "./client";
 import i18n from "@/i18n/config";
 export interface InterviewRecord {
@@ -65,7 +66,7 @@ export async function getInterviewSummary(id: string) {
       strengths: [...new Set(record.answers.flatMap((a) => a.strengths))],
       weaknesses: [...new Set(record.answers.flatMap((a) => a.improvements))],
       recommendations: record.answers.map((a) => a.reference_answer),
-      estimated_level: `${record.score ?? "—"}/100 · учебная оценка, не профессиональный уровень`,
+      estimated_level: tr("dynamic.level", { score: record.score ?? "—" }),
     },
   };
 }

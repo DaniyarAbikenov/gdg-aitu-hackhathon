@@ -1,3 +1,4 @@
+import { tr, useLocale, displayLocale } from "@/i18n/copy";
 import type { OverviewData } from "@/types/product";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -7,15 +8,17 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { NextSteps } from "@/components/NextSteps";
-const labels = {
-  resumes: "Резюме",
-  skills: "Навыки для развития",
-  companies: "Компании и интервью",
-  learning: "Обучение за неделю",
-  activity: "Активность за 14 дней",
-  journey: "Путь к трудоустройству",
-};
+
 export default function Dashboard() {
+  useLocale();
+  const labels = {
+    resumes: tr("copy.c242"),
+    skills: tr("copy.c243"),
+    companies: tr("copy.c244"),
+    learning: tr("copy.c245"),
+    activity: tr("copy.c246"),
+    journey: tr("copy.c247"),
+  };
   const [data, setData] = useState<OverviewData | null>(null);
   const [prefs, setPrefs] = useState({
     revision: 0,
@@ -63,20 +66,18 @@ export default function Dashboard() {
       <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6">
         <header className="flex flex-wrap justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Обзор подготовки</h1>
+            <h1 className="text-3xl font-bold">{tr("copy.c248")}</h1>
             {data?.goal && <p className="text-primary mt-2">{data.goal}</p>}
-            <p className="text-muted-foreground mt-2">
-              Резюме, практика и обучение — ваш следующий шаг к работе.
-            </p>
+            <p className="text-muted-foreground mt-2">{tr("copy.c249")}</p>
           </div>
           <Button variant="outline" onClick={() => setEditing(!editing)}>
-            Настроить виджеты
+            {tr("copy.c250")}
           </Button>
         </header>
         <NextSteps />
         {editing && (
           <fieldset className="flex flex-wrap gap-4 rounded-lg border p-4">
-            <legend>Что показывать</legend>
+            <legend>{tr("copy.c251")}</legend>
             {Object.entries(labels).map(([key, label]) => (
               <label key={key} className="flex gap-2 items-center">
                 <input
@@ -94,11 +95,11 @@ export default function Dashboard() {
           <div role="alert">
             {error}{" "}
             <Button variant="link" onClick={load}>
-              Повторить
+              {tr("copy.c252")}
             </Button>
           </div>
         )}
-        {!data && !error && <p role="status">Загрузка аналитики…</p>}
+        {!data && !error && <p role="status">{tr("copy.c253")}</p>}
         {data && (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {prefs.data.widgets.map((key) => (
@@ -111,15 +112,15 @@ export default function Dashboard() {
                     <>
                       <p className="text-4xl font-bold">{data.resumes}</p>
                       <p>
-                        Проанализировано: {data.reviewed_resumes} · Версий:{" "}
-                        {data.resume_versions}
+                        {tr("copy.c254")} {data.reviewed_resumes}{" "}
+                        {tr("copy.c255")} {data.resume_versions}
                       </p>
                       <p className="text-sm text-muted-foreground">
-                        Актуальных: {data.active_resumes} · В архиве:{" "}
-                        {data.archived_resumes}
+                        {tr("copy.c256")} {data.active_resumes}{" "}
+                        {tr("copy.c257")} {data.archived_resumes}
                       </p>
                       <Link className="text-primary underline" to="/resume">
-                        Управлять резюме
+                        {tr("copy.c258")}
                       </Link>
                     </>
                   )}
@@ -129,28 +130,28 @@ export default function Dashboard() {
                         data.skill_gaps.map((g) => (
                           <div key={g.name} className="flex justify-between">
                             <span>{g.name}</span>
-                            <span>{g.mentions} вакансий</span>
+                            <span>
+                              {g.mentions} {tr("copy.c259")}
+                            </span>
                           </div>
                         ))
                       ) : (
-                        <p>
-                          Пока нет выявленных пробелов. Проанализируйте резюме
-                          под вакансию.
-                        </p>
+                        <p>{tr("copy.c260")}</p>
                       )}
                       <p className="text-xs text-muted-foreground">
-                        Навыки из вакансий, не указанные в резюме. Это не оценка
-                        уровня владения.
+                        {tr("copy.c261")}
                       </p>
                     </>
                   )}
                   {key === "companies" && (
                     <>
                       <p>
-                        Завершено интервью:{" "}
+                        {tr("copy.c262")}{" "}
                         <strong>{data.interviews_completed}</strong>
                       </p>
-                      <p>Средний результат: {data.average_score ?? "—"}/100</p>
+                      <p>
+                        {tr("copy.c263")} {data.average_score ?? "—"}/100
+                      </p>
                       {data.companies.length ? (
                         <ul className="space-y-1">
                           {data.companies.map((c) => (
@@ -161,11 +162,11 @@ export default function Dashboard() {
                         </ul>
                       ) : (
                         <p className="text-muted-foreground">
-                          Начните первую тренировку.
+                          {tr("copy.c264")}
                         </p>
                       )}
                       <Link className="text-primary underline" to="/interview">
-                        История и новое интервью
+                        {tr("copy.c265")}
                       </Link>
                     </>
                   )}
@@ -174,10 +175,10 @@ export default function Dashboard() {
                       <p className="text-4xl font-bold">
                         {data.week.learning_current}
                       </p>
-                      <p>Заданий впервые завершено на этой неделе</p>
+                      <p>{tr("copy.c266")}</p>
                       <p className="text-sm text-muted-foreground">
-                        Прошлая неделя: {data.week.learning_previous} ·
-                        Изменение:{" "}
+                        {tr("copy.c267")} {data.week.learning_previous}{" "}
+                        {tr("copy.c268")}{" "}
                         {data.week.learning_current -
                           data.week.learning_previous >
                         0
@@ -187,11 +188,11 @@ export default function Dashboard() {
                           data.week.learning_previous}
                       </p>
                       <p>
-                        {data.completed_modules} / {data.total_modules} модулей
-                        выполнено
+                        {data.completed_modules} / {data.total_modules}{" "}
+                        {tr("copy.c269")}
                       </p>
                       <Link className="text-primary underline" to="/plan">
-                        Учебные планы
+                        {tr("copy.c270")}
                       </Link>
                     </>
                   )}
@@ -199,7 +200,7 @@ export default function Dashboard() {
                     <>
                       <div
                         className="flex gap-1 h-28 items-end"
-                        aria-label="Действия за последние 14 дней"
+                        aria-label={tr("copy.c271")}
                       >
                         {data.activity.map((d) => (
                           <div
@@ -213,36 +214,40 @@ export default function Dashboard() {
                         ))}
                       </div>
                       <p>
-                        Эта неделя: {data.week.current} · Прошлая:{" "}
+                        {tr("copy.c272")} {data.week.current} {tr("copy.c273")}{" "}
                         {data.week.previous}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Неделя начинается в понедельник, по вашему часовому
-                        поясу. История учитывается с{" "}
+                        {tr("copy.c274")}{" "}
                         {data.tracking_started
-                          ? new Date(data.tracking_started).toLocaleDateString()
-                          : "первого действия"}
+                          ? new Date(data.tracking_started).toLocaleDateString(
+                              displayLocale(),
+                            )
+                          : tr("copy.c275")}
                         .
                       </p>
                     </>
                   )}
                   {key === "journey" && (
                     <>
-                      <p className="text-3xl font-bold">Уровень {data.level}</p>
+                      <p className="text-3xl font-bold">
+                        {tr("copy.c040")} {data.level}
+                      </p>
                       <p>
-                        {data.xp} XP · Серия: {data.streak} дн.
+                        {data.xp} {tr("copy.c276")} {data.streak}{" "}
+                        {tr("copy.c042")}
                       </p>
                       <progress
                         className="w-full accent-primary"
                         max={100}
                         value={data.level_progress}
-                        aria-label="Прогресс уровня"
+                        aria-label={tr("copy.c277")}
                       />
                       <p className="text-sm">
-                        До следующего уровня: {100 - data.level_progress} XP
+                        {tr("copy.c278")} {100 - data.level_progress} XP
                       </p>
                       <Link className="text-primary underline" to="/progress">
-                        Задания и достижения
+                        {tr("copy.c279")}
                       </Link>
                     </>
                   )}
@@ -251,18 +256,16 @@ export default function Dashboard() {
             ))}
           </div>
         )}
-        {!prefs.data.widgets.length && (
-          <p>Виджеты скрыты. Добавьте нужные через «Настроить виджеты».</p>
-        )}
+        {!prefs.data.widgets.length && <p>{tr("copy.c280")}</p>}
         <div className="flex flex-wrap gap-3">
           <Button asChild>
-            <Link to="/resume/new">Создать резюме</Link>
+            <Link to="/resume/new">{tr("copy.c281")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/plan">Создать план</Link>
+            <Link to="/plan">{tr("copy.c067")}</Link>
           </Button>
           <Button asChild variant="outline">
-            <Link to="/onboarding">Обновить профиль</Link>
+            <Link to="/onboarding">{tr("copy.c282")}</Link>
           </Button>
         </div>
       </div>

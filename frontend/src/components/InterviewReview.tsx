@@ -1,7 +1,9 @@
+import { tr, useLocale } from "@/i18n/copy";
 import type { InterviewRecord } from "@/api/interview";
 import { useEffect, useState } from "react";
 import client from "@/api/client";
 export function InterviewReview({ id }: { id: string }) {
+  useLocale();
   const [record, setRecord] = useState<InterviewRecord | null>(null);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -12,7 +14,7 @@ export function InterviewReview({ id }: { id: string }) {
   }, [id]);
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">Вопросы и ваши ответы</h2>
+      <h2 className="text-xl font-semibold">{tr("copy.c028")}</h2>
       {error && <p role="alert">{error}</p>}
       {record?.answers.map((a, i) => (
         <details key={i} className="rounded-lg border p-4">
@@ -20,13 +22,13 @@ export function InterviewReview({ id }: { id: string }) {
             {i + 1}. {a.question} · {a.score}/100
           </summary>
           <div className="pt-4 space-y-3">
-            <h3 className="font-medium">Ваш ответ</h3>
+            <h3 className="font-medium">{tr("copy.c029")}</h3>
             <p className="whitespace-pre-wrap">{a.answer}</p>
-            <h3 className="font-medium">Обратная связь</h3>
+            <h3 className="font-medium">{tr("copy.c030")}</h3>
             <p>{a.feedback}</p>
             {a.reference_answer && (
               <>
-                <h3 className="font-medium">Пример ответа</h3>
+                <h3 className="font-medium">{tr("copy.c031")}</h3>
                 <p>{a.reference_answer}</p>
               </>
             )}
@@ -38,11 +40,13 @@ export function InterviewReview({ id }: { id: string }) {
       ))}
       {record?.transcript?.length > 0 && (
         <details className="border rounded-lg p-4">
-          <summary>Полная расшифровка голосового интервью</summary>
+          <summary>{tr("copy.c032")}</summary>
           <div className="space-y-3 pt-4">
             {record.transcript.map((t) => (
               <p key={t.id} className="whitespace-pre-wrap">
-                <strong>{t.role === "user" ? "Вы" : "Интервьюер"}: </strong>
+                <strong>
+                  {t.role === "user" ? tr("copy.c033") : tr("copy.c034")}:{" "}
+                </strong>
                 {t.text}
               </p>
             ))}

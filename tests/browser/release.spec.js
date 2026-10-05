@@ -19,84 +19,72 @@ test("vacancy connects a manual resume, practice and learning after reload", asy
 }) => {
   await register(page);
   await page.goto("/applications");
+  await page.getByRole("button", { name: "Add vacancy", exact: true }).click();
   await page
-    .getByRole("button", { name: "Добавить вакансию", exact: true })
-    .click();
-  await page
-    .getByLabel("Название позиции", { exact: true })
+    .getByLabel("Position title", { exact: true })
     .fill("Junior Backend Developer");
-  await page.getByLabel("Компания", { exact: true }).fill("Library team");
+  await page.getByLabel("Company", { exact: true }).fill("Library team");
   await page
-    .getByLabel("Описание вакансии", { exact: true })
+    .getByLabel("Job description", { exact: true })
     .fill("Build reliable Python APIs with PostgreSQL and automated tests.");
-  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("Python");
+  await page.getByRole("combobox", { name: "Search skills" }).fill("Python");
   await page.getByRole("option", { name: /^Python/ }).click();
   await page
-    .getByLabel("Следующее действие", { exact: true })
+    .getByLabel("Next action", { exact: true })
     .fill("Review the application");
-  await page
-    .getByRole("button", { name: "Сохранить вакансию", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Save vacancy", exact: true }).click();
   await expect(
-    page.getByRole("region", { name: "Подготовка к вакансии" }),
+    page.getByRole("region", { name: "Vacancy preparation" }),
   ).toBeVisible();
   const applicationUrl = page.url();
-  await page.getByRole("link", { name: "Собрать резюме", exact: true }).click();
-  await expect(page.getByLabel("Целевая позиция", { exact: true })).toHaveValue(
+  await page.getByRole("link", { name: "Build resume", exact: true }).click();
+  await expect(page.getByLabel("Target position", { exact: true })).toHaveValue(
     "Junior Backend Developer",
   );
   await page
-    .getByRole("checkbox", { name: "Собрать и адаптировать с ИИ" })
+    .getByRole("checkbox", { name: "Build and tailor with AI" })
     .uncheck();
-  await page.getByRole("button", { name: "Создать черновик" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await expect(page).toHaveURL(/\/resume\/[^/]+\/edit$/);
   await page.goto(applicationUrl);
   await page.reload();
-  await expect(
-    page.getByRole("link", { name: "Адаптировать резюме" }),
-  ).toBeVisible();
-  await page
-    .getByRole("link", { name: "Начать тренировку", exact: true })
-    .click();
-  await expect(
-    page.getByLabel("Название компании", { exact: true }),
-  ).toHaveValue("Library team");
-  await expect(
-    page.getByLabel("Описание вакансии", { exact: true }),
-  ).toHaveValue(
+  await expect(page.getByRole("link", { name: "Tailor resume" })).toBeVisible();
+  await page.getByRole("link", { name: "Start practice", exact: true }).click();
+  await expect(page.getByLabel("Company name", { exact: true })).toHaveValue(
+    "Library team",
+  );
+  await expect(page.getByLabel("Job description", { exact: true })).toHaveValue(
     "Build reliable Python APIs with PostgreSQL and automated tests.",
   );
   await page
-    .getByRole("button", { name: "Начать интервью", exact: true })
+    .getByRole("button", { name: "Start interview", exact: true })
     .click();
   await expect(page).toHaveURL(/\/interview\/session\?id=/);
   await page.goto(applicationUrl);
   await expect(
-    page.getByRole("link", { name: /Тренировка 1 · Продолжить/ }),
+    page.getByRole("link", { name: /Practice 1.*Continue/ }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Создать план", exact: true }).click();
-  await expect(page.getByLabel("Целевая позиция", { exact: true })).toHaveValue(
+  await page.getByRole("link", { name: "Create plan", exact: true }).click();
+  await expect(page.getByLabel("Target position", { exact: true })).toHaveValue(
     "Junior Backend Developer",
   );
-  await page.getByRole("button", { name: "Создать план", exact: true }).click();
+  await page.getByRole("button", { name: "Create plan", exact: true }).click();
   await expect(page).toHaveURL(/\/plan\/[^/]+$/);
   await page.goto(applicationUrl);
-  await expect(page.getByRole("link", { name: /Учебный план:/ })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Learning plan:/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Edit vacancy", exact: true }).click();
   await page
-    .getByRole("button", { name: "Изменить вакансию", exact: true })
-    .click();
-  await page
-    .getByLabel("Статус отклика", { exact: true })
+    .getByLabel("Application stage", { exact: true })
     .selectOption("applied");
   await page
-    .getByLabel("Дата следующего контакта", { exact: true })
+    .getByLabel("Next contact date", { exact: true })
     .fill("2026-12-01");
-  await page
-    .getByRole("button", { name: "Сохранить вакансию", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Save vacancy", exact: true }).click();
   await page.goto("/dashboard");
   await expect(
-    page.getByRole("region", { name: "Следующие действия" }),
+    page.getByRole("region", { name: "Next actions" }),
   ).toContainText("Review the application");
   expect(
     await page.evaluate(
@@ -110,16 +98,16 @@ test("account export, password change and confirmed deletion work through settin
   const email = await register(page);
   await page.goto("/settings");
   const download = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Скачать мои данные (JSON)" }).click();
+  await page.getByRole("link", { name: "Download my data (JSON)" }).click();
   expect((await download).suggestedFilename()).toBe("careerbot-data.json");
   await page
-    .getByRole("button", { name: "Сменить пароль", exact: true })
+    .getByRole("button", { name: "Change password", exact: true })
     .click();
-  await page.getByLabel("Текущий пароль", { exact: true }).fill(password);
+  await page.getByLabel("Current password", { exact: true }).fill(password);
   await page
-    .getByLabel("Новый пароль", { exact: true })
+    .getByLabel("New password", { exact: true })
     .fill("Changed-test-password-43");
-  await page.getByRole("button", { name: "Сохранить новый пароль" }).click();
+  await page.getByRole("button", { name: "Save new password" }).click();
   await expect(page).toHaveURL(/\/login\?account=password-changed/);
   await page.locator("#email").fill(email);
   await page.locator("#password").fill("Changed-test-password-43");
@@ -127,14 +115,14 @@ test("account export, password change and confirmed deletion work through settin
   await expect(page).toHaveURL(/\/dashboard$/);
   await page.goto("/settings");
   await page
-    .getByRole("button", { name: "Удалить аккаунт", exact: true })
+    .getByRole("button", { name: "Delete account", exact: true })
     .click();
   await page
-    .getByLabel("Текущий пароль", { exact: true })
+    .getByLabel("Current password", { exact: true })
     .fill("Changed-test-password-43");
-  await page.getByLabel("Введите email аккаунта для подтверждения").fill(email);
+  await page.getByLabel("Enter your account email to confirm").fill(email);
   await page
-    .getByRole("button", { name: "Удалить мои данные и аккаунт" })
+    .getByRole("button", { name: "Delete my data and account" })
     .click();
   await expect(page).toHaveURL(/\/login\?account=deleted/);
 });

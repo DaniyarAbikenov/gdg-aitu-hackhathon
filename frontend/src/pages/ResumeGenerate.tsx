@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
@@ -6,6 +7,7 @@ import { generateResume } from "@/api/resume";
 import { Button } from "@/components/ui/button";
 
 export default function ResumeGenerate() {
+  useLocale();
   const { t } = useTranslation();
   const { resumeId } = useParams();
   const [template, setTemplate] = useState("modern");
@@ -65,7 +67,7 @@ export default function ResumeGenerate() {
           className="block text-primary underline"
           href={`/api/resume/${resumeId}/docx`}
         >
-          Скачать Word (.docx)
+          {tr("copy.c462")}
         </a>
       </div>
     </MainLayout>

@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import client from "@/api/client";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ArticleBody } from "@/components/ArticleBody";
 import type { KnowledgeArticle } from "./FAQ";
 const empty = {
+  language: "ru",
   id: "",
   title: "",
   category: "",
@@ -16,6 +18,7 @@ const empty = {
   updated_at: "",
 };
 export default function KnowledgeAdmin() {
+  useLocale();
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
   const [article, setArticle] = useState(empty);
   const [error, setError] = useState("");
@@ -46,7 +49,7 @@ export default function KnowledgeAdmin() {
     setMessage("");
   };
   const choose = (a: KnowledgeArticle) => {
-    if (!dirty || window.confirm("Отменить несохранённые изменения?")) {
+    if (!dirty || window.confirm(tr("copy.c348"))) {
       setArticle(a);
       setDirty(false);
       setMessage("");
@@ -63,9 +66,7 @@ export default function KnowledgeAdmin() {
       setArticle(r.data);
       setArticles([r.data, ...articles.filter((a) => a.id !== r.data.id)]);
       setDirty(false);
-      setMessage(
-        r.data.published ? "Статья опубликована" : "Черновик сохранён",
-      );
+      setMessage(r.data.published ? tr("copy.c349") : tr("copy.c350"));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -75,7 +76,7 @@ export default function KnowledgeAdmin() {
   return (
     <MainLayout>
       <div className="max-w-6xl mx-auto p-6 space-y-5">
-        <h1 className="text-3xl font-bold">Редактор базы знаний</h1>
+        <h1 className="text-3xl font-bold">{tr("copy.c351")}</h1>
         {error && (
           <p role="alert" className="text-destructive">
             {error}
@@ -85,7 +86,7 @@ export default function KnowledgeAdmin() {
           <div className="grid md:grid-cols-[260px_1fr] gap-6">
             <aside className="space-y-2">
               <Button disabled={busy} onClick={() => choose(empty)}>
-                Новая статья
+                {tr("copy.c352")}
               </Button>
               {articles.map((a) => (
                 <button
@@ -95,14 +96,25 @@ export default function KnowledgeAdmin() {
                 >
                   <strong>{a.title}</strong>
                   <span className="block text-xs text-muted-foreground">
-                    {a.published ? "Опубликована" : "Черновик"}
+                    {a.published ? tr("copy.c353") : tr("copy.c354")}
                   </span>
                 </button>
               ))}
             </aside>
             <section className="space-y-4">
               <label className="block">
-                Заголовок
+                {tr("articleLanguage")}
+                <select
+                  value={article.language}
+                  onChange={(e) => edit({ language: e.target.value })}
+                >
+                  <option value="ru">Русский</option>
+                  <option value="en">English</option>
+                  <option value="kk">Қазақша</option>
+                </select>
+              </label>
+              <label className="block">
+                {tr("copy.c355")}
                 <Input
                   value={article.title}
                   maxLength={200}
@@ -110,7 +122,7 @@ export default function KnowledgeAdmin() {
                 />
               </label>
               <label className="block">
-                Категория
+                {tr("copy.c356")}
                 <Input
                   value={article.category}
                   maxLength={100}
@@ -119,7 +131,7 @@ export default function KnowledgeAdmin() {
               </label>
               <div className="flex gap-3">
                 <Button variant="outline" onClick={() => setPreview(!preview)}>
-                  {preview ? "Редактировать текст" : "Предпросмотр"}
+                  {preview ? tr("copy.c357") : tr("copy.c358")}
                 </Button>
                 <label className="flex gap-2 items-center">
                   <input
@@ -127,14 +139,14 @@ export default function KnowledgeAdmin() {
                     checked={article.published}
                     onChange={(e) => edit({ published: e.target.checked })}
                   />
-                  Публиковать
+                  {tr("copy.c359")}
                 </label>
               </div>
               {preview ? (
                 <ArticleBody body={article.body} />
               ) : (
                 <label className="block space-y-2">
-                  Текст статьи
+                  {tr("copy.c360")}
                   <Textarea
                     className="min-h-96"
                     maxLength={50000}
@@ -142,8 +154,7 @@ export default function KnowledgeAdmin() {
                     onChange={(e) => edit({ body: e.target.value })}
                   />
                   <span className="text-xs text-muted-foreground">
-                    Разделяйте абзацы пустой строкой. Для заголовка раздела
-                    используйте ##. HTML не выполняется.
+                    {tr("copy.c361")}
                   </span>
                 </label>
               )}
@@ -156,7 +167,7 @@ export default function KnowledgeAdmin() {
                 }
                 onClick={save}
               >
-                {busy ? "Сохранение…" : "Сохранить статью"}
+                {busy ? tr("copy.c109") : tr("copy.c362")}
               </Button>
               {message && <p role="status">{message}</p>}
             </section>

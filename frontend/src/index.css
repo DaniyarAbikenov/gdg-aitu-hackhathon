@@ -8,52 +8,39 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 214 32% 91%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 217 91% 67%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
+    --background: 42 35% 96%;
+    --foreground: 165 17% 15%;
+    --card: 45 50% 99%;
+    --card-foreground: 165 17% 15%;
+    --popover: 45 50% 99%;
+    --popover-foreground: 165 17% 15%;
+    --primary: 164 48% 25%;
+    --primary-foreground: 45 50% 99%;
+    --secondary: 43 28% 89%;
+    --secondary-foreground: 165 17% 15%;
+    --muted: 42 22% 92%;
+    --muted-foreground: 155 7% 39%;
+    --accent: 44 60% 82%;
+    --accent-foreground: 165 17% 15%;
+    --destructive: 7 65% 43%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 217 91% 60%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 28% 17%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 215 28% 17%;
-    --sidebar-ring: 217 91% 60%;
-
-    --success: 142 71% 45%;
+    --border: 38 18% 82%;
+    --input: 38 18% 77%;
+    --ring: 164 48% 25%;
+    --radius: 0.9rem;
+    --sidebar-background: 43 28% 91%;
+    --sidebar-foreground: 165 17% 20%;
+    --sidebar-primary: 164 48% 25%;
+    --sidebar-primary-foreground: 45 50% 99%;
+    --sidebar-accent: 43 30% 85%;
+    --sidebar-accent-foreground: 165 17% 15%;
+    --sidebar-border: 38 18% 82%;
+    --sidebar-ring: 164 48% 25%;
+    --success: 155 45% 32%;
     --success-foreground: 0 0% 100%;
-
-    --warning: 38 92% 50%;
+    --warning: 34 85% 40%;
     --warning-foreground: 0 0% 100%;
-
-    --info: 199 89% 48%;
+    --info: 200 65% 35%;
     --info-foreground: 0 0% 100%;
   }
 
@@ -104,5 +91,223 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer base {
+  body {
+    font-family: "Avenir Next", "Segoe UI", sans-serif;
+    line-height: 1.55;
+  }
+  h1 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    letter-spacing: -0.035em;
+    font-weight: 500 !important;
+  }
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+  select {
+    border: 1px solid hsl(var(--input));
+    border-radius: 0.7rem;
+    background: hsl(var(--card));
+    padding: 0.55rem 0.8rem;
+    min-height: 2.6rem;
+    max-width: 100%;
+  }
+  select:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+  label > input,
+  label > textarea,
+  label > select {
+    margin-top: 0.4rem;
+  }
+  ::selection {
+    background: hsl(43 80% 73%);
+    color: hsl(165 17% 15%);
+  }
+}
+@layer components {
+  .studio-button {
+    border-radius: 999px;
+    transition:
+      background-color 0.18s,
+      box-shadow 0.18s,
+      transform 0.18s;
+  }
+  .studio-button:active {
+    transform: translateY(1px);
+  }
+  .studio-card,
+  .paper-panel {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 1.25rem;
+    box-shadow: 0 3px 0 hsl(var(--border) / 0.25);
+  }
+  .eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.13em;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+  }
+  .page-heading {
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid hsl(var(--border));
+  }
+  .company-shelf {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: 1.4rem;
+  }
+  .company-cover {
+    border-radius: 1rem 2.7rem 1rem 1rem;
+    background: hsl(44 58% 86%);
+    border: 1px solid hsl(41 37% 75%);
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+  .company-cover[data-tone="1"] {
+    background: hsl(158 22% 87%);
+    border-color: hsl(158 20% 73%);
+  }
+  .company-cover[data-tone="2"] {
+    background: hsl(12 50% 91%);
+    border-color: hsl(12 30% 79%);
+  }
+  .company-cover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 9px 18px hsl(165 17% 15% / 0.07);
+  }
+  .company-monogram {
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    font-family: Georgia, serif;
+    font-size: 1.2rem;
+  }
+  .skill-stamp {
+    font-size: 0.75rem;
+    border: 1px solid hsl(var(--foreground) / 0.18);
+    border-radius: 0.3rem;
+    padding: 0.2rem 0.6rem;
+    background: hsl(var(--card) / 0.6);
+  }
+  .assignment-note {
+    background: hsl(46 65% 93%);
+    border-left: 3px solid hsl(38 68% 57%);
+    border-radius: 0 0.9rem 0.9rem 0;
+  }
+  .import-strip {
+    background: hsl(158 22% 92%);
+    border-radius: 1rem;
+    border: 1px dashed hsl(164 25% 55%);
+  }
+  .landing-hero {
+    position: relative;
+  }
+  .landing-title {
+    font-size: clamp(2.9rem, 5.6vw, 5.5rem);
+    line-height: 1.02;
+    max-width: 12ch;
+  }
+  .route-notebook {
+    position: relative;
+    border-radius: 0.4rem 2.7rem 0.4rem 0.4rem;
+    border: 1px solid hsl(38 24% 71%);
+    background: hsl(43 48% 89%);
+    color: hsl(165 17% 15%);
+    box-shadow: 8px 9px 0 hsl(164 23% 82%);
+    transform: rotate(2deg);
+  }
+  .route-notebook::before {
+    content: "";
+    position: absolute;
+    top: -12px;
+    left: 38%;
+    width: 6.5rem;
+    height: 1.9rem;
+    background: hsl(16 64% 66% / 0.7);
+    transform: rotate(-6deg);
+  }
+  .route-notebook > div {
+    border-bottom: 1px solid hsl(38 24% 71%);
+    padding-bottom: 0.9rem;
+  }
+  .route-notebook > div > span {
+    background: transparent;
+    border: 1px solid hsl(164 35% 35%);
+    color: hsl(164 48% 25%);
+  }
+  .workflow-editorial {
+    counter-reset: steps;
+  }
+  .workflow-editorial article {
+    border: 0;
+    border-top: 1px solid hsl(var(--border));
+    border-radius: 0;
+    padding: 1.6rem 0;
+    box-shadow: none;
+  }
+  .workflow-editorial article::before {
+    counter-increment: steps;
+    content: "0" counter(steps);
+    display: block;
+    font:
+      2.8rem Georgia,
+      serif;
+    color: hsl(12 50% 43%);
+    margin-bottom: 1.4rem;
+  }
+  .workspace-main > div > header:first-child,
+  .workspace-main > div > h1:first-child {
+    margin-bottom: 1.8rem;
+  }
+  .workspace-main h1 {
+    font-size: clamp(2.1rem, 3.2vw, 3.4rem);
+  }
+  .brand-mark {
+    display: inline-grid;
+    place-items: center;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    font:
+      1rem Georgia,
+      serif;
+    transform: rotate(-8deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+@media (max-width: 640px) {
+  .route-notebook {
+    transform: none;
+    box-shadow: 4px 5px 0 hsl(164 23% 82%);
+  }
+}
+
+@layer components {
+  .studio-button {
+    white-space: normal;
+    text-align: center;
+    height: auto;
+    min-height: 2.5rem;
   }
 }

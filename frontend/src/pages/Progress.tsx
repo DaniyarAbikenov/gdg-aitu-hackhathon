@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { Journey } from "@/components/Journey";
 import type { ProgressRecord } from "@/types/career";
 import { useEffect, useState } from "react";
@@ -17,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Trophy, Target, MessageSquare, FileText, Award } from "lucide-react";
 
 export default function Progress() {
+  useLocale();
   const { t } = useTranslation();
   const { toast } = useToast();
 
@@ -49,7 +51,7 @@ export default function Progress() {
   const rewards = (progress?.rewards || []).map((r) => ({
     ...r,
     id: r.key,
-    name: r.title,
+    name: tr("ui." + r.key),
     description: "",
     icon:
       {
@@ -75,7 +77,7 @@ export default function Progress() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Target className="h-5 w-5 text-primary" />
-                План обучения
+                {tr("copy.c403")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -102,7 +104,7 @@ export default function Progress() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                Интервью
+                {tr("copy.c322")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -120,8 +122,8 @@ export default function Progress() {
                   className="mt-4"
                 >
                   {stats.avgInterviewScore == null
-                    ? "Нет завершённых интервью"
-                    : "Учебная оценка"}
+                    ? tr("copy.c404")
+                    : tr("copy.c405")}
                 </Badge>
               </div>
             </CardContent>
@@ -131,13 +133,15 @@ export default function Progress() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <FileText className="h-5 w-5 text-primary" />
-                Резюме
+                {tr("copy.c242")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <div className="text-3xl font-bold">{stats.resumeIndex}</div>
-                <p className="text-sm text-muted-foreground">Версий резюме</p>
+                <p className="text-sm text-muted-foreground">
+                  {tr("copy.c406")}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -149,9 +153,7 @@ export default function Progress() {
               <Award className="h-5 w-5 text-primary" />
               {t("progress.rewards.title")}
             </CardTitle>
-            <CardDescription>
-              Получайте бейджи за выполнение целей
-            </CardDescription>
+            <CardDescription>{tr("copy.c407")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
@@ -186,12 +188,12 @@ export default function Progress() {
                         )}
                         {!reward.available && (
                           <Badge variant="outline" className="mt-2">
-                            Заблокировано
+                            {tr("copy.c408")}
                           </Badge>
                         )}
                         {reward.claimed && (
                           <Badge variant="default" className="mt-2">
-                            Получено
+                            {tr("copy.c409")}
                           </Badge>
                         )}
                       </div>
@@ -205,15 +207,12 @@ export default function Progress() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Рекомендации</CardTitle>
+            <CardTitle>{tr("copy.c410")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
-            <p>• Для награды «Упорство» завершите 5 недель плана</p>
-            <p>
-              • Пройдите еще одну тренировку интервью для улучшения среднего
-              балла
-            </p>
-            <p>• Создайте версию резюме под новую вакансию</p>
+            <p>{tr("copy.c411")}</p>
+            <p>{tr("copy.c412")}</p>
+            <p>{tr("copy.c413")}</p>
           </CardContent>
         </Card>
       </div>

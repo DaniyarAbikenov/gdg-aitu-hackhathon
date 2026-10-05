@@ -5,10 +5,10 @@ test("shared skill descriptions, fuzzy suggestions and case-insensitive selectio
   page,
 }) => {
   await register(page);
-  const input = page.getByRole("combobox", { name: "Поиск навыка" });
+  const input = page.getByRole("combobox", { name: "Search skills" });
   await input.fill("css");
   await expect(page.getByRole("option", { name: /^CSS/ })).toContainText(
-    "Язык стилей",
+    "A style language",
   );
   await input.press("ArrowDown");
   await input.press("Enter");
@@ -25,9 +25,9 @@ test("shared skill descriptions, fuzzy suggestions and case-insensitive selectio
       : "";
   if (description)
     await page
-      .getByRole("textbox", { name: "Описание нового навыка" })
+      .getByRole("textbox", { name: "New skill description" })
       .fill(description);
-  await page.getByRole("button", { name: "Добавить новый навык" }).click();
+  await page.getByRole("button", { name: "Add new skill" }).click();
   await expect(page.getByText(name, { exact: true })).toBeVisible();
   await page.reload();
   await input.fill(name.toLowerCase());

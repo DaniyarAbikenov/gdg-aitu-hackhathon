@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { ProfileBlocks } from "@/components/ProfileBlocks";
 import type { ResumeFields } from "@/types/resume";
 import { useEffect, useState } from "react";
@@ -20,7 +21,8 @@ import { useAuthStore } from "@/store/auth";
 import { MainLayout } from "@/components/layout/MainLayout.tsx";
 
 export default function Onboarding() {
-  const { t } = useTranslation();
+  useLocale();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -28,6 +30,14 @@ export default function Onboarding() {
   const [details, setDetails] = useState<ResumeFields>({});
   const [saving, setSaving] = useState(false);
   const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    const updated = (e: Event) => {
+      const next = (e as CustomEvent<number>).detail;
+      setRevision((previous) => (previous === next - 1 ? next : previous));
+    };
+    window.addEventListener("profile-language-saved", updated);
+    return () => window.removeEventListener("profile-language-saved", updated);
+  }, []);
 
   // ---- form fields ----
   const [name, setName] = useState("");
@@ -44,7 +54,7 @@ export default function Onboarding() {
         if (!user.isAuthenticated) {
           toast({
             title: t("common.error"),
-            description: "Вы не авторизованы",
+            description: tr("copy.c392"),
             variant: "destructive",
           });
           navigate("/login");
@@ -95,7 +105,7 @@ export default function Onboarding() {
     setNormalizedSkills([...new Set(normalized)]);
     toast({
       title: t("onboarding.normalizedSkills"),
-      description: `Обработано ${normalized.length} навыков`,
+      description: tr("dynamic.normalized", { count: normalized.length }),
     });
   };
 
@@ -103,7 +113,7 @@ export default function Onboarding() {
     if (!name || selectedRoles.length === 0 || skills.length === 0) {
       toast({
         title: t("common.error"),
-        description: "Заполните все обязательные поля",
+        description: tr("copy.c393"),
         variant: "destructive",
       });
       return;
@@ -115,7 +125,7 @@ export default function Onboarding() {
       if (!user.isAuthenticated) {
         toast({
           title: t("common.error"),
-          description: "Вы не авторизованы",
+          description: tr("copy.c392"),
           variant: "destructive",
         });
         return;
@@ -126,6 +136,7 @@ export default function Onboarding() {
       };
       const payload = {
         ...blocks,
+        language: i18n.language === "kz" ? "kk" : i18n.language,
         full_name: name,
         email: details.email || user.email || "",
         desired_position: selectedRoles[0],
@@ -141,7 +152,7 @@ export default function Onboarding() {
 
       toast({
         title: t("common.success"),
-        description: "Анкета сохранена",
+        description: tr("copy.c394"),
       });
 
       navigate("/dashboard");
@@ -159,7 +170,7 @@ export default function Onboarding() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="p-8">Загрузка…</div>
+        <div className="p-8">{tr("copy.c000")}</div>
       </MainLayout>
     );
   }
@@ -234,7 +245,7 @@ export default function Onboarding() {
                       <span>{skill}</span>
                       <button
                         type="button"
-                        aria-label={`Удалить навык ${skill}`}
+                        aria-label={tr("dynamic.removeSkill", { skill })}
                         onClick={() => removeSkill(skill)}
                       >
                         ×

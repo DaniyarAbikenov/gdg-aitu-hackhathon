@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ import {
 import { logout } from "@/api/auth";
 
 export function TopBar() {
+  useLocale();
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -27,7 +29,7 @@ export function TopBar() {
   }
 
   return (
-    <header className="h-14 border-b bg-card flex items-center justify-between px-4">
+    <header className="h-16 border-b bg-background flex items-center justify-between px-4">
       <div className="flex items-center gap-2">
         <SidebarTrigger />
       </div>
@@ -45,12 +47,14 @@ export function TopBar() {
 
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={() => navigate("/onboarding")}>
-              Изменить профиль
+              {tr("copy.c127")}
             </DropdownMenuItem>
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuItem onClick={handleLogout}>Выйти</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>
+              {tr("copy.c128")}
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

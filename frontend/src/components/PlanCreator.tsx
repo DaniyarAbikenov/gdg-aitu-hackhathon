@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "@/api/client";
@@ -9,6 +10,7 @@ import { useVacancyContext } from "@/hooks/useVacancyContext";
 import { VacancyContext } from "@/components/VacancyContext";
 import { useCapabilities } from "@/hooks/useCapabilities";
 export function PlanCreator() {
+  useLocale();
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
@@ -22,10 +24,10 @@ export function PlanCreator() {
       setPosition(vacancy.data.name);
       setStacks(vacancy.data.skills);
       setGoal(
-        `Подготовиться к ${vacancy.data.name} в ${vacancy.data.company_name}`.slice(
-          0,
-          500,
-        ),
+        tr("dynamic.prepare", {
+          role: vacancy.data.name,
+          company: vacancy.data.company_name,
+        }).slice(0, 500),
       );
     }
   }, [vacancy]);
@@ -48,32 +50,30 @@ export function PlanCreator() {
   };
   return (
     <section className="rounded-xl border p-5 space-y-4">
-      <h2 className="text-xl font-semibold">Новый учебный план</h2>
+      <h2 className="text-xl font-semibold">{tr("copy.c058")}</h2>
       <VacancyContext vacancy={vacancy} />
       {contextError && <p role="alert">{contextError}</p>}
       <label className="block space-y-2">
-        Целевая позиция
+        {tr("copy.c059")}
         <Input
           value={position}
           onChange={(e) => setPosition(e.target.value)}
-          placeholder="Например: Backend developer"
+          placeholder={tr("copy.c060")}
         />
       </label>
       <label className="block space-y-2">
-        Цель и пожелания
+        {tr("copy.c061")}
         <Textarea
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
-          placeholder="Что хотите освоить и какой проект создать"
+          placeholder={tr("copy.c062")}
         />
       </label>
-      <p className="text-sm font-medium">
-        Предпочитаемый стек — можно выбрать несколько технологий
-      </p>
+      <p className="text-sm font-medium">{tr("copy.c063")}</p>
       <SkillPicker
         selected={stacks}
         onChange={setStacks}
-        placeholder="Найти технологию"
+        placeholder={tr("copy.c064")}
       />
       <div className="flex flex-wrap gap-2">
         {stacks.map((s) => (
@@ -87,10 +87,7 @@ export function PlanCreator() {
         ))}
       </div>
       {capabilities && !capabilities.ai && (
-        <p className="text-sm text-muted-foreground">
-          Создание плана с ИИ сейчас недоступно. Сохранённые планы и отметки о
-          выполнении остаются доступны.
-        </p>
+        <p className="text-sm text-muted-foreground">{tr("copy.c065")}</p>
       )}
       {error && (
         <p role="alert" className="text-destructive">
@@ -106,7 +103,7 @@ export function PlanCreator() {
         }
         onClick={create}
       >
-        {busy ? "Готовим план…" : "Создать план"}
+        {busy ? tr("copy.c066") : tr("copy.c067")}
       </Button>
     </section>
   );

@@ -1,3 +1,4 @@
+import { tr, useLocale, displayLocale } from "@/i18n/copy";
 import type { SnapshotRecord } from "@/types/product";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -6,20 +7,7 @@ import { getResume, saveVersion, type ResumeRecord } from "@/api/resume";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-const names = {
-  full_name: "Имя",
-  position: "Позиция",
-  email: "Email",
-  phone: "Телефон",
-  location: "Локация",
-  summary: "О себе",
-  skills: "Навыки",
-  experience: "Опыт",
-  education: "Образование",
-  projects: "Проекты",
-  certificates: "Сертификаты",
-  languages: "Языки",
-};
+
 function text(value: unknown): string {
   if (!value) return "—";
   if (Array.isArray(value)) return value.map(text).join("\n\n");
@@ -28,6 +16,21 @@ function text(value: unknown): string {
   return String(value);
 }
 export default function ResumeVersions() {
+  useLocale();
+  const names = {
+    full_name: tr("copy.c468"),
+    position: tr("copy.c469"),
+    email: "Email",
+    phone: tr("copy.c086"),
+    location: tr("copy.c073"),
+    summary: tr("copy.c090"),
+    skills: tr("copy.c104"),
+    experience: tr("copy.c470"),
+    education: tr("copy.c076"),
+    projects: tr("copy.c081"),
+    certificates: tr("copy.c444"),
+    languages: tr("copy.c445"),
+  };
   const { resumeId } = useParams();
   const [resume, setResume] = useState<ResumeRecord | null>(null);
   const [versions, setVersions] = useState<SnapshotRecord[]>([]);
@@ -53,12 +56,12 @@ export default function ResumeVersions() {
         resumeId!,
         resume!.fields,
         resume!.revision,
-        label.trim() || `Версия ${versions.length + 1}`,
+        label.trim() || tr("dynamic.version", { count: versions.length + 1 }),
         resume!.jd_text,
       );
       await load();
       setLabel("");
-      setNotice("Версия сохранена");
+      setNotice(tr("copy.c471"));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -66,19 +69,14 @@ export default function ResumeVersions() {
     }
   };
   const restore = async (id: string) => {
-    if (
-      !window.confirm(
-        "Заменить текущие поля сохранённой версией? Сначала сохраните текущую версию, если она нужна.",
-      )
-    )
-      return;
+    if (!window.confirm(tr("copy.c472"))) return;
     setBusy(true);
     try {
       await client.post(`/versions/${id}/restore`, {
         revision: resume!.revision,
       });
       await load();
-      setNotice("Содержимое резюме восстановлено. Остальные версии сохранены.");
+      setNotice(tr("copy.c473"));
     } catch (e) {
       setError(e.message);
     } finally {
@@ -89,7 +87,7 @@ export default function ResumeVersions() {
     <MainLayout>
       <div className="max-w-5xl mx-auto p-6 space-y-6">
         <header>
-          <h1 className="text-3xl font-bold">История версий</h1>
+          <h1 className="text-3xl font-bold">{tr("copy.c439")}</h1>
           <p className="text-muted-foreground mt-2">
             {resume?.title || resume?.filename}
           </p>
@@ -99,34 +97,32 @@ export default function ResumeVersions() {
         <div className="flex flex-wrap gap-3">
           <Input
             className="sm:max-w-sm"
-            aria-label="Название версии"
-            placeholder="Например: адаптация под Python"
+            aria-label={tr("copy.c474")}
+            placeholder={tr("copy.c475")}
             value={label}
             maxLength={160}
             onChange={(e) => setLabel(e.target.value)}
           />
           <Button disabled={busy || !resume} onClick={save}>
-            Сохранить текущую версию
+            {tr("copy.c476")}
           </Button>
           <Button asChild variant="outline">
-            <Link to={`/resume/${resumeId}/edit`}>Редактировать</Link>
+            <Link to={`/resume/${resumeId}/edit`}>{tr("copy.c477")}</Link>
           </Button>
         </div>
         {resume && !versions.length && (
-          <p className="border rounded-lg p-5">
-            Сохранённых версий пока нет. Создайте снимок перед изменениями.
-          </p>
+          <p className="border rounded-lg p-5">{tr("copy.c478")}</p>
         )}
         {versions.map((v) => (
           <section key={v.id} className="rounded-xl border p-5 space-y-4">
             <div>
               <h2 className="text-xl font-semibold">{v.data.label}</h2>
               <p className="text-sm text-muted-foreground">
-                {new Date(v.created_at).toLocaleString()}
+                {new Date(v.created_at).toLocaleString(displayLocale())}
               </p>
               {v.data.jd_text && (
                 <details className="pt-2">
-                  <summary>Вакансия этой версии</summary>
+                  <summary>{tr("copy.c479")}</summary>
                   <p className="whitespace-pre-wrap text-sm pt-2">
                     {v.data.jd_text}
                   </p>
@@ -135,7 +131,7 @@ export default function ResumeVersions() {
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild variant="outline">
-                <a href={`/api/versions/${v.id}/pdf`}>Download PDF</a>
+                <a href={`/api/versions/${v.id}/pdf`}>{tr("ui.pdf")}</a>
               </Button>
               <Button asChild variant="outline">
                 <a href={`/api/versions/${v.id}/docx`}>Word</a>
@@ -145,13 +141,11 @@ export default function ResumeVersions() {
                 variant="outline"
                 onClick={() => restore(v.id)}
               >
-                Восстановить
+                {tr("copy.c480")}
               </Button>
             </div>
             <details>
-              <summary className="cursor-pointer">
-                Содержимое и сравнение с исходным
-              </summary>
+              <summary className="cursor-pointer">{tr("copy.c481")}</summary>
               <div className="space-y-4 pt-4">
                 {Object.entries(names).map(([key, title]) => {
                   const before = text(v.data.before[key]);
@@ -166,13 +160,13 @@ export default function ResumeVersions() {
                       ) : (
                         <div className="grid sm:grid-cols-2 gap-3 mt-2">
                           <div className="rounded bg-muted p-3">
-                            <p className="text-xs mb-2">До</p>
+                            <p className="text-xs mb-2">{tr("copy.c482")}</p>
                             <p className="whitespace-pre-wrap text-sm">
                               {before}
                             </p>
                           </div>
                           <div className="rounded bg-primary/10 p-3">
-                            <p className="text-xs mb-2">В этой версии</p>
+                            <p className="text-xs mb-2">{tr("copy.c483")}</p>
                             <p className="whitespace-pre-wrap text-sm">
                               {after}
                             </p>

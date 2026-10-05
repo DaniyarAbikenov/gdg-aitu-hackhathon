@@ -22,7 +22,7 @@ Reference: original backend commit `82c50c1` and the `skill-pathfinder-151` fron
 | NotebookLM overview | Toast-only action | Export source + manual NotebookLM import; no false claim of automatic video generation |
 | Dashboard/progress | Fixed mock counters | Configurable analytic widgets, weekly comparisons, activity, XP and vacancy-specific next actions |
 | Rewards | Mock availability/claim toast | Eligibility from records, persistent claims, duplicate protection |
-| EN/RU/KZ preferences | Original locale files and switcher | Persisted en/ru/kk preference, localized navigation/core controls, coaching language. Additional explanatory copy still needs translation. |
+| EN/RU/KZ preferences | Original locale files and switcher | Persisted en/ru/kk preference, localized screens/forms/errors/built-in skill descriptions, language-filtered knowledge articles and coaching language. User-authored content remains in its original language. |
 | Audio interview mode | Setting toggle; STT service empty | Browser dictation plus OpenAI Realtime WebRTC mode, saved transcripts and final assessment; requires real provider configuration |
 | FAQ/support/policies | Static screens | Searchable knowledge base, administrator draft/preview/publish editor, factual policy and user-initiated GitHub support link |
 
@@ -41,3 +41,11 @@ Live OpenAI/Gemini requires an API key/model; voice also requires Realtime and t
 ## Connected preparation release
 
 Saved vacancies now connect a selected resume, interview history and learning plans. Application stages, private notes and next-contact dates are editable. Accounts can export private data; password accounts support password changes with global session revocation and confirmed deletion. Public product introduction, reproducible manual demo data and presentation/operations guides are included.
+
+## Company atlas and vacancy import
+
+`/companies` is a private PostgreSQL-backed company research workspace, shared with the existing vacancy/interview workflows. Records include website, location, stack, hiring stages, notes and source-linked assignments distinguished as employer tasks or personal practice. Companies can be archived and edited with revision checks. No invented company task corpus is presented as verified employer material.
+
+`/applications/import` reads a public HTTP(S) vacancy or pasted text through the configured structured AI adapter. A reviewable draft contains role, employer, stack, requirements, responsibilities, location, employment and salary. The user applies the preview to the form and saves separately. Missing facts stay blank. Sites requiring sign-in, JavaScript rendering or blocking requests may need pasted text.
+
+The fetcher rejects private/reserved IPs, credentials and nonstandard ports, pins the resolved public IP, revalidates redirects, bounds bytes/time and strips active HTML. It does not send application cookies or provider secrets to the supplied URL.

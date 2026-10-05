@@ -52,6 +52,11 @@ export interface VoiceEvent {
   event_id?: string;
 }
 export interface ApplicationFields {
+  location: string;
+  employment: string;
+  salary: string;
+  requirements: string[];
+  responsibilities: string[];
   name: string;
   description: string;
   company_name: string;
@@ -78,6 +83,7 @@ export interface ApplicationRecord {
   created_at: string;
   data: ApplicationFields;
   next_step: string;
+  next_step_key?: string;
   resume_title: string | null;
   interviews: {
     id: string;

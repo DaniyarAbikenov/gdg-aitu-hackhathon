@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { Link } from "react-router-dom";
 import type { ApplicationRecord } from "@/types/product";
 export function VacancyContext({
@@ -5,6 +6,7 @@ export function VacancyContext({
 }: {
   vacancy: ApplicationRecord | null;
 }) {
+  useLocale();
   return vacancy ? (
     <div className="border-l-4 border-primary bg-primary/5 rounded-r-lg px-4 py-3 text-sm">
       <p className="font-medium">
@@ -14,7 +16,7 @@ export function VacancyContext({
         to={`/applications?id=${vacancy.id}`}
         className="text-primary underline"
       >
-        Вернуться к подготовке по вакансии
+        {tr("copy.c111")}
       </Link>
     </div>
   ) : null;

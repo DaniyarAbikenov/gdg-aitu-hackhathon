@@ -72,6 +72,8 @@ Screenshots show a separate fictional account persisted in the local production 
 ## Workflows
 
 - Register, log in, edit a profile, save language, and log out without losing data. Export private records, change a password (revoking old sessions), or delete a password account with confirmation.
+- Research companies with a saved stack, hiring stages and source-linked test assignments in `/companies`. Reuse that context in interviews.
+- Import public vacancy links or pasted text with AI into a reviewable draft; confirm extracted facts before saving.
 - Save vacancies, track application stages and next-contact dates, and reuse the same context across resume, interview and learning workflows. No messages or applications are sent automatically.
 - Upload or drag-and-drop PDF (up to 5 MiB/20 pages), DOCX or TXT, review extracted fields and edit experience, education and projects as structured entries. The API also accepts UTF-8 text files. Original upload bytes are not retained.
 - Adapt to a vacancy with OpenAI or Gemini; inspect before/after proposals, accept selected changes into saved versions, compare snapshots, restore and download PDFs in three styles.
@@ -155,3 +157,7 @@ Set `CAREER_OPENAI_API_KEY`, `CAREER_OPENAI_REALTIME_MODEL` and `CAREER_OPENAI_T
 Completed user and assistant transcripts are saved with revision checks in PostgreSQL and displayed in interview history. No audio blobs are saved by this application. Provider retention rules still apply. Pause/end/unmount closes local tracks and requests call termination. Reconnect restores the saved conversational context. Failed transcript writes remain visible and can be retried; leaving before retrying can lose unsaved browser-held turns. Voice assessment is server-generated from the supplied transcript, which is practice data, not proctored evidence.
 
 Live voice and cloud extraction quality must be checked with real account credentials and representative user documents. CI validates request/response contracts and explicit failures without making paid provider calls. `CAREER_ENVIRONMENT=production` hides global technical status banners; actionable errors remain next to the failed operation. Explicit `local` mode remains clearly labelled as a test provider.
+
+### Locale checks
+
+Run `node scripts/check_locales.cjs` to verify matching translation keys and interpolation fields in Russian, English and Kazakh. CI runs this check, and browser tests switch languages while preserving an unsaved draft. Knowledge articles are filtered by their explicit language; migration `0009` includes English and Kazakh getting-started guides. Personal notes and existing provider outputs are not machine-translated on language changes.

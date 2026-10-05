@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useState } from "react";
 import { Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -29,9 +30,10 @@ export function MultiSelect({
   options,
   selected,
   onChange,
-  placeholder = "Выберите...",
+  placeholder = tr("copy.c048"),
   allowCustom = false,
 }: MultiSelectProps) {
+  useLocale();
   const [open, setOpen] = useState(false);
   const [customValue, setCustomValue] = useState("");
 
@@ -55,14 +57,16 @@ export function MultiSelect({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" className="w-full justify-start">
-            {selected.length > 0 ? `${selected.length} выбрано` : placeholder}
+            {selected.length > 0
+              ? tr("dynamic.selected", { count: selected.length })
+              : placeholder}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0 bg-background" align="start">
           <Command>
-            <CommandInput placeholder="Поиск..." />
+            <CommandInput placeholder={tr("copy.c049")} />
             <CommandList>
-              <CommandEmpty>Не найдено</CommandEmpty>
+              <CommandEmpty>{tr("copy.c050")}</CommandEmpty>
               <CommandGroup>
                 {options.map((option) => (
                   <CommandItem
@@ -86,7 +90,7 @@ export function MultiSelect({
           <Input
             value={customValue}
             onChange={(e) => setCustomValue(e.target.value)}
-            placeholder="Или введите свою..."
+            placeholder={tr("copy.c051")}
             onKeyDown={(e) => e.key === "Enter" && handleAddCustom()}
           />
           <Button onClick={handleAddCustom} size="sm">

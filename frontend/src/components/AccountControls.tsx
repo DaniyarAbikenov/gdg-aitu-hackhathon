@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useState } from "react";
 import client from "@/api/client";
 import { useAuthStore } from "@/store/auth";
@@ -8,6 +9,7 @@ export function AccountControls({
 }: {
   passwordAccount: boolean;
 }) {
+  useLocale();
   const email = useAuthStore((s) => s.email);
   const [mode, setMode] = useState<"password" | "delete" | null>(null);
   const [password, setPassword] = useState(""),
@@ -38,14 +40,11 @@ export function AccountControls({
   };
   return (
     <section className="border rounded-xl p-5 space-y-4">
-      <h2 className="font-semibold">Данные и безопасность</h2>
-      <p className="text-sm text-muted-foreground">
-        Экспорт включает профиль, резюме, версии, вакансии, интервью и учебные
-        планы. Пароли и ключи в выгрузку не входят.
-      </p>
+      <h2 className="font-semibold">{tr("copy.c005")}</h2>
+      <p className="text-sm text-muted-foreground">{tr("copy.c006")}</p>
       <div className="flex flex-wrap gap-3">
         <Button asChild variant="outline">
-          <a href="/api/account/export">Скачать мои данные (JSON)</a>
+          <a href="/api/account/export">{tr("copy.c007")}</a>
         </Button>
         {passwordAccount && (
           <>
@@ -58,7 +57,7 @@ export function AccountControls({
                 setError("");
               }}
             >
-              Сменить пароль
+              {tr("copy.c008")}
             </Button>
             <Button
               variant="ghost"
@@ -70,7 +69,7 @@ export function AccountControls({
                 setError("");
               }}
             >
-              Удалить аккаунт
+              {tr("copy.c009")}
             </Button>
           </>
         )}
@@ -79,20 +78,16 @@ export function AccountControls({
         <form
           onSubmit={submit}
           className="border rounded-lg p-4 space-y-4"
-          aria-label={mode === "delete" ? "Удаление аккаунта" : "Смена пароля"}
+          aria-label={mode === "delete" ? tr("copy.c010") : tr("copy.c011")}
         >
           <h3 className="font-semibold">
-            {mode === "delete"
-              ? "Удаление без возможности восстановления"
-              : "Новый пароль и выход на всех устройствах"}
+            {mode === "delete" ? tr("copy.c012") : tr("copy.c013")}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {mode === "delete"
-              ? "Личные данные в этом сервисе будут удалены: профиль, резюме, интервью, вакансии и планы. Общий каталог навыков и опубликованные статьи сохранятся. Сначала скачайте нужные материалы."
-              : "После смены пароля все текущие сессии перестанут действовать. Войдите снова с новым паролем."}
+            {mode === "delete" ? tr("copy.c014") : tr("copy.c015")}
           </p>
           <label className="block">
-            Текущий пароль
+            {tr("copy.c016")}
             <Input
               type="password"
               autoComplete="current-password"
@@ -103,11 +98,11 @@ export function AccountControls({
           </label>
           {mode === "password" ? (
             <label className="block">
-              Новый пароль
+              {tr("copy.c017")}
               <Input
                 type="password"
                 autoComplete="new-password"
-                aria-label="Новый пароль"
+                aria-label={tr("copy.c017")}
                 required
                 minLength={12}
                 maxLength={256}
@@ -115,12 +110,12 @@ export function AccountControls({
                 onChange={(e) => setNext(e.target.value)}
               />
               <span className="text-xs text-muted-foreground">
-                Не меньше 12 символов
+                {tr("copy.c018")}
               </span>
             </label>
           ) : (
             <label className="block">
-              Введите email аккаунта для подтверждения
+              {tr("copy.c019")}
               <Input
                 type="email"
                 autoComplete="off"
@@ -145,10 +140,10 @@ export function AccountControls({
               }
             >
               {busy
-                ? "Выполняем…"
+                ? tr("copy.c020")
                 : mode === "delete"
-                  ? "Удалить мои данные и аккаунт"
-                  : "Сохранить новый пароль"}
+                  ? tr("copy.c021")
+                  : tr("copy.c022")}
             </Button>
             <Button
               type="button"
@@ -160,7 +155,7 @@ export function AccountControls({
                 setNext("");
               }}
             >
-              Отмена
+              {tr("copy.c023")}
             </Button>
           </div>
         </form>

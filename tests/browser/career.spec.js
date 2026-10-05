@@ -6,22 +6,20 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
   await register(page);
   // Explicit deterministic provider is enabled only in this isolated test stack.
   await page.goto("/interview/start");
+  await page.getByLabel("Company name", { exact: true }).fill("Library team");
   await page
-    .getByLabel("Название компании", { exact: true })
-    .fill("Library team");
-  await page
-    .getByLabel("О компании", { exact: true })
+    .getByLabel("About the company", { exact: true })
     .fill("Library engineering team");
   await page
-    .getByLabel("Название вакансии", { exact: true })
+    .getByLabel("Vacancy title", { exact: true })
     .fill("Backend engineer");
   await page
-    .getByLabel("Описание вакансии", { exact: true })
+    .getByLabel("Job description", { exact: true })
     .fill("Build reliable Python APIs using PostgreSQL");
-  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("Python");
+  await page.getByRole("combobox", { name: "Search skills" }).fill("Python");
   await page.getByRole("option", { name: /^Python/ }).click();
   await page
-    .getByRole("button", { name: "Начать интервью", exact: true })
+    .getByRole("button", { name: "Start interview", exact: true })
     .click();
   await expect(page).toHaveURL(/\/interview\/session\?id=/);
   await page.reload();
@@ -38,7 +36,7 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
   await expect(page).toHaveURL(/\/interview\/result\?id=/);
   await page.getByRole("button", { name: "View Summary" }).click();
   await page.reload();
-  await expect(page.getByText(/100\/100 · учебная оценка/)).toBeVisible();
+  await expect(page.getByText(/100\/100 · practice score/)).toBeVisible();
   const profile = await (await page.request.get("/api/user/profile")).json();
   expect(
     (
@@ -56,11 +54,11 @@ test("interview reloads from PostgreSQL, feedback and plan progress persist", as
   ).toBeTruthy();
   await page.goto("/plan");
   await page
-    .getByLabel("Целевая позиция", { exact: true })
+    .getByLabel("Target position", { exact: true })
     .fill("Backend developer");
-  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("Python");
+  await page.getByRole("combobox", { name: "Search skills" }).fill("Python");
   await page.getByRole("option", { name: /^Python/ }).click();
-  await page.getByRole("button", { name: "Создать план", exact: true }).click();
+  await page.getByRole("button", { name: "Create plan", exact: true }).click();
   await expect(page).toHaveURL(/\/plan\/[^/]+$/);
   await page.getByRole("checkbox").first().click();
   await expect(page.getByRole("checkbox").first()).toBeChecked();

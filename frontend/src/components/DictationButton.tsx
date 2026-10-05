@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ export function DictationButton({
   onText: (value: string) => void;
   disabled: boolean;
 }) {
+  useLocale();
   const [active, setActive] = useState(false);
   const [error, setError] = useState("");
   const current = useRef<Recognition | null>(null);
@@ -65,10 +67,7 @@ export function DictationButton({
   };
   return (
     <div className="space-y-2 text-sm">
-      <p className="text-muted-foreground">
-        Диктовка использует распознавание речи браузера. Аудио может
-        обрабатываться его провайдером. Проверьте текст перед отправкой.
-      </p>
+      <p className="text-muted-foreground">{tr("copy.c024")}</p>
       <Button
         variant="outline"
         disabled={disabled || !Factory}
@@ -76,10 +75,10 @@ export function DictationButton({
       >
         <Mic className="h-4 w-4 mr-2" aria-hidden="true" />
         {!Factory
-          ? "Браузер не поддерживает диктовку"
+          ? tr("copy.c025")
           : active
-            ? "Остановить диктовку"
-            : "Диктовать ответ"}
+            ? tr("copy.c026")
+            : tr("copy.c027")}
       </Button>
       {error && <p role="alert">{error}</p>}
     </div>

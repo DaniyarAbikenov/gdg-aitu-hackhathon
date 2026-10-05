@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { BriefcaseBusiness, ArrowRight, Plus } from "lucide-react";
@@ -6,19 +7,18 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { VacancyImport } from "@/components/VacancyImport";
+import type { CompanyRecord } from "./Companies";
 import { SkillPicker } from "@/components/SkillPicker";
 import type { ResumeRecord } from "@/api/resume";
 import type { ApplicationRecord, ApplicationFields } from "@/types/product";
-const stages = {
-  saved: "Сохранена",
-  preparing: "Готовлюсь",
-  applied: "Отклик отправлен",
-  interview: "Интервью назначено",
-  offer: "Получен оффер",
-  rejected: "Отказ",
-  archived: "Архив",
-};
+
 const empty: ApplicationFields = {
+  location: "",
+  employment: "",
+  salary: "",
+  requirements: [],
+  responsibilities: [],
   name: "",
   company_name: "",
   company_description: "",
@@ -33,7 +33,18 @@ const empty: ApplicationFields = {
   follow_up: "",
 };
 export default function Applications() {
+  useLocale();
+  const stages = {
+    saved: tr("copy.c141"),
+    preparing: tr("copy.c142"),
+    applied: tr("copy.c143"),
+    interview: tr("copy.c144"),
+    offer: tr("copy.c145"),
+    rejected: tr("copy.c146"),
+    archived: tr("copy.c147"),
+  };
   const [params, setParams] = useSearchParams();
+  const [companies, setCompanies] = useState<CompanyRecord[]>([]);
   const [records, setRecords] = useState<ApplicationRecord[]>([]);
   const [resumes, setResumes] = useState<ResumeRecord[]>([]);
   const [draft, setDraft] = useState<ApplicationFields | null>(null);
@@ -44,10 +55,12 @@ export default function Applications() {
   const [query, setQuery] = useState(""),
     [filter, setFilter] = useState("active");
   const load = async () => {
-    const [a, r] = await Promise.all([
+    const [a, r, c] = await Promise.all([
       client.get("/applications"),
       client.get("/resume"),
+      client.get("/companies"),
     ]);
+    setCompanies(c.data);
     setRecords(a.data);
     setResumes(r.data);
   };
@@ -56,9 +69,24 @@ export default function Applications() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, []);
+  useEffect(() => {
+    const company = companies.find((c) => c.id === params.get("company"));
+    if (company)
+      setDraft({
+        ...empty,
+        company_id: company.id,
+        company_name: company.data.name,
+        company_description: company.data.description,
+        skills: company.data.skills || [],
+      });
+  }, [companies, params]);
   const selected = records.find((r) => r.id === params.get("id"));
   const change = (key: keyof ApplicationFields, value: string | string[]) =>
-    setDraft((d) => ({ ...d!, [key]: value }));
+    setDraft((d) => ({
+      ...d!,
+      [key]: value,
+      ...(key === "company_name" ? { company_id: "" } : {}),
+    }));
   const edit = (record: ApplicationRecord | null) => {
     setEditing(record);
     setDraft(record ? { ...empty, ...record.data } : { ...empty });
@@ -111,14 +139,12 @@ export default function Applications() {
       <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
         <header className="flex flex-wrap gap-4 items-start justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Мои вакансии</h1>
-            <p className="text-muted-foreground mt-2">
-              Одна вакансия — резюме, тренировки и следующий шаг в одном месте.
-            </p>
+            <h1 className="text-3xl font-bold">{tr("copy.c148")}</h1>
+            <p className="text-muted-foreground mt-2">{tr("copy.c149")}</p>
           </div>
           <Button onClick={() => edit(null)}>
             <Plus className="h-4 w-4 mr-2" />
-            Добавить вакансию
+            {tr("copy.c150")}
           </Button>
         </header>
         {error && (
@@ -132,7 +158,7 @@ export default function Applications() {
                   .catch((e) => setError(e.message))
               }
             >
-              Обновить данные
+              {tr("copy.c151")}
             </Button>
           </p>
         )}
@@ -140,15 +166,47 @@ export default function Applications() {
           <form
             onSubmit={save}
             className="border rounded-xl p-5 space-y-4"
-            aria-label="Редактор вакансии"
+            aria-label={tr("copy.c152")}
           >
             <h2 className="text-xl font-semibold">
-              {editing ? "Изменить вакансию" : "Новая вакансия"}
+              {editing ? tr("copy.c153") : tr("copy.c154")}
             </h2>
+            <VacancyImport
+              onImport={(fields) =>
+                setDraft((d) => ({ ...d!, ...fields, company_id: "" }))
+              }
+            />
+            <label className="block">
+              {tr("copy.c155")}
+              <select
+                aria-label={tr("copy.c155")}
+                className="block w-full"
+                value={draft.company_id || ""}
+                onChange={(e) => {
+                  const c = companies.find((c) => c.id === e.target.value);
+                  setDraft((d) => ({
+                    ...d!,
+                    company_id: c?.id || "",
+                    company_name: c?.data.name || "",
+                    company_description: c?.data.description || "",
+                    skills: c?.data.skills?.length ? c.data.skills : d!.skills,
+                  }));
+                }}
+              >
+                <option value="">{tr("copy.c156")}</option>
+                {companies
+                  .filter((c) => !c.data.archived || c.id === draft.company_id)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.data.name}
+                    </option>
+                  ))}
+              </select>
+            </label>
             <div className="grid sm:grid-cols-2 gap-4">
               {[
-                ["name", "Название позиции"],
-                ["company_name", "Компания"],
+                ["name", tr("copy.c089")],
+                ["company_name", tr("copy.c069")],
               ].map(([key, label]) => (
                 <label key={key}>
                   {label}
@@ -165,9 +223,9 @@ export default function Applications() {
               ))}
             </div>
             <label className="block">
-              Описание вакансии
+              {tr("copy.c157")}
               <Textarea
-                aria-label="Описание вакансии"
+                aria-label={tr("copy.c157")}
                 required
                 minLength={10}
                 maxLength={10000}
@@ -177,7 +235,7 @@ export default function Applications() {
               />
             </label>
             <label className="block">
-              Ссылка на источник
+              {tr("copy.c158")}
               <Input
                 type="url"
                 placeholder="https://…"
@@ -185,9 +243,47 @@ export default function Applications() {
                 onChange={(e) => change("source_url", e.target.value)}
               />
             </label>
-            <p className="font-medium">Технологии для подготовки</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              {[
+                ["location", tr("copy.c073")],
+                ["employment", tr("copy.c159")],
+                ["salary", tr("copy.c160")],
+              ].map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <Input
+                    maxLength={key === "employment" ? 200 : 300}
+                    value={draft[key] || ""}
+                    onChange={(e) =>
+                      change(key as keyof ApplicationFields, e.target.value)
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[
+                ["requirements", tr("copy.c161")],
+                ["responsibilities", tr("copy.c133")],
+              ].map(([key, label]) => (
+                <label key={key}>
+                  {label}
+                  <Textarea
+                    aria-label={label}
+                    value={(draft[key] || []).join("\n")}
+                    onChange={(e) =>
+                      change(
+                        key as keyof ApplicationFields,
+                        e.target.value.split("\n").slice(0, 30),
+                      )
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="font-medium">{tr("copy.c162")}</p>
             <SkillPicker
-              placeholder="Найти технологию"
+              placeholder={tr("copy.c064")}
               selected={draft.skills}
               onChange={(v) => change("skills", v)}
             />
@@ -210,9 +306,9 @@ export default function Applications() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <label>
-                Статус отклика
+                {tr("copy.c163")}
                 <select
-                  aria-label="Статус отклика"
+                  aria-label={tr("copy.c163")}
                   className="block w-full p-2 border rounded bg-background"
                   value={draft.status}
                   onChange={(e) => change("status", e.target.value)}
@@ -225,14 +321,14 @@ export default function Applications() {
                 </select>
               </label>
               <label>
-                Резюме для вакансии
+                {tr("copy.c164")}
                 <select
-                  aria-label="Резюме для вакансии"
+                  aria-label={tr("copy.c164")}
                   className="block w-full p-2 border rounded bg-background"
                   value={draft.resume_id || ""}
                   onChange={(e) => change("resume_id", e.target.value)}
                 >
-                  <option value="">Пока не выбрано</option>
+                  <option value="">{tr("copy.c165")}</option>
                   {resumes.map((r) => (
                     <option key={r.resume_id} value={r.resume_id}>
                       {r.title || r.filename}
@@ -243,16 +339,16 @@ export default function Applications() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <label>
-                Следующее действие
+                {tr("copy.c166")}
                 <Input
                   maxLength={500}
-                  placeholder="Например: написать рекрутеру"
+                  placeholder={tr("copy.c167")}
                   value={draft.next_action}
                   onChange={(e) => change("next_action", e.target.value)}
                 />
               </label>
               <label>
-                Дата следующего контакта
+                {tr("copy.c168")}
                 <Input
                   type="date"
                   value={draft.follow_up || ""}
@@ -261,20 +357,17 @@ export default function Applications() {
               </label>
             </div>
             <label className="block">
-              Личные заметки
+              {tr("copy.c169")}
               <Textarea
                 maxLength={5000}
                 value={draft.notes}
                 onChange={(e) => change("notes", e.target.value)}
               />
             </label>
-            <p className="text-sm text-muted-foreground">
-              Даты видны здесь и в обзоре. Сервис не отправляет отклики или
-              письма автоматически.
-            </p>
+            <p className="text-sm text-muted-foreground">{tr("copy.c170")}</p>
             <div className="flex gap-3">
               <Button disabled={busy}>
-                {busy ? "Сохраняем…" : "Сохранить вакансию"}
+                {busy ? tr("copy.c171") : tr("copy.c172")}
               </Button>
               <Button
                 type="button"
@@ -282,14 +375,14 @@ export default function Applications() {
                 disabled={busy}
                 onClick={() => setDraft(null)}
               >
-                Отмена
+                {tr("copy.c023")}
               </Button>
             </div>
           </form>
         ) : null}
         {selected && !draft ? (
           <section
-            aria-label="Подготовка к вакансии"
+            aria-label={tr("copy.c173")}
             className="border border-primary/30 rounded-xl p-5 space-y-4"
           >
             <div className="flex flex-wrap justify-between gap-3">
@@ -300,22 +393,57 @@ export default function Applications() {
                 <h2 className="text-2xl font-semibold">{selected.data.name}</h2>
               </div>
               <Button variant="outline" onClick={() => edit(selected)}>
-                Изменить вакансию
+                {tr("copy.c153")}
               </Button>
             </div>
             <div className="rounded-lg bg-primary/5 p-4">
-              <p className="font-semibold">Следующий шаг</p>
-              <p>{selected.next_step}</p>
+              <p className="font-semibold">{tr("copy.c174")}</p>
+              <p>
+                {selected.next_step_key && selected.next_step_key !== "custom"
+                  ? tr("nextStep." + selected.next_step_key)
+                  : selected.next_step}
+              </p>
               {selected.data.follow_up && (
                 <p className="mt-2 text-sm">
-                  Контакт: {selected.data.follow_up}
-                  {selected.data.follow_up < localDate ? " · дата прошла" : ""}
+                  {tr("copy.c175")} {selected.data.follow_up}
+                  {selected.data.follow_up < localDate ? tr("copy.c176") : ""}
                 </p>
               )}
             </div>
             <p className="whitespace-pre-wrap break-words">
               {selected.data.description}
             </p>
+            <p className="text-sm text-muted-foreground">
+              {[
+                selected.data.location,
+                selected.data.employment,
+                selected.data.salary,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+            {["requirements", "responsibilities"].map((key) =>
+              selected.data[key]?.length ? (
+                <div key={key}>
+                  <h3 className="font-semibold">
+                    {key === "requirements" ? tr("copy.c161") : tr("copy.c133")}
+                  </h3>
+                  <ul className="list-disc pl-5">
+                    {selected.data[key].map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null,
+            )}
+            {selected.data.company_id && (
+              <Link
+                className="text-primary underline block"
+                to={`/companies?id=${selected.data.company_id}`}
+              >
+                {tr("copy.c177")}
+              </Link>
+            )}
             {selected.data.source_url && (
               <a
                 href={selected.data.source_url}
@@ -323,19 +451,19 @@ export default function Applications() {
                 rel="noopener noreferrer"
                 className="text-primary underline"
               >
-                Открыть исходную вакансию ↗
+                {tr("copy.c178")}
               </a>
             )}
             {selected.resume_title && (
               <div className="flex flex-wrap gap-3">
                 <Button asChild variant="outline">
                   <Link to={`/resume/${selected.data.resume_id}/edit`}>
-                    Редактировать резюме
+                    {tr("copy.c179")}
                   </Link>
                 </Button>
                 <Button asChild variant="outline">
                   <Link to={`/resume/${selected.data.resume_id}/generate`}>
-                    Экспорт PDF / Word
+                    {tr("copy.c180")}
                   </Link>
                 </Button>
               </div>
@@ -343,28 +471,28 @@ export default function Applications() {
             <div className="grid md:grid-cols-3 gap-4">
               {[
                 {
-                  title: "1. Резюме",
-                  body:
-                    selected.resume_title ||
-                    "Создайте резюме из фактов профиля. Оно прикрепится к этой вакансии.",
+                  title: tr("copy.c181"),
+                  body: selected.resume_title || tr("copy.c182"),
                   to: selected.resume_title
                     ? `/resume/${selected.data.resume_id}/improve?vacancy=${selected.id}`
                     : `/resume/new?vacancy=${selected.id}`,
                   action: selected.resume_title
-                    ? "Адаптировать резюме"
-                    : "Собрать резюме",
+                    ? tr("copy.c183")
+                    : tr("copy.c184"),
                 },
                 {
-                  title: "2. Практика",
-                  body: `Тренировок: ${selected.interviews.length}. Контекст вакансии будет заполнен заранее.`,
+                  title: tr("copy.c185"),
+                  body: tr("dynamic.practiceCount", {
+                    count: selected.interviews.length,
+                  }),
                   to: `/interview/start?vacancy=${selected.id}`,
-                  action: "Начать тренировку",
+                  action: tr("copy.c186"),
                 },
                 {
-                  title: "3. Обучение",
-                  body: "План учитывает требования вакансии и результаты последней завершённой тренировки.",
+                  title: tr("copy.c187"),
+                  body: tr("copy.c188"),
                   to: `/plan?vacancy=${selected.id}`,
-                  action: "Создать план",
+                  action: tr("copy.c067"),
                 },
               ].map((x) => (
                 <article
@@ -385,17 +513,17 @@ export default function Applications() {
             </div>
             {selected.interviews.length > 0 && (
               <div>
-                <h3 className="font-semibold">Тренировки по этой вакансии</h3>
+                <h3 className="font-semibold">{tr("copy.c189")}</h3>
                 {selected.interviews.map((i, n) => (
                   <Link
                     key={i.id}
                     className="block text-primary underline py-1"
                     to={`/interview/${i.finished ? "summary" : i.mode === "voice" ? "voice" : "session"}?id=${i.id}`}
                   >
-                    Тренировка {selected.interviews.length - n} ·{" "}
+                    {tr("copy.c190")} {selected.interviews.length - n} ·{" "}
                     {i.finished
-                      ? `${i.score}/100 — учебная оценка`
-                      : "Продолжить"}
+                      ? tr("dynamic.score", { score: i.score })
+                      : tr("copy.c191")}
                   </Link>
                 ))}
               </div>
@@ -406,12 +534,12 @@ export default function Applications() {
                 className="block text-primary underline"
                 to={`/plan/${p.id}`}
               >
-                Учебный план: {p.goal}
+                {tr("copy.c192")} {p.goal}
               </Link>
             ))}
             {selected.data.notes && (
               <div>
-                <h3 className="font-semibold">Заметки</h3>
+                <h3 className="font-semibold">{tr("copy.c193")}</h3>
                 <p className="whitespace-pre-wrap break-words">
                   {selected.data.notes}
                 </p>
@@ -421,20 +549,20 @@ export default function Applications() {
         ) : null}
         <div className="flex flex-wrap gap-3">
           <Input
-            aria-label="Поиск вакансии"
+            aria-label={tr("copy.c194")}
             className="sm:max-w-sm"
-            placeholder="Позиция или компания"
+            placeholder={tr("copy.c195")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <select
-            aria-label="Фильтр вакансий"
+            aria-label={tr("copy.c196")}
             className="border rounded p-2 bg-background"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="active">В работе</option>
-            <option value="all">Все</option>
+            <option value="active">{tr("copy.c197")}</option>
+            <option value="all">{tr("copy.c198")}</option>
             {Object.entries(stages).map(([k, v]) => (
               <option value={k} key={k}>
                 {v}
@@ -443,20 +571,16 @@ export default function Applications() {
           </select>
         </div>
         {loading ? (
-          <p role="status">Загрузка вакансий…</p>
+          <p role="status">{tr("copy.c199")}</p>
         ) : visible.length === 0 ? (
           <section className="border border-dashed rounded-xl p-8 text-center space-y-3">
             <BriefcaseBusiness className="mx-auto h-9 w-9 text-primary" />
             <h2 className="text-xl font-semibold">
-              {records.length
-                ? "Ничего не найдено"
-                : "Начните с одной реальной вакансии"}
+              {records.length ? tr("copy.c200") : tr("copy.c201")}
             </h2>
-            <p className="text-muted-foreground">
-              Сохраните требования, чтобы подготовка была конкретной.
-            </p>
+            <p className="text-muted-foreground">{tr("copy.c202")}</p>
             <Button variant="outline" onClick={() => edit(null)}>
-              Добавить первую вакансию
+              {tr("copy.c203")}
             </Button>
           </section>
         ) : (
@@ -476,10 +600,14 @@ export default function Applications() {
                 <h2 className="font-semibold text-lg break-words">
                   {r.data.name}
                 </h2>
-                <p className="text-sm">{r.next_step}</p>
+                <p className="text-sm">
+                  {r.next_step_key && r.next_step_key !== "custom"
+                    ? tr("nextStep." + r.next_step_key)
+                    : r.next_step}
+                </p>
                 {r.data.follow_up && (
                   <p className="text-sm text-primary">
-                    Следующий контакт: {r.data.follow_up}
+                    {tr("copy.c055")} {r.data.follow_up}
                   </p>
                 )}
               </button>

@@ -8,8 +8,8 @@ test("original frontend registers, persists profile and supports login", async (
   page.on("pageerror", (e) => errors.push(e.message));
   const email = await register(page);
   await page.locator("#name").fill("Alex Portfolio");
-  await page.getByPlaceholder("Или введите свою...").fill("Backend developer");
-  await page.getByPlaceholder("Или введите свою...").press("Enter");
+  await page.getByPlaceholder("Or enter your own…").fill("Backend developer");
+  await page.getByPlaceholder("Or enter your own…").press("Enter");
   await page.getByPlaceholder("Search for a skill").fill("Python");
   await page.getByRole("option", { name: /^Python/ }).click();
   await page.getByRole("button", { name: "Save Profile", exact: true }).click();
@@ -24,7 +24,7 @@ test("original frontend registers, persists profile and supports login", async (
   await page.goto("/settings");
   await expect(page.getByText(email, { exact: true })).toBeVisible();
   await expect(
-    page.getByRole("link", { name: "Опыт и данные профиля" }),
+    page.getByRole("link", { name: "Experience and profile data" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Logout", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -69,26 +69,26 @@ test("upload, structured edit, saved version and actual PDF download", async ({
   await page.getByRole("button", { name: "Continue", exact: true }).click();
   await expect(page).toHaveURL(/\/resume\/[^/]+\/edit$/);
   await page
-    .getByLabel("О себе", { exact: true })
+    .getByLabel("About me", { exact: true })
     .fill("Verified portfolio summary");
   const saved = page.waitForResponse(
     (r) => r.url().endsWith("/save") && r.status() === 200,
   );
-  await page.getByRole("button", { name: "Сохранить", exact: true }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await saved;
   await page.reload();
-  await expect(page.getByLabel("О себе", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("About me", { exact: true })).toHaveValue(
     "Verified portfolio summary",
   );
-  await page.getByRole("button", { name: "Версии", exact: true }).click();
-  await page.getByRole("button", { name: "Сохранить текущую версию" }).click();
-  await expect(page.getByText("Версия 1", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Versions", exact: true }).click();
+  await page.getByRole("button", { name: "Save current version" }).click();
+  await expect(page.getByText("Version 1", { exact: true })).toBeVisible();
   const downloaded = page.waitForEvent("download");
   await page.getByRole("link", { name: "Download PDF", exact: true }).click();
   const download = await downloaded;
   expect(download.suggestedFilename()).toMatch(/\.pdf$/);
   await page.reload();
-  await expect(page.getByText("Версия 1", { exact: true })).toBeVisible();
+  await expect(page.getByText("Version 1", { exact: true })).toBeVisible();
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= innerWidth,

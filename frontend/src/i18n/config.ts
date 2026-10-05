@@ -4,13 +4,22 @@ import ru from "./locales/ru.json";
 import en from "./locales/en.json";
 import kz from "./locales/kz.json";
 
+const storedLanguage = localStorage.getItem("language");
+const initialLanguage =
+  storedLanguage === "kk"
+    ? "kz"
+    : ["ru", "en", "kz"].includes(storedLanguage || "")
+      ? storedLanguage!
+      : "ru";
+
 i18n.use(initReactI18next).init({
   resources: {
     ru: { translation: ru },
     en: { translation: en },
     kz: { translation: kz },
   },
-  lng: localStorage.getItem("language") || "ru",
+  lng: initialLanguage,
+  supportedLngs: ["ru", "en", "kz"],
   fallbackLng: "ru",
   interpolation: {
     escapeValue: false,

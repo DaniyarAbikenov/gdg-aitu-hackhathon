@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import type { Profile } from "@/types/career";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -6,19 +7,21 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-const blocks = {
-  summary: "О себе",
-  experience: "Опыт работы",
-  education: "Образование",
-  projects: "Проекты",
-  skills: "Навыки",
-  certificates: "Сертификаты",
-  languages: "Языки",
-};
+
 import { useVacancyContext } from "@/hooks/useVacancyContext";
 import { VacancyContext } from "@/components/VacancyContext";
 import { useCapabilities } from "@/hooks/useCapabilities";
 export default function ResumeCreate() {
+  useLocale();
+  const blocks = {
+    summary: tr("copy.c090"),
+    experience: tr("copy.c068"),
+    education: tr("copy.c076"),
+    projects: tr("copy.c081"),
+    skills: tr("copy.c104"),
+    certificates: tr("copy.c444"),
+    languages: tr("copy.c445"),
+  };
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
@@ -78,24 +81,21 @@ export default function ResumeCreate() {
   return (
     <MainLayout>
       <div className="max-w-3xl mx-auto p-6 space-y-5">
-        <h1 className="text-3xl font-bold">Новое резюме</h1>
+        <h1 className="text-3xl font-bold">{tr("copy.c446")}</h1>
         <VacancyContext vacancy={vacancy} />
         {contextError && <p role="alert">{contextError}</p>}
-        <p className="text-muted-foreground">
-          Выберите блоки профиля и целевую позицию. Черновик можно полностью
-          отредактировать перед экспортом.
-        </p>
+        <p className="text-muted-foreground">{tr("copy.c447")}</p>
         <label className="block space-y-2">
-          Название резюме
+          {tr("copy.c448")}
           <Input
             value={title}
             maxLength={200}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Например: Backend developer — компания"
+            placeholder={tr("copy.c449")}
           />
         </label>
         <label className="block space-y-2">
-          Целевая позиция
+          {tr("copy.c059")}
           <Input
             value={position}
             maxLength={200}
@@ -103,16 +103,16 @@ export default function ResumeCreate() {
           />
         </label>
         <label className="block space-y-2">
-          Описание вакансии
+          {tr("copy.c157")}
           <Textarea
-            aria-label="Описание вакансии"
+            aria-label={tr("copy.c157")}
             value={job}
             maxLength={15000}
             onChange={(e) => setJob(e.target.value)}
           />
         </label>
         <fieldset className="border rounded-lg p-4 space-y-3">
-          <legend>Добавить блоки из профиля</legend>
+          <legend>{tr("copy.c450")}</legend>
           {Object.entries(blocks).map(([key, label]) => (
             <label className="flex gap-2" key={key}>
               <input
@@ -130,10 +130,10 @@ export default function ResumeCreate() {
               <span className="text-muted-foreground text-sm">
                 {profile &&
                   (Array.isArray(profile[key])
-                    ? `${profile[key].length} записей`
+                    ? tr("dynamic.entries", { count: profile[key].length })
                     : profile[key]
-                      ? "Заполнено"
-                      : "Пока пусто")}
+                      ? tr("copy.c451")
+                      : tr("copy.c452"))}
               </span>
             </label>
           ))}
@@ -145,17 +145,14 @@ export default function ResumeCreate() {
             disabled={!capabilities?.ai}
             onChange={(e) => setAI(e.target.checked)}
           />
-          Собрать и адаптировать с ИИ
+          {tr("copy.c453")}
         </label>
         {capabilities && !capabilities.ai && (
-          <p className="text-sm text-muted-foreground">
-            Сейчас доступна сборка из выбранных блоков профиля. Готовый черновик
-            можно редактировать и экспортировать.
-          </p>
+          <p className="text-sm text-muted-foreground">{tr("copy.c454")}</p>
         )}
         {questions.length > 0 && (
           <div role="status" className="rounded-lg bg-muted p-4">
-            <h2 className="font-semibold">Нужно уточнить факты</h2>
+            <h2 className="font-semibold">{tr("copy.c455")}</h2>
             <ol className="list-decimal pl-5">
               {questions.map((q) => (
                 <li key={q}>{q}</li>
@@ -165,12 +162,12 @@ export default function ResumeCreate() {
         )}
         {ai && (
           <label className="block space-y-2">
-            Дополнительные факты и ответы на вопросы
+            {tr("copy.c456")}
             <Textarea
               value={facts}
               maxLength={10000}
               onChange={(e) => setFacts(e.target.value)}
-              placeholder="Опишите реальный опыт и достижения"
+              placeholder={tr("copy.c457")}
             />
           </label>
         )}
@@ -183,7 +180,7 @@ export default function ResumeCreate() {
           disabled={busy || !title.trim() || (ai && !position.trim())}
           onClick={create}
         >
-          {busy ? "Собираем черновик…" : "Создать черновик"}
+          {busy ? tr("copy.c458") : tr("copy.c459")}
         </Button>
       </div>
     </MainLayout>

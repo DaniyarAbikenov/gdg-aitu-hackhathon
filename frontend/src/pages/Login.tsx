@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -18,6 +19,7 @@ import { loginWithEmail, loginWithGoogle } from "@/api/auth";
 import client from "@/api/client";
 
 export default function Login() {
+  useLocale();
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -39,7 +41,7 @@ export default function Login() {
     if (!email || !password) {
       toast({
         title: t("common.error"),
-        description: t("login.fillAll") ?? "Заполните все поля",
+        description: t("login.fillAll") ?? tr("copy.c377"),
         variant: "destructive",
       });
       return;
@@ -48,14 +50,14 @@ export default function Login() {
       setSubmitting(true);
       await loginWithEmail(email, password);
       toast({
-        title: t("login.success") ?? "Вход выполнен",
-        description: t("login.redirect") ?? "Перенаправление...",
+        title: t("login.success") ?? tr("copy.c378"),
+        description: t("login.redirect") ?? tr("copy.c379"),
       });
       navigate("/dashboard");
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? "Неверный email или пароль",
+        description: err?.message ?? tr("copy.c380"),
         variant: "destructive",
       });
     } finally {
@@ -68,14 +70,14 @@ export default function Login() {
       setSubmitting(true);
       await loginWithGoogle();
       toast({
-        title: t("login.success") ?? "Вход выполнен",
-        description: t("login.redirect") ?? "Перенаправление...",
+        title: t("login.success") ?? tr("copy.c378"),
+        description: t("login.redirect") ?? tr("copy.c379"),
       });
       navigate("/onboarding");
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? "Не удалось войти через Google",
+        description: err?.message ?? tr("copy.c381"),
         variant: "destructive",
       });
     } finally {
@@ -91,7 +93,7 @@ export default function Login() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
-            {t("login.title") ?? "Вход"}
+            {t("login.title") ?? tr("copy.c382")}
           </CardTitle>
           <CardDescription>{`${t("app.name")} - ${t("app.tagline")}`}</CardDescription>
         </CardHeader>
@@ -100,8 +102,8 @@ export default function Login() {
             <p role="status" className="text-sm mb-4 text-primary">
               {new URLSearchParams(window.location.search).get("account") ===
               "deleted"
-                ? "Аккаунт и личные данные удалены."
-                : "Пароль изменён. Войдите с новым паролем."}
+                ? tr("copy.c383")
+                : tr("copy.c384")}
             </p>
           )}
           <form onSubmit={onSubmit} className="space-y-4">
@@ -117,7 +119,7 @@ export default function Login() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">
-                {t("login.password") ?? "Пароль"}
+                {t("login.password") ?? tr("copy.c385")}
               </Label>
               <Input
                 id="password"
@@ -128,7 +130,7 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {t("login.signIn") ?? "Войти"}
+              {t("login.signIn") ?? tr("copy.c296")}
             </Button>
             {googleEnabled && (
               <Button
@@ -138,15 +140,15 @@ export default function Login() {
                 onClick={onGoogle}
                 disabled={submitting}
               >
-                {t("login.signInGoogle") ?? "Войти через Google"}
+                {t("login.signInGoogle") ?? tr("copy.c386")}
               </Button>
             )}
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
-                {t("login.noAccount") ?? "Нет аккаунта?"}{" "}
+                {t("login.noAccount") ?? tr("copy.c387")}{" "}
               </span>
               <Link to="/register" className="text-primary hover:underline">
-                {t("login.registerNow") ?? "Зарегистрируйтесь"}
+                {t("login.registerNow") ?? tr("copy.c388")}
               </Link>
             </div>
             <div className="text-center text-sm">
@@ -154,7 +156,7 @@ export default function Login() {
                 to="/legal/policies"
                 className="text-muted-foreground hover:text-primary"
               >
-                {t("login.policies") ?? "Политики и условия"}
+                {t("login.policies") ?? tr("copy.c389")}
               </Link>
             </div>
           </form>

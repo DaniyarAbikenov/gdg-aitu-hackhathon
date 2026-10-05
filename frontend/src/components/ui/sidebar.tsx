@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/copy";
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { VariantProps, cva } from "class-variance-authority";
@@ -285,7 +286,7 @@ const SidebarTrigger = React.forwardRef<
       {...props}
     >
       <PanelLeft />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{tr("ui.sidebar")}</span>
     </Button>
   );
 });

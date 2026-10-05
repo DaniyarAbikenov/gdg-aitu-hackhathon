@@ -33,7 +33,7 @@ The proposed value is continuity and inspectability: confirmed profile facts →
 - No payments or subscription layer until the preparation loop is validated.
 - No fully managed public SaaS claim: email verification/recovery, Google-account self-deletion, operational alerting and independent security review remain outside this release.
 - Server AI configuration and a live provider check remain a gate before presenting voice or generated output as tested.
-- Original English/Russian/Kazakh translations are retained; new product copy is primarily Russian. Full translation parity is a follow-up, not a completed claim.
+- Interface copy, errors, built-in skill descriptions and knowledge navigation support Russian, English and Kazakh. Authored notes, employer text and existing AI outputs retain their original language; the app does not silently rewrite user material. Knowledge articles have an explicit language.
 
 ## What to learn from first user sessions
 

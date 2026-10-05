@@ -23,7 +23,14 @@ export function LanguageSwitcher() {
   const changeLanguage = async (lng: string) => {
     if (useAuthStore.getState().isAuthenticated) {
       try {
-        await updateUserProfile({ language: lng === "kz" ? "kk" : lng });
+        const profile = await updateUserProfile({
+          language: lng === "kz" ? "kk" : lng,
+        });
+        window.dispatchEvent(
+          new CustomEvent("profile-language-saved", {
+            detail: profile.revision,
+          }),
+        );
       } catch (e) {
         toast({ title: e.message, variant: "destructive" });
         return;

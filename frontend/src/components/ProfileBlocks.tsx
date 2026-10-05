@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import type { ResumeFields } from "@/types/resume";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +17,7 @@ export function ProfileBlocks({
   contacts?: boolean;
   includeName?: boolean;
 }) {
+  useLocale();
   const data = structured(value);
   const set = (key: string, next: unknown) =>
     onChange({ ...data, [key]: next });
@@ -40,7 +42,7 @@ export function ProfileBlocks({
   const sections = [
     {
       key: "experience",
-      title: "Опыт работы",
+      title: tr("copy.c068"),
       empty: {
         company: "",
         role: "",
@@ -51,34 +53,34 @@ export function ProfileBlocks({
         achievements: [],
       },
       fields: [
-        ["company", "Компания"],
-        ["role", "Должность"],
-        ["date_from", "Начало периода"],
-        ["date_to", "Конец периода / настоящее время"],
-        ["location", "Локация"],
-        ["responsibilities", "Задачи и обязанности"],
-        ["achievements", "Достижения — по одному на строку"],
+        ["company", tr("copy.c069")],
+        ["role", tr("copy.c070")],
+        ["date_from", tr("copy.c071")],
+        ["date_to", tr("copy.c072")],
+        ["location", tr("copy.c073")],
+        ["responsibilities", tr("copy.c074")],
+        ["achievements", tr("copy.c075")],
       ],
     },
     {
       key: "education",
-      title: "Образование",
+      title: tr("copy.c076"),
       empty: { institution: "", degree: "", year_start: 0, year_end: 0 },
       fields: [
-        ["institution", "Учебное заведение"],
-        ["degree", "Степень / специальность"],
-        ["year_start", "Год поступления"],
-        ["year_end", "Год окончания"],
+        ["institution", tr("copy.c077")],
+        ["degree", tr("copy.c078")],
+        ["year_start", tr("copy.c079")],
+        ["year_end", tr("copy.c080")],
       ],
     },
     {
       key: "projects",
-      title: "Проекты",
+      title: tr("copy.c081"),
       empty: { title: "", description: "", tech: [] },
       fields: [
-        ["title", "Название проекта"],
-        ["description", "Задачи и результат проекта"],
-        ["tech", "Технологии — по одной на строку"],
+        ["title", tr("copy.c082")],
+        ["description", tr("copy.c083")],
+        ["tech", tr("copy.c084")],
       ],
     },
   ] as const;
@@ -86,14 +88,14 @@ export function ProfileBlocks({
     <div className="space-y-6">
       {contacts && (
         <div className="grid gap-4 sm:grid-cols-2">
-          {includeName && scalar("full_name", "Имя в резюме")}
-          {scalar("phone", "Телефон")}
-          {scalar("email", "Контактный email")}
-          {scalar("location", "Город / локация")}
-          {scalar("position", "Название позиции")}
+          {includeName && scalar("full_name", tr("copy.c085"))}
+          {scalar("phone", tr("copy.c086"))}
+          {scalar("email", tr("copy.c087"))}
+          {scalar("location", tr("copy.c088"))}
+          {scalar("position", tr("copy.c089"))}
         </div>
       )}
-      {scalar("summary", "О себе", true)}
+      {scalar("summary", tr("copy.c090"), true)}
       {sections.map((section) => {
         const rows = (data[section.key] || []) as unknown as Record<
           string,
@@ -109,14 +111,11 @@ export function ProfileBlocks({
                 disabled={rows.length >= 40}
                 onClick={() => set(section.key, [...rows, section.empty])}
               >
-                Добавить: {section.title}
+                {tr("copy.c091")} {section.title}
               </Button>
             </div>
             {rows.length === 0 && (
-              <p className="text-sm text-muted-foreground">
-                Добавьте подтверждённые факты — они пригодятся при сборке
-                резюме.
-              </p>
+              <p className="text-sm text-muted-foreground">{tr("copy.c092")}</p>
             )}
             {rows.map((row, index) => (
               <fieldset
@@ -184,15 +183,15 @@ export function ProfileBlocks({
                     )
                   }
                 >
-                  Удалить запись {index + 1}
+                  {tr("copy.c093")} {index + 1}
                 </Button>
               </fieldset>
             ))}
           </section>
         );
       })}
-      {scalar("certificates", "Сертификаты и награды", true)}
-      {scalar("languages", "Языки и уровень владения", true)}
+      {scalar("certificates", tr("copy.c094"), true)}
+      {scalar("languages", tr("copy.c095"), true)}
     </div>
   );
 }

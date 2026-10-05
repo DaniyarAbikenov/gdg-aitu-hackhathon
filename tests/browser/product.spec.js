@@ -6,46 +6,48 @@ test("profile blocks, resume creation, archive and dashboard preferences persist
 }) => {
   await register(page);
   await page.locator("#name").fill("Profile Candidate");
-  await page.getByPlaceholder("Или введите свою...").fill("Backend engineer");
-  await page.getByPlaceholder("Или введите свою...").press("Enter");
-  await page.getByRole("combobox", { name: "Поиск навыка" }).fill("CSS");
+  await page.getByPlaceholder("Or enter your own…").fill("Backend engineer");
+  await page.getByPlaceholder("Or enter your own…").press("Enter");
+  await page.getByRole("combobox", { name: "Search skills" }).fill("CSS");
   await page.getByRole("option", { name: /^CSS/ }).click();
-  await page.getByRole("button", { name: "Добавить: Опыт работы" }).click();
-  await page.getByLabel("Компания", { exact: true }).fill("Library");
-  await page.getByLabel("Должность", { exact: true }).fill("Engineer");
-  await page.getByLabel("Задачи и обязанности").fill("Build real APIs");
+  await page.getByRole("button", { name: "Add: Work experience" }).click();
+  await page.getByLabel("Company", { exact: true }).fill("Library");
+  await page.getByLabel("Role", { exact: true }).fill("Engineer");
+  await page.getByLabel("Tasks and responsibilities").fill("Build real APIs");
   await page.getByRole("button", { name: "Save Profile", exact: true }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
-  await page.getByRole("button", { name: "Настроить виджеты" }).click();
-  await page.getByRole("checkbox", { name: "Компании и интервью" }).uncheck();
+  await page.getByRole("button", { name: "Customize widgets" }).click();
+  await page
+    .getByRole("checkbox", { name: "Companies and interviews" })
+    .uncheck();
   await expect(
-    page.getByRole("checkbox", { name: "Компании и интервью" }),
+    page.getByRole("checkbox", { name: "Companies and interviews" }),
   ).toBeEnabled();
   await page.reload();
   await expect(
-    page.getByText("Компании и интервью", { exact: true }),
+    page.getByText("Companies and interviews", { exact: true }),
   ).toHaveCount(0);
   await page.goto("/resume/new");
   await page
-    .getByLabel("Название резюме", { exact: true })
+    .getByLabel("Resume title", { exact: true })
     .fill("Backend application");
-  await page.getByRole("button", { name: "Создать черновик" }).click();
+  await page.getByRole("button", { name: "Create draft" }).click();
   await expect(page).toHaveURL(/\/resume\/[^/]+\/edit$/);
-  await expect(page.getByLabel("Компания", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Company", { exact: true })).toHaveValue(
     "Library",
   );
-  await expect(page.getByLabel("Задачи и обязанности")).toHaveValue(
+  await expect(page.getByLabel("Tasks and responsibilities")).toHaveValue(
     "Build real APIs",
   );
   await page.goto("/resume");
-  await page.getByRole("button", { name: "Название и статус" }).click();
-  await page.getByLabel("Новый статус").selectOption("archived");
-  await page.getByRole("button", { name: "Сохранить свойства" }).click();
+  await page.getByRole("button", { name: "Title and status" }).click();
+  await page.getByLabel("New status").selectOption("archived");
+  await page.getByRole("button", { name: "Save properties" }).click();
   await expect(
-    page.getByRole("region", { name: "Свойства резюме" }),
+    page.getByRole("region", { name: "Resume properties" }),
   ).toHaveCount(0);
   await page.reload();
-  await page.getByLabel("Статус резюме").selectOption("archived");
+  await page.getByLabel("Resume status").selectOption("archived");
   await expect(
     page.getByRole("link", { name: "Backend application", exact: true }),
   ).toBeVisible();
@@ -58,16 +60,16 @@ test("knowledge search and protected admin editor", async ({ page }) => {
   await register(page);
   await page.goto("/faq");
   await page
-    .getByRole("textbox", { name: "Поиск в базе знаний" })
-    .fill("Голосовой");
-  await page.getByRole("link", { name: /Живой голосовой диалог с ИИ/ }).click();
+    .getByRole("textbox", { name: "Search the knowledge base" })
+    .fill("practice");
+  await page
+    .getByRole("link", { name: /Interview practice, learning and progress/ })
+    .click();
   await expect(
-    page.getByRole("heading", { name: "Подключение", exact: true }),
+    page.getByRole("heading", { name: "Practice deliberately", exact: true }),
   ).toBeVisible();
   await page.goto("/admin/knowledge");
-  await expect(page.getByRole("alert")).toContainText(
-    "Administrator access required",
-  );
+  await expect(page.getByRole("alert")).toContainText("Action unavailable");
 });
 
 test("admin publishes and unpublishes articles", async ({ page }) => {
@@ -75,6 +77,7 @@ test("admin publishes and unpublishes articles", async ({ page }) => {
     test.info().project.name !== "desktop",
     "One named admin in this isolated stack",
   );
+  await page.addInitScript(() => localStorage.setItem("language", "en"));
   await page.request.post("/api/session");
   const email = "admin-e2e@example.test";
   expect(
@@ -84,30 +87,29 @@ test("admin publishes and unpublishes articles", async ({ page }) => {
   ).toBeTruthy();
   await page.goto("/admin/knowledge");
   const title = `Browser verified article ${Date.now()}`;
-  await page.getByLabel("Заголовок", { exact: true }).fill(title);
-  await page.getByLabel("Категория", { exact: true }).fill("Testing");
+  await page.getByLabel("Title", { exact: true }).fill(title);
+  await page.getByLabel("Category", { exact: true }).fill("Testing");
   await page
-    .getByLabel("Текст статьи", { exact: false })
+    .getByLabel("Article body", { exact: false })
     .fill(
       "## A real article\n\nThis article is persisted in PostgreSQL and published by an administrator.",
     );
-  await page.getByRole("checkbox", { name: "Публиковать" }).check();
-  await page.getByRole("button", { name: "Сохранить статью" }).click();
+  await page.getByLabel("Article language").selectOption("en");
+  await page.getByRole("checkbox", { name: "Publish" }).check();
+  await page.getByRole("button", { name: "Save article" }).click();
   await expect(
-    page.getByText("Статья опубликована", { exact: true }),
+    page.getByText("Article published", { exact: true }),
   ).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: new RegExp(title) }).click();
-  await page.getByRole("checkbox", { name: "Публиковать" }).uncheck();
-  await page.getByRole("button", { name: "Сохранить статью" }).click();
-  await expect(
-    page.getByText("Черновик сохранён", { exact: true }),
-  ).toBeVisible();
+  await page.getByRole("checkbox", { name: "Publish" }).uncheck();
+  await page.getByRole("button", { name: "Save article" }).click();
+  await expect(page.getByText("Draft saved", { exact: true })).toBeVisible();
   await page.goto("/faq");
-  await page.getByRole("textbox", { name: "Поиск в базе знаний" }).fill(title);
+  await page
+    .getByRole("textbox", { name: "Search the knowledge base" })
+    .fill(title);
   await expect(
-    page.getByText(
-      "Статей по этому запросу не найдено. Попробуйте другое слово.",
-    ),
+    page.getByText("No articles match this search. Try another word."),
   ).toBeVisible();
 });

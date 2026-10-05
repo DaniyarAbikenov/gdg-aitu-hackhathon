@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { resumeText } from "@/lib/resumeText";
 import client from "@/api/client";
 import { useEffect, useState } from "react";
@@ -13,6 +14,7 @@ import { useVacancyContext } from "@/hooks/useVacancyContext";
 import { VacancyContext } from "@/components/VacancyContext";
 import { useCapabilities } from "@/hooks/useCapabilities";
 export default function ResumeImprove() {
+  useLocale();
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
   const navigate = useNavigate();
@@ -116,31 +118,25 @@ export default function ResumeImprove() {
         </Button>
 
         {capabilities && !capabilities.ai && (
-          <p className="text-sm text-muted-foreground">
-            ИИ-анализ сейчас недоступен. Резюме можно редактировать вручную и
-            экспортировать.
-          </p>
+          <p className="text-sm text-muted-foreground">{tr("copy.c463")}</p>
         )}
         {/* 🔹 Ошибка */}
         {error && <div className="text-red-600">{error}</div>}
 
         {analyzed && !loading && improvements.length === 0 && (
-          <p role="status">
-            Неприменённых предложений нет. Проверьте факты и экспортируйте
-            готовое резюме.
-          </p>
+          <p role="status">{tr("copy.c464")}</p>
         )}
         <Link
           className="text-primary underline block"
           to={`/resume/${resumeId}/edit`}
         >
-          Редактировать вручную
+          {tr("copy.c465")}
         </Link>
         <Link
           className="text-primary underline"
           to={`/resume/${resumeId}/generate`}
         >
-          Экспорт PDF / Word
+          {tr("copy.c180")}
         </Link>
         {/* 🔹 Список улучшений */}
         {improvements.length > 0 && (
@@ -158,7 +154,7 @@ export default function ResumeImprove() {
                   {t("resume.improve.section")}: {impr.section}
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  {t("resume.improve.type")}: {"Предложение"}
+                  {t("resume.improve.type")}: {tr("copy.c466")}
                 </div>
 
                 {impr.before && (
@@ -208,7 +204,7 @@ export default function ResumeImprove() {
                     }
                   }}
                 >
-                  Применить и сохранить версию
+                  {tr("copy.c467")}
                 </Button>
                 <div className="text-sm">
                   <span className="font-semibold">

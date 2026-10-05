@@ -15,7 +15,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         <div className="min-w-0 flex-1 flex flex-col">
           <TopBar />
           <ServiceStatus />
-          <main className="flex-1 overflow-auto bg-background">{children}</main>
+          <main className="workspace-main flex-1 overflow-auto bg-background">
+            {children}
+          </main>
         </div>
       </div>
     </SidebarProvider>

@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/copy";
 import * as React from "react";
 import useEmblaCarousel, {
   type UseEmblaCarouselType,
@@ -215,7 +216,7 @@ const CarouselPrevious = React.forwardRef<
       {...props}
     >
       <ArrowLeft className="h-4 w-4" />
-      <span className="sr-only">Previous slide</span>
+      <span className="sr-only">{tr("ui.previousSlide")}</span>
     </Button>
   );
 });
@@ -244,7 +245,7 @@ const CarouselNext = React.forwardRef<
       {...props}
     >
       <ArrowRight className="h-4 w-4" />
-      <span className="sr-only">Next slide</span>
+      <span className="sr-only">{tr("ui.nextSlide")}</span>
     </Button>
   );
 });

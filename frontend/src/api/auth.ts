@@ -1,3 +1,4 @@
+import { tr } from "@/i18n/copy";
 import { useResumeStore } from "@/store/resumeStore";
 import { useInterviewStore } from "@/store/useInterviewStore";
 import client from "./client";
@@ -6,14 +7,14 @@ export async function loginWithEmail(email: string, password: string) {
   await client.post("/auth/login", { email, password });
   await refreshIdentity();
   if (!useAuthStore.getState().isAuthenticated)
-    throw new Error("Не удалось загрузить аккаунт. Попробуйте войти снова.");
+    throw new Error(tr("copy.c001"));
 }
 export async function registerWithEmail(email: string, password: string) {
   await client.post("/session");
   await client.post("/auth/register", { email, password });
   await refreshIdentity();
   if (!useAuthStore.getState().isAuthenticated)
-    throw new Error("Не удалось загрузить аккаунт. Попробуйте войти снова.");
+    throw new Error(tr("copy.c001"));
 }
 export async function logout() {
   await client.post("/auth/logout");
@@ -44,7 +45,7 @@ export async function loginWithGoogle() {
     const dialog = document.createElement("dialog");
     const button = document.createElement("div");
     const close = document.createElement("button");
-    close.textContent = "Закрыть / Close";
+    close.textContent = tr("copy.c002");
     dialog.style.padding = "24px";
     dialog.append(button, close);
     document.body.append(dialog);
@@ -77,7 +78,7 @@ export async function loginWithGoogle() {
   await client.post("/auth/google", { credential });
   await refreshIdentity();
   if (!useAuthStore.getState().isAuthenticated)
-    throw new Error("Не удалось загрузить аккаунт. Попробуйте войти снова.");
+    throw new Error(tr("copy.c001"));
 }
 declare global {
   interface Window {

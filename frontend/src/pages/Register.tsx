@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { registerWithEmail } from "@/api/auth";
 
 export default function Register() {
+  useLocale();
   const { t } = useTranslation();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ export default function Register() {
     if (!email || !password || !password2) {
       toast({
         title: t("common.error"),
-        description: t("login.fillAll") ?? "Заполните все поля",
+        description: t("login.fillAll") ?? tr("copy.c377"),
         variant: "destructive",
       });
       return;
@@ -39,7 +41,7 @@ export default function Register() {
     if (password !== password2) {
       toast({
         title: t("common.error"),
-        description: t("register.passwordMismatch") ?? "Пароли не совпадают",
+        description: t("register.passwordMismatch") ?? tr("copy.c414"),
         variant: "destructive",
       });
       return;
@@ -57,14 +59,14 @@ export default function Register() {
       setSubmitting(true);
       await registerWithEmail(email, password);
       toast({
-        title: t("register.success") ?? "Регистрация завершена",
-        description: t("login.redirect") ?? "Перенаправление...",
+        title: t("register.success") ?? tr("copy.c415"),
+        description: t("login.redirect") ?? tr("copy.c379"),
       });
       navigate("/onboarding");
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? "Не удалось зарегистрироваться",
+        description: err?.message ?? tr("copy.c416"),
         variant: "destructive",
       });
     } finally {
@@ -80,11 +82,11 @@ export default function Register() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">
-            {t("register.title") ?? "Регистрация"}
+            {t("register.title") ?? tr("copy.c417")}
           </CardTitle>
           <CardDescription>
             {t("register.subtitle") ??
-              `Создайте новый аккаунт ${t("app.name")}`}
+              tr("dynamic.register", { app: t("app.name") })}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -101,7 +103,7 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">
-                {t("login.password") ?? "Пароль"}
+                {t("login.password") ?? tr("copy.c385")}
               </Label>
               <Input
                 id="password"
@@ -113,7 +115,7 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password2">
-                {t("register.confirmPassword") ?? "Подтверждение пароля"}
+                {t("register.confirmPassword") ?? tr("copy.c418")}
               </Label>
               <Input
                 id="password2"
@@ -125,15 +127,15 @@ export default function Register() {
             </div>
 
             <Button type="submit" className="w-full" disabled={submitting}>
-              {t("register.submit") ?? "Зарегистрироваться"}
+              {t("register.submit") ?? tr("copy.c419")}
             </Button>
 
             <div className="text-center text-sm">
               <span className="text-muted-foreground">
-                {t("register.haveAccount") ?? "Уже есть аккаунт?"}{" "}
+                {t("register.haveAccount") ?? tr("copy.c420")}{" "}
               </span>
               <Link to="/login" className="text-primary hover:underline">
-                {t("login.signIn") ?? "Войти"}
+                {t("login.signIn") ?? tr("copy.c296")}
               </Link>
             </div>
 
@@ -142,7 +144,7 @@ export default function Register() {
                 to="/legal/policies"
                 className="text-muted-foreground hover:text-primary"
               >
-                {t("login.policies") ?? "Политики и условия"}
+                {t("login.policies") ?? tr("copy.c389")}
               </Link>
             </div>
           </form>

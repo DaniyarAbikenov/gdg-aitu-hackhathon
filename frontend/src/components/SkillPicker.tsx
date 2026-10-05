@@ -1,4 +1,6 @@
-import { useEffect, useId, useState } from "react";
+import { tr, useLocale } from "@/i18n/copy";
+import { useEffect, useId, useState, useRef } from "react";
+import ru from "@/i18n/locales/ru.json";
 import client from "@/api/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,7 +19,21 @@ export function SkillPicker({
   onChange: (skills: string[]) => void;
   placeholder: string;
 }) {
+  useLocale();
   const id = useId();
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const dismiss = (event: Event) => {
+      if (event.target instanceof Node && !root.current?.contains(event.target))
+        setOpen(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("focusin", dismiss);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("focusin", dismiss);
+    };
+  }, []);
   const [query, setQuery] = useState("");
   const [description, setDescription] = useState("");
   const [items, setItems] = useState<Skill[]>([]);
@@ -39,10 +55,7 @@ export function SkillPicker({
           setError("");
         })
         .catch(() => {
-          if (!controller.signal.aborted)
-            setError(
-              "Не удалось загрузить навыки. Измените запрос, чтобы повторить.",
-            );
+          if (!controller.signal.aborted) setError(tr("copy.c100"));
         })
         .finally(() => {
           if (!controller.signal.aborted) setLoading(false);
@@ -74,18 +87,25 @@ export function SkillPicker({
       });
       choose(data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Не удалось добавить навык",
-      );
+      setError(err instanceof Error ? err.message : tr("copy.c101"));
     } finally {
       setSaving(false);
     }
   };
   return (
-    <div className="space-y-2">
+    <div
+      ref={root}
+      className="relative space-y-2"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          setOpen(false);
+          setActive(-1);
+        }
+      }}
+    >
       <Input
         role="combobox"
-        aria-label="Поиск навыка"
+        aria-label={tr("copy.c102")}
         aria-expanded={open}
         aria-controls={id}
         aria-autocomplete="list"
@@ -94,6 +114,7 @@ export function SkillPicker({
         placeholder={placeholder}
         value={query}
         onFocus={() => setOpen(true)}
+        onClick={() => setOpen(true)}
         onChange={(e) => {
           setQuery(e.target.value);
           setOpen(true);
@@ -117,16 +138,16 @@ export function SkillPicker({
         }}
       />
       {open && (
-        <div className="rounded-md border bg-background p-2 space-y-2">
+        <div className="absolute z-40 top-full left-0 right-0 rounded-xl border bg-popover shadow-xl p-2 space-y-2 max-h-96 overflow-auto">
           {loading && (
             <p role="status" className="text-sm">
-              Поиск…
+              {tr("copy.c103")}
             </p>
           )}
           <ul
             id={id}
             role="listbox"
-            aria-label="Навыки"
+            aria-label={tr("copy.c104")}
             className="max-h-64 overflow-y-auto"
           >
             {items.map((item, index) => (
@@ -141,7 +162,9 @@ export function SkillPicker({
                 >
                   <span className="block font-medium">{item.name}</span>
                   <span className="block text-sm text-muted-foreground break-words">
-                    {item.description}
+                    {ru.seedSkills[item.name] === item.description
+                      ? tr("seedSkills." + item.name)
+                      : item.description}
                   </span>
                 </button>
               </li>
@@ -150,13 +173,11 @@ export function SkillPicker({
           {!loading && !exact && query.trim() && (
             <div className="space-y-2 border-t pt-2">
               <p className="text-sm">
-                {items.length
-                  ? "Есть похожие навыки. Выберите подходящий или добавьте отдельный навык."
-                  : "Навык не найден. Добавьте его в общий каталог."}
+                {items.length ? tr("copy.c105") : tr("copy.c106")}
               </p>
               <Textarea
-                aria-label="Описание нового навыка"
-                placeholder="Описание (необязательно). Его увидят другие пользователи."
+                aria-label={tr("copy.c107")}
+                placeholder={tr("copy.c108")}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={1000}
@@ -166,7 +187,7 @@ export function SkillPicker({
                 disabled={saving || selected.length >= 60}
                 onClick={create}
               >
-                {saving ? "Сохранение…" : "Добавить новый навык"}
+                {saving ? tr("copy.c109") : tr("copy.c110")}
               </Button>
             </div>
           )}

@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { InterviewReview } from "@/components/InterviewReview";
 import client from "@/api/client";
 import { getInterview } from "@/api/interview";
@@ -10,6 +11,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function InterviewSummary() {
+  useLocale();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const {
@@ -154,7 +156,7 @@ export default function InterviewSummary() {
             }
           }}
         >
-          План обучения по результатам интервью
+          {tr("copy.c347")}
         </Button>
         {/* ✅ Кнопки */}
         <div className="flex gap-4 justify-center pt-6">

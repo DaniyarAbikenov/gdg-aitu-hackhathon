@@ -1,3 +1,4 @@
+import { tr, useLocale } from "@/i18n/copy";
 import { Textarea } from "@/components/ui/textarea";
 import { PlanCreator } from "@/components/PlanCreator";
 import type { PlanRecord } from "@/types/career";
@@ -14,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Download, Video } from "lucide-react";
 
 export default function Plan() {
+  useLocale();
   const { t } = useTranslation();
   const { planId } = useParams();
   const [record, setRecord] = useState<PlanRecord | null>(null);
@@ -104,10 +106,8 @@ export default function Plan() {
               </CardContent>
             </Card>
           ))}
-          {!plans.length && (
-            <p>Пока нет планов. Выберите позицию и стек в форме выше.</p>
-          )}
-          <Link to="/dashboard">На главную</Link>
+          {!plans.length && <p>{tr("copy.c395")}</p>}
+          <Link to="/dashboard">{tr("copy.c396")}</Link>
         </div>
       </MainLayout>
     );
@@ -118,13 +118,11 @@ export default function Plan() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">{t("plan.title")}</h1>
-            <p className="text-muted-foreground">
-              Персональный 8-недельный план развития
-            </p>
+            <p className="text-muted-foreground">{tr("copy.c397")}</p>
           </div>
           <Badge variant="outline" className="text-sm">
             {Object.values(weekProgress).filter(Boolean).length} /{" "}
-            {plan.weeks.length} недель
+            {plan.weeks.length} {tr("copy.c398")}
           </Badge>
         </div>
 
@@ -150,7 +148,7 @@ export default function Plan() {
                   </CardTitle>
                   <Checkbox
                     disabled={busy}
-                    aria-label={`Неделя ${week.week} завершена`}
+                    aria-label={tr("dynamic.weekDone", { week: week.week })}
                     checked={weekProgress[week.week] || false}
                     onCheckedChange={() => toggleWeek(week.week)}
                   />
@@ -170,17 +168,17 @@ export default function Plan() {
                   </ul>
                 </div>
                 <p className="text-sm">
-                  {week.exercise} · {week.hours} ч.
+                  {week.exercise} · {week.hours} {tr("copy.c399")}
                 </p>
                 <label className="block space-y-2">
-                  Результат задания
+                  {tr("copy.c400")}
                   <Textarea
                     maxLength={2000}
                     value={evidence[week.id] ?? week.evidence}
                     onChange={(e) =>
                       setEvidence({ ...evidence, [week.id]: e.target.value })
                     }
-                    placeholder="Ссылка на код, заметки или описание результата"
+                    placeholder={tr("copy.c401")}
                   />
                 </label>
                 <Button
@@ -188,7 +186,7 @@ export default function Plan() {
                   disabled={busy}
                   onClick={() => saveEvidence(week.id)}
                 >
-                  Сохранить результат
+                  {tr("copy.c402")}
                 </Button>
                 <div>
                   <h4 className="text-sm font-medium mb-2">

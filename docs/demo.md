@@ -29,3 +29,11 @@
 Do not claim product-market fit, proven improvement in hiring rates, universal ATS compatibility, live cloud validation when not performed, or an independently audited production service.
 
 The exact startup commands and the seeded manual data are reproducible. No cloud-provider result is included in the seed. For screenshots of AI feedback, create a real consented session after provider configuration and label any test-provider captures explicitly.
+
+## Company research and link import
+
+Open **Companies** to show the private company atlas. A saved company can hold its stack, location, hiring process and test assignments. Add an assignment with a source URL and distinguish employer material from personal practice. Open an interview or a vacancy directly from the company to reuse its context.
+
+In a new vacancy, paste a public job URL and choose AI parsing. Review the preview before applying it to the form; verify the employer, responsibilities, location and salary. If the page blocks access, paste the vacancy text. A real provider must be configured to demonstrate this step; do not present test fixtures as live parsing.
+
+Switch Russian, English and Kazakh while a company draft is open: the interface changes without discarding entered facts. User-authored material remains in its original language.
