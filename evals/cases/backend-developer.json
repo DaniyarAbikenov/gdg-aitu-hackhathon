@@ -1,0 +1,39 @@
+{
+  "title": "Backend developer with matching experience",
+  "languages": ["en", "ru", "kk"],
+  "resume": {
+    "position": "Backend developer",
+    "full_name": "Aru Example",
+    "summary": "Backend developer who builds and tests Python web services.",
+    "skills": ["Python", "FastAPI", "PostgreSQL", "Docker", "Git"],
+    "experience": [
+      {
+        "company": "Fictional Logistics",
+        "role": "Junior backend developer",
+        "date_from": "2024-02",
+        "date_to": "",
+        "achievements": ["Moved order exports to a background queue"]
+      }
+    ],
+    "projects": [
+      {
+        "title": "Library booking API",
+        "description": "REST API with PostgreSQL and automated tests",
+        "tech": ["FastAPI", "PostgreSQL"]
+      }
+    ],
+    "education": [
+      { "institution": "Example University", "degree": "BSc Computer Science", "year_end": 2024 }
+    ]
+  },
+  "profile": { "summary": "", "skills": [] },
+  "vacancy": {
+    "name": "Python backend developer",
+    "company_name": "Sample Payments",
+    "description": "Build payment APIs in Python with FastAPI and PostgreSQL. Kubernetes is a plus.",
+    "skills": ["Python", "FastAPI", "PostgreSQL", "Kubernetes", "Redis"],
+    "requirements": ["Python", "PostgreSQL", "Kubernetes"],
+    "responsibilities": ["Design and test payment APIs"]
+  },
+  "never_mention": ["Google", "Kaspi", "senior", "team lead", "years of experience"]
+}

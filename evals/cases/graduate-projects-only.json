@@ -1,0 +1,31 @@
+{
+  "title": "Graduate with projects and no employment",
+  "languages": ["en", "ru"],
+  "resume": {
+    "position": "Data analyst",
+    "full_name": "Dana Sample",
+    "summary": "Recent graduate who analyses data with SQL and Python.",
+    "skills": ["SQL", "Python", "pandas", "Excel"],
+    "experience": [],
+    "projects": [
+      {
+        "title": "City bike usage dashboard",
+        "description": "Cleaned open trip data with pandas and summarised weekly demand in SQL",
+        "tech": ["pandas", "SQL"]
+      }
+    ],
+    "education": [
+      { "institution": "Example Polytechnic", "degree": "BSc Applied Mathematics", "year_end": 2026 }
+    ]
+  },
+  "profile": { "summary": "", "skills": [] },
+  "vacancy": {
+    "name": "Junior data analyst",
+    "company_name": "Sample Retail",
+    "description": "Prepare weekly sales reports with SQL and build dashboards in Power BI.",
+    "skills": ["SQL", "Power BI", "Excel", "Python"],
+    "requirements": ["SQL", "Power BI"],
+    "responsibilities": ["Weekly sales reporting"]
+  },
+  "never_mention": ["internship at", "worked at", "Microsoft", "years of experience"]
+}

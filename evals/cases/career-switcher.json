@@ -1,0 +1,37 @@
+{
+  "title": "Career switcher missing most required skills",
+  "languages": ["en", "kk"],
+  "resume": {
+    "position": "Frontend developer",
+    "full_name": "Timur Placeholder",
+    "summary": "Former school teacher learning web development.",
+    "skills": ["HTML", "CSS", "JavaScript"],
+    "experience": [
+      {
+        "company": "Example School 12",
+        "role": "Mathematics teacher",
+        "date_from": "2019-09",
+        "date_to": "2025-06",
+        "achievements": []
+      }
+    ],
+    "projects": [
+      {
+        "title": "Homework tracker",
+        "description": "Single-page app for tracking homework deadlines",
+        "tech": ["JavaScript", "HTML", "CSS"]
+      }
+    ],
+    "education": []
+  },
+  "profile": { "summary": "", "skills": [] },
+  "vacancy": {
+    "name": "Frontend developer",
+    "company_name": "Sample Studio",
+    "description": "Build React and TypeScript interfaces with automated tests.",
+    "skills": ["React", "TypeScript", "JavaScript", "Jest"],
+    "requirements": ["React", "TypeScript", "Jest"],
+    "responsibilities": ["Implement product interfaces"]
+  },
+  "never_mention": ["React developer", "experienced in React", "professional TypeScript", "Google"]
+}
