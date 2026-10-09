@@ -1026,5 +1026,26 @@
     "notConfirmed": "Email not confirmed yet.",
     "send": "Send confirmation link",
     "sent": "A confirmation link was sent. It works for 24 hours."
+  },
+  "usage": {
+    "title": "AI usage and cost",
+    "period": "Period",
+    "days": "Last {{count}} days",
+    "explain": "Every request to the AI provider is counted with its tokens and duration. Request content is not stored.",
+    "loading": "Loading usage…",
+    "calls": "Requests",
+    "failed": "Failed",
+    "tokens": "Tokens",
+    "cost": "Estimated cost",
+    "unpriced": "Set CAREER_AI_INPUT_USD_PER_MILLION and CAREER_AI_OUTPUT_USD_PER_MILLION to your provider's prices to see a cost estimate.",
+    "empty": "No AI requests in this period.",
+    "byTask": "By task",
+    "task": "Task",
+    "model": "Provider and model",
+    "input": "Input tokens",
+    "output": "Output tokens",
+    "latency": "Average time",
+    "failedCount": "{{count}} failed",
+    "byDay": "By day"
   }
 }

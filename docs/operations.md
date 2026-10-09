@@ -15,6 +15,10 @@
 - **Errors.** Set `CAREER_SENTRY_DSN` to report unhandled errors to Sentry or a compatible service. Personal data and request bodies are not sent; resumes never leave the server this way.
 - **Traces.** Set `CAREER_OTEL_ENABLED=true` and the standard `OTEL_EXPORTER_OTLP_ENDPOINT` (for example a local Jaeger or Grafana Tempo) to export spans for HTTP requests, SQL, Redis and provider calls from both the API (`career-api`) and the worker (`career-worker`).
 
+## AI usage and cost
+
+Every request to OpenAI or Gemini is recorded in the `ai_usage` table: task, provider, model, input and output tokens, duration and whether it succeeded. Prompts, answers and user ids are not stored, and rows older than 180 days are removed by the API's cleanup loop. Administrators see the totals per task and per day at **Settings → AI usage and cost** (`GET /api/admin/ai-usage?days=30`). Set `CAREER_AI_INPUT_USD_PER_MILLION` and `CAREER_AI_OUTPUT_USD_PER_MILLION` to the provider's current prices for a cost estimate; the provider's own billing remains the source of truth.
+
 ## Backup
 
 For a project started as `career-studio`, a local database backup can be created with:

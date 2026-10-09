@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     # Error reporting and tracing stay off unless configured.
     sentry_dsn: SecretStr = SecretStr("")
     otel_enabled: bool = False
+    # USD per million tokens for the admin cost estimate; 0 shows tokens only.
+    ai_input_usd_per_million: float = Field(default=0, ge=0)
+    ai_output_usd_per_million: float = Field(default=0, ge=0)
     # Password recovery and email confirmation are offered only when SMTP is configured.
     smtp_url: SecretStr = SecretStr("")
     mail_from: str = "Career Studio <no-reply@localhost>"

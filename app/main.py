@@ -4,13 +4,14 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.application.accounts import Accounts
 from app.application.adaptation import ResumeAdaptation
+from app.application.ai_usage import RETENTION_DAYS, AiUsageReport
 from app.application.applications import Applications
 from app.application.auth import Administrators, Auth
 from app.application.companies import Companies
@@ -30,6 +31,7 @@ from app.application.voice import VoiceInterviews
 from app.application.workspaces import Workspaces
 from app.config import Settings
 from app.infrastructure.activity import ActivityRepository
+from app.infrastructure.ai_usage import PostgresAiUsage
 from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
@@ -68,6 +70,7 @@ class Container:
 
     repository: PostgresRepository
     career_store: PostgresCareerRepository
+    ai_usage: PostgresAiUsage
     sessions: RedisSessions
     jobs: RedisJobQueue
     use_cases: UseCases
@@ -86,7 +89,9 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
     jobs = RedisJobQueue(settings.redis_url, settings.redis_namespace)
     store = PostgresCareerRepository(repository)
     activity = ActivityRepository(repository.sessions)
-    documents = Documents(settings)
+    usage = PostgresAiUsage(repository.sessions)
+    meter = usage.record
+    documents = Documents(settings, meter=meter)
     passwords = ScryptPasswords()
     smtp_url = settings.smtp_url.get_secret_value()
     smtp = SmtpMailer(smtp_url, settings.mail_from) if smtp_url else None
@@ -95,11 +100,11 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         repository,
         store,
         sessions,
-        reviewer or Reviewer(settings),
+        reviewer or Reviewer(settings, meter=meter),
         documents,
         settings.max_upload_bytes,
     )
-    coach = Coach(settings)
+    coach = Coach(settings, meter=meter)
     profile = ProfileService(store)
     interviews = InterviewService(store, sessions, coach, profile)
     progress = ProgressService(store, repository)
@@ -124,13 +129,16 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         progress=progress,
         voice=VoiceInterviews(interviews, sessions, RealtimeVoice(settings), coach),
         applications=Applications(
-            store, repository, sessions, VacancyReader(settings), coach, profile
+            store, repository, sessions, VacancyReader(settings, meter=meter), coach, profile
         ),
         companies=Companies(store),
         overview=Overview(store, repository, progress, profile, activity),
         skills=SkillCatalog(PostgresSkillRepository(repository.engine), sessions),
         knowledge=Knowledge(KnowledgeRepository(repository.sessions), auth),
         jobs=Jobs(jobs),
+        ai_usage=AiUsageReport(
+            usage, auth, settings.ai_input_usd_per_million, settings.ai_output_usd_per_million
+        ),
         recovery=Recovery(
             store,
             sessions,
@@ -139,7 +147,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
             settings.public_url,
         ),
     )
-    return Container(repository, store, sessions, jobs, use_cases, smtp)
+    return Container(repository, store, usage, sessions, jobs, use_cases, smtp)
 
 
 VERSION = "0.5.0"
@@ -168,6 +176,9 @@ def create_app(settings=None, reviewer=None):
                     now = datetime.now(UTC)
                     await asyncio.to_thread(container.repository.purge_expired, now)
                     await asyncio.to_thread(container.career_store.purge_expired, now)
+                    await asyncio.to_thread(
+                        container.ai_usage.purge, now - timedelta(days=RETENTION_DAYS)
+                    )
                 except SQLAlchemyError:
                     logging.getLogger("career").warning("Expiration cleanup will retry")
                 await asyncio.sleep(300)

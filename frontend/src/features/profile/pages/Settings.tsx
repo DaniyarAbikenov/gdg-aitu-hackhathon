@@ -63,6 +63,11 @@ export default function Settings() {
               {tr("copy.c351")}
             </Link>
           )}
+          {admin && (
+            <Link className="text-primary underline" to="/admin/ai-usage">
+              {tr("usage.title")}
+            </Link>
+          )}
         </div>
       </div>
     </MainLayout>

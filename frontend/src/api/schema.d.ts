@@ -72,6 +72,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/ai-usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ai Usage */
+        get: operations["ai_usage_admin_ai_usage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/admin/knowledge": {
         parameters: {
             query?: never;
@@ -1174,6 +1191,20 @@ export interface components {
             /** Revision */
             revision: number;
         };
+        /** AiUsage */
+        AiUsage: {
+            /** Daily */
+            daily: components["schemas"]["DailyUsage"][];
+            /** Days */
+            days: number;
+            /** Operations */
+            operations: components["schemas"]["OperationUsage"][];
+            /** Priced */
+            priced: boolean;
+            totals: components["schemas"]["UsageTotals"];
+        } & {
+            [key: string]: unknown;
+        };
         /** Analysis */
         Analysis: {
             /** Matched Skills */
@@ -1496,6 +1527,21 @@ export interface components {
             count: number;
             /** Date */
             date: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** DailyUsage */
+        DailyUsage: {
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: number | null;
+            /** Day */
+            day: string;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
         } & {
             [key: string]: unknown;
         };
@@ -1848,6 +1894,29 @@ export interface components {
             revision: number;
             /** Sdp */
             sdp: string;
+        };
+        /** OperationUsage */
+        OperationUsage: {
+            /** Average Ms */
+            average_ms: number;
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: number | null;
+            /** Failed */
+            failed: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Model */
+            model: string;
+            /** Operation */
+            operation: string;
+            /** Output Tokens */
+            output_tokens: number;
+            /** Provider */
+            provider: string;
+        } & {
+            [key: string]: unknown;
         };
         /** Overview */
         Overview: {
@@ -2506,6 +2575,21 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** UsageTotals */
+        UsageTotals: {
+            /** Calls */
+            calls: number;
+            /** Cost Usd */
+            cost_usd: number | null;
+            /** Failed */
+            failed: number;
+            /** Input Tokens */
+            input_tokens: number;
+            /** Output Tokens */
+            output_tokens: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** VacancyImport */
         VacancyImport: {
             /**
@@ -2701,6 +2785,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ai_usage_admin_ai_usage_get: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AiUsage"];
+                };
             };
             /** @description Validation Error */
             422: {

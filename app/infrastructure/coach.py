@@ -96,9 +96,9 @@ LOCAL_LETTER = {
 
 
 class Coach:
-    def __init__(self, settings, transport=None):
+    def __init__(self, settings, transport=None, meter=None):
         self.provider = settings.provider
-        self.ai = structured_ai(settings, transport)
+        self.ai = structured_ai(settings, transport, meter)
 
     def improvements(self, fields, profile, job):
         if self.provider == "unconfigured":

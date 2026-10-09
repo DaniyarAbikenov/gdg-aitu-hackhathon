@@ -7,6 +7,7 @@ from fastapi import Depends, Request, Response
 
 from app.application.accounts import Accounts
 from app.application.adaptation import ResumeAdaptation
+from app.application.ai_usage import AiUsageReport
 from app.application.applications import Applications
 from app.application.auth import Auth
 from app.application.companies import Companies
@@ -49,6 +50,7 @@ class UseCases:
     knowledge: Knowledge
     jobs: Jobs
     recovery: Recovery
+    ai_usage: AiUsageReport
 
 
 def use_cases(request: Request) -> UseCases:

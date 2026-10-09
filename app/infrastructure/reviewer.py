@@ -22,9 +22,9 @@ class ProviderAdvice(BaseModel):
 
 
 class Reviewer:
-    def __init__(self, settings, transport=None):
+    def __init__(self, settings, transport=None, meter=None):
         self.settings = settings
-        self.transport = transport
+        self.transport, self.meter = transport, meter
 
     def analyze(self, fields, jd_text):
         if self.settings.provider == "unconfigured":
@@ -32,7 +32,7 @@ class Reviewer:
         result = compare(fields, jd_text)
         if self.settings.provider == "local":
             return result
-        advice = structured_ai(self.settings, self.transport).generate(
+        advice = structured_ai(self.settings, self.transport, self.meter).generate(
             "Review the resume for its author. Return actionable, factual suggestions, "
             "not a hiring decision or ATS score. Use only the provided evidence.",
             {"resume": asdict(fields), "job_description": jd_text},

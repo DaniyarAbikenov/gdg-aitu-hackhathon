@@ -9,7 +9,7 @@ from app.contracts import ResumeFields, StrictModel
 from app.domain.models import ResumeFields as DomainFields
 from app.presentation.dependencies import Cases, Member
 from app.presentation.errors import ApiError
-from app.presentation.responses import Overview, PreferencesRecord, Record
+from app.presentation.responses import AiUsage, Overview, PreferencesRecord, Record
 
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
@@ -80,6 +80,10 @@ def product_router(settings: Settings) -> APIRouter:
             ),
             "development": settings.environment == "development",
         }
+
+    @routes.get("/admin/ai-usage", response_model=AiUsage)
+    def ai_usage(cases: Cases, current: Member, days: int = Query(default=30, ge=1, le=180)):
+        return cases.ai_usage.summary(current, days)
 
     @routes.post("/user/profile/import")
     def import_profile(file: UploadFile, cases: Cases, current: Member):
