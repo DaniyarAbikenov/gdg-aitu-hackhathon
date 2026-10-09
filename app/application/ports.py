@@ -83,6 +83,24 @@ class VoiceGateway(Protocol):
 
 
 @dataclass(frozen=True)
+class AiCall:
+    """One provider request: which task, how many tokens and how long it took."""
+
+    provider: str
+    model: str
+    operation: str
+    input_tokens: int
+    output_tokens: int
+    duration_ms: int
+    succeeded: bool
+
+
+class AiUsageLog(Protocol):
+    def record(self, call: AiCall) -> None: ...
+    def summary(self, since: datetime) -> dict[str, Any]: ...
+
+
+@dataclass(frozen=True)
 class EmailMessage:
     to: str
     subject: str

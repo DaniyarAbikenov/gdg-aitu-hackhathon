@@ -15,6 +15,29 @@
 - **Errors.** Set `CAREER_SENTRY_DSN` to report unhandled errors to Sentry or a compatible service. Personal data and request bodies are not sent; resumes never leave the server this way.
 - **Traces.** Set `CAREER_OTEL_ENABLED=true` and the standard `OTEL_EXPORTER_OTLP_ENDPOINT` (for example a local Jaeger or Grafana Tempo) to export spans for HTTP requests, SQL, Redis and provider calls from both the API (`career-api`) and the worker (`career-worker`).
 
+## AI usage and cost
+
+Every request to OpenAI or Gemini is recorded in the `ai_usage` table: task, provider, model, input and output tokens, duration and whether it succeeded. Prompts, answers and user ids are not stored, and rows older than 180 days are removed by the API's cleanup loop. Administrators see the totals per task and per day at **Settings → AI usage and cost** (`GET /api/admin/ai-usage?days=30`). Set `CAREER_AI_INPUT_USD_PER_MILLION` and `CAREER_AI_OUTPUT_USD_PER_MILLION` to the provider's current prices for a cost estimate; the provider's own billing remains the source of truth.
+
+## AI evaluation
+
+`scripts/run_evals.py` runs fictional cases from `evals/cases/` through the configured provider and checks each cover letter and resume suggestion:
+
+- facts the letter says it used must come from the candidate's profile or resume;
+- no number may appear that is not in the input;
+- no employer, title or claim on the case's `never_mention` list may appear, and no missing skill may be claimed as experience;
+- the letter must be written in the requested language;
+- resume suggestions may not add skills.
+
+CI runs it with the rule-based provider (`CAREER_PROVIDER=local`). Before changing a prompt or model, run it against the real provider and keep the report:
+
+```sh
+CAREER_PROVIDER=openai CAREER_OPENAI_API_KEY=... CAREER_OPENAI_MODEL=... \
+  python scripts/run_evals.py --report evals/report.md
+```
+
+The report lists the provider calls and tokens the run cost. Add a case whenever a real output slips past these checks.
+
 ## Backup
 
 For a project started as `career-studio`, a local database backup can be created with:

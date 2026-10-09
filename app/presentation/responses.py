@@ -251,3 +251,34 @@ class CoverLetterDraft(View):
     matched_skills: list[str]
     missing_skills: list[str]
     resume_id: str | None
+
+
+class UsageTotals(View):
+    calls: int
+    failed: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float | None
+
+
+class OperationUsage(UsageTotals):
+    provider: str
+    model: str
+    operation: str
+    average_ms: int
+
+
+class DailyUsage(View):
+    day: str
+    calls: int
+    input_tokens: int
+    output_tokens: int
+    cost_usd: float | None
+
+
+class AiUsage(View):
+    days: int
+    priced: bool
+    totals: UsageTotals
+    operations: list[OperationUsage]
+    daily: list[DailyUsage]

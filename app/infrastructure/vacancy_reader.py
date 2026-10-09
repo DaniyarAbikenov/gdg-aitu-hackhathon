@@ -148,10 +148,10 @@ class PublicPage:
 
 
 class VacancyReader:
-    def __init__(self, settings, pages=None, transport=None):
+    def __init__(self, settings, pages=None, transport=None, meter=None):
         self.provider = settings.provider
         self.pages = pages or PublicPage()
-        self.ai = structured_ai(settings, transport)
+        self.ai = structured_ai(settings, transport, meter)
 
     def parse(self, url, text, language):
         if self.provider not in {"openai", "gemini"}:

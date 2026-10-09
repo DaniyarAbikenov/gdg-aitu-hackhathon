@@ -53,6 +53,8 @@ jobs:
       - run: alembic upgrade head
       - run: alembic check
       - run: pytest --cov=app --cov-report=term-missing --cov-report=xml
+      - name: AI evaluation with the rule-based provider
+        run: CAREER_PROVIDER=local python scripts/run_evals.py
       - run: pip-audit -r requirements.txt
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

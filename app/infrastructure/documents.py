@@ -233,9 +233,9 @@ class ComposedResume(BaseModel):
 
 
 class Documents:
-    def __init__(self, settings=None, transport=None):
+    def __init__(self, settings=None, transport=None, meter=None):
         self.settings = settings
-        self.ai = structured_ai(settings, transport) if settings else None
+        self.ai = structured_ai(settings, transport, meter) if settings else None
 
     def extract(self, filename, data):
         if self.settings and self.settings.provider == "unconfigured":

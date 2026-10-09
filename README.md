@@ -102,6 +102,9 @@ npm run build --prefix frontend
 # Hot reload frontend, forwarding /api to the Docker gateway on port 8080:
 npm run dev --prefix frontend
 
+# Fictional cases through the AI provider: grounded facts, no invented numbers, right language
+CAREER_PROVIDER=local python scripts/run_evals.py
+
 # Real PostgreSQL/Redis integration suite in isolated containers:
 docker compose -p career-tests -f compose.test.yml up --build --abort-on-container-exit --exit-code-from tests
 docker compose -p career-tests -f compose.test.yml down --volumes
