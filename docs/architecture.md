@@ -8,6 +8,12 @@ CareerBot connects profile → resume adaptation → interview coaching → lear
 
 Domain and application modules contain no FastAPI, Pydantic, SQLAlchemy, Redis or HTTP client imports. The application coordinates repositories, sessions, documents and coaching ports. Infrastructure implements the ports; presentation validates external contracts and maps domain errors to HTTP. `app/main.py` is the composition root. An AST test enforces the dependency boundary.
 
+`app/main.py` builds one `Container` per process. Routers receive use cases through typed dependencies in `app/presentation/dependencies.py` (`Cases`, `Workspace`, `Member`) and make one use-case call per endpoint; they never touch repositories, Redis or provider adapters. A second AST test fails if a router imports infrastructure or reaches an adapter attribute. Domain and application code is fully annotated and checked by mypy in CI.
+
+## Error contract
+
+Domain errors carry a stable `code`. Every error response has the shape `{"detail": "<message>", "code": "<code>"}`; request validation adds a per-field `errors` list. The frontend translates by `code` (with an HTTP status fallback), so changing server wording never breaks localisation.
+
 Resumes, profiles, interviews, plans, versions and rewards are separate aggregates. JSONB captures their bounded documents; SQL columns provide ownership, revisions, timestamps and expiration. This avoids dozens of join tables for small documents while keeping transactions and queryable ownership explicit. Separate tables make aggregate lifecycles and quotas visible.
 
 ## PostgreSQL and Redis
