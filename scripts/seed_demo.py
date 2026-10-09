@@ -24,7 +24,12 @@ password = (
 )
 if len(password) < 12:
     parser.error("Password needs at least 12 characters.")
-client = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+# Like browsers, treat loopback as a secure context so Secure session cookies from a
+# production deployment (CAREER_SECURE_COOKIE=true) are sent back over plain HTTP.
+policy = http.cookiejar.DefaultCookiePolicy(secure_protocols=("https", "wss", "http"))
+client = urllib.request.build_opener(
+    urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar(policy))
+)
 
 
 def post(path, data):

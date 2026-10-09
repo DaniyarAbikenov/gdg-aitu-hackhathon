@@ -1,0 +1,55 @@
+name: Release images
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Image names and tags
+        id: meta
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          if [[ "$GITHUB_REF_TYPE" == "tag" ]]; then version="${GITHUB_REF_NAME#v}"; else version="sha-${GITHUB_SHA::7}"; fi
+          echo "registry=ghcr.io/$owner" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Sign in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - name: Build and push
+        env:
+          REGISTRY: ${{ steps.meta.outputs.registry }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          SOURCE: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          build() {
+            local name="$1"; shift
+            docker build "$@" \
+              --label "org.opencontainers.image.source=$SOURCE" \
+              --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              -t "$REGISTRY/career-studio-$name:$VERSION" \
+              -t "$REGISTRY/career-studio-$name:latest"
+            docker push --all-tags "$REGISTRY/career-studio-$name"
+          }
+          build backend --target runtime .
+          build frontend ./frontend
+      - name: Smoke-test the pushed images with the production overlay
+        env:
+          CAREER_VERSION: ${{ steps.meta.outputs.version }}
+          CAREER_DOMAIN: localhost
+          CAREER_PROVIDER: local
+        run: |
+          export CAREER_IMAGE_OWNER="${GITHUB_REPOSITORY_OWNER,,}"
+          compose="docker compose -f docker-compose.yml -f deploy/compose.prod.yml"
+          $compose up --no-build --wait --wait-timeout 180 frontend || ($compose logs; exit 1)
+          $compose exec -T frontend wget -q -O - http://127.0.0.1:8080/health
+          $compose down --volumes

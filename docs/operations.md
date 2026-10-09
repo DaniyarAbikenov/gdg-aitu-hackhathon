@@ -4,7 +4,7 @@
 
 - Run the isolated backend suite and desktop/mobile browser suite; check CI for the exact commit being presented.
 - Run `docker compose exec backend alembic check`; verify `/health` and an authenticated manual resume/export workflow.
-- Configure distinct database credentials. Bind publicly only behind a trusted HTTPS reverse proxy and set `CAREER_SECURE_COOKIE=true` for HTTPS. Browser microphones require a secure context; localhost is an exception.
+- Configure distinct database credentials. Bind publicly only behind a trusted HTTPS reverse proxy and set `CAREER_SECURE_COOKIE=true` for HTTPS; `deploy/compose.prod.yml` does both (see [deploy.md](deploy.md)). Browser microphones require a secure context; localhost is an exception.
 - Choose a server AI provider and model IDs explicitly. Check live extraction against a representative PDF/DOCX, accept/restore a proposal, complete a text interview, and test voice permissions, interruptions, pause/reconnect and final assessment before advertising these integrations as verified.
 - Keep keys and passwords outside Git. Administrator email is an allowlist, not a password; provision administrators using `python -m app.manage` inside the backend container.
 - Choose and document retention for backups and provider-side data. The UI describes application storage and does not promise that account deletion erases third-party copies or backups.

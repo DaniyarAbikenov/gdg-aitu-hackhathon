@@ -1,0 +1,10 @@
+# Automatic HTTPS (Let's Encrypt) for the public hostname, proxied to the Nginx gateway.
+{$CAREER_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy frontend:8080
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+	log {
+		output stdout
+		format json
+	}
+}
