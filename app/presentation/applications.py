@@ -13,6 +13,7 @@ from app.presentation.dependencies import (
     Member,
     clear_session_cookie,
 )
+from app.presentation.responses import ApplicationItem, Record
 
 
 class Application(StrictModel):
@@ -86,15 +87,15 @@ class AccountDelete(StrictModel):
 def applications_router() -> APIRouter:
     routes = APIRouter()
 
-    @routes.get("/companies")
+    @routes.get("/companies", response_model=list[Record])
     def companies(cases: Cases, current: Member):
         return cases.companies.list(current)
 
-    @routes.post("/companies", status_code=201)
+    @routes.post("/companies", response_model=Record, status_code=201)
     def create_company(payload: Company, cases: Cases, current: Member):
         return cases.companies.save(current, payload.model_dump(mode="json", exclude={"revision"}))
 
-    @routes.put("/companies/{company_id}")
+    @routes.put("/companies/{company_id}", response_model=Record)
     def update_company(company_id: UUID, payload: Company, cases: Cases, current: Member):
         return cases.companies.save(
             current,
@@ -109,11 +110,11 @@ def applications_router() -> APIRouter:
             current, str(payload.url or ""), payload.text, payload.language
         )
 
-    @routes.get("/applications")
+    @routes.get("/applications", response_model=list[ApplicationItem])
     def applications(cases: Cases, current: Member):
         return cases.applications.board(current)
 
-    @routes.post("/applications", status_code=201)
+    @routes.post("/applications", response_model=Record, status_code=201)
     def create(payload: Application, cases: Cases, current: Member):
         return cases.applications.save(
             current,
@@ -121,7 +122,7 @@ def applications_router() -> APIRouter:
             revision=payload.revision,
         )
 
-    @routes.put("/applications/{application_id}")
+    @routes.put("/applications/{application_id}", response_model=Record)
     def update(application_id: UUID, payload: Application, cases: Cases, current: Member):
         return cases.applications.save(
             current,

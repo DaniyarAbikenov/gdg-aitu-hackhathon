@@ -6,6 +6,7 @@ from pydantic import Field
 
 from app.contracts import StrictModel
 from app.presentation.dependencies import Cases, Workspace
+from app.presentation.responses import InterviewView
 
 
 class Offer(StrictModel):
@@ -32,7 +33,7 @@ def voice_router() -> APIRouter:
     def connect(id: UUID, payload: Offer, cases: Cases, current: Workspace):
         return cases.voice.connect(current, str(id), payload.revision, payload.sdp)
 
-    @routes.post("/interview/{id}/voice/transcript")
+    @routes.post("/interview/{id}/voice/transcript", response_model=InterviewView)
     def transcript(id: UUID, payload: Transcript, cases: Cases, current: Workspace):
         return cases.voice.save_transcript(
             current,
