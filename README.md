@@ -12,7 +12,7 @@ The original React frontend from [`skill-pathfinder-151`](https://github.com/Dan
 
 | Directory | Responsibility |
 |---|---|
-| `frontend/` | React, TypeScript, Vite, original UI and typed API adapters |
+| `frontend/` | React, TypeScript, Vite and TanStack Query, grouped by feature; API types generated from OpenAPI |
 | `app/domain/` | Framework-independent business models |
 | `app/application/` | Use cases and repository/service ports |
 | `app/infrastructure/` | PostgreSQL, Redis, OpenAI/Gemini, PDF and identity adapters |
@@ -86,7 +86,7 @@ The original core UI is localized in English, Russian and Kazakh; some helper co
 
 ## Persistence and concurrency
 
-PostgreSQL stores accounts, profiles, resumes, versions, interviews, plans and rewards. JSONB preserves structured sections and supports legacy text records. Redis stores sessions and shared rate limits. There is no SQLite or process-local data cache. React/Zustand hold transient form state only; persisted records are reloaded from the API.
+PostgreSQL stores accounts, profiles, resumes, versions, interviews, plans and rewards. JSONB preserves structured sections and supports legacy text records. Redis stores sessions and shared rate limits. There is no SQLite or process-local data cache. TanStack Query caches API responses per page visit and Zustand holds transient wizard state only; persisted records always come from the API.
 
 Updates include revisions to reject stale writes. Passwords use salted scrypt. Guest records expire; registered account records remain until deleted. The backend enforces ownership on every record lookup.
 
@@ -119,7 +119,7 @@ GitHub Actions validates frontend types/lint/build/runtime dependency audit, Pyt
 
 The home page explains the product before sign-in. Run `python3 scripts/seed_demo.py --url http://localhost:8080` to create a separate fictional presentation account with manual profile/vacancy/resume data and no invented AI results.
 
-API schema: **http://localhost:8080/api/openapi.json**. Swagger: **http://localhost:8080/api/docs**.
+API schema: **http://localhost:8080/api/openapi.json**. Swagger: **http://localhost:8080/api/docs**. The frontend's request and response types are generated from the same schema (`frontend/openapi.json` → `frontend/src/api/schema.d.ts`); after changing an endpoint run `npm run api:generate --prefix frontend`. CI fails if the generated files are stale.
 
 Noto Sans is bundled under the [SIL Open Font License](app/assets/OFL.txt). No license is inferred for the original project.
 
