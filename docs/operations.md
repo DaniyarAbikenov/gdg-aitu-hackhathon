@@ -9,6 +9,12 @@
 - Keep keys and passwords outside Git. Administrator email is an allowlist, not a password; provision administrators using `python -m app.manage` inside the backend container.
 - Choose and document retention for backups and provider-side data. The UI describes application storage and does not promise that account deletion erases third-party copies or backups.
 
+## Observability
+
+- **Logs.** API and worker write one JSON object per line to stdout (`docker compose logs -f backend worker`). Every request gets an `X-Request-ID` (a valid incoming one is kept) that appears on the access line, on every log line written while handling it, and on the worker's lines for jobs it queued. Unhandled errors are logged with the stack trace and return `{"code": "internal_error"}`.
+- **Errors.** Set `CAREER_SENTRY_DSN` to report unhandled errors to Sentry or a compatible service. Personal data and request bodies are not sent; resumes never leave the server this way.
+- **Traces.** Set `CAREER_OTEL_ENABLED=true` and the standard `OTEL_EXPORTER_OTLP_ENDPOINT` (for example a local Jaeger or Grafana Tempo) to export spans for HTTP requests, SQL, Redis and provider calls from both the API (`career-api`) and the worker (`career-worker`).
+
 ## Backup
 
 For a project started as `career-studio`, a local database backup can be created with:

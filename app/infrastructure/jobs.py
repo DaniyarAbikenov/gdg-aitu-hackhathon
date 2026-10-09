@@ -9,6 +9,7 @@ from rq.job import Job
 from rq.serializers import JSONSerializer
 
 from app.application.ports import JobState, JobStatus
+from app.infrastructure.observability import request_id
 
 RUN = "app.worker.run"
 # Statuses RQ reports for jobs that never produced a result.
@@ -35,7 +36,8 @@ class RedisJobQueue:
             RUN,
             operation,
             payload,
-            meta={"owner": owner, "operation": operation},
+            # The request id lets the worker's log lines be matched to the API request.
+            meta={"owner": owner, "operation": operation, "request_id": request_id.get()},
             # Unstarted jobs expire, so a stopped worker never leaves stale work behind.
             ttl=600,
             result_ttl=3600,

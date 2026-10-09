@@ -35,6 +35,13 @@ from app.infrastructure.documents import Documents
 from app.infrastructure.google_login import GoogleLogin
 from app.infrastructure.jobs import RedisJobQueue
 from app.infrastructure.knowledge import KnowledgeRepository
+from app.infrastructure.observability import (
+    RequestContext,
+    configure_logging,
+    init_sentry,
+    init_tracing,
+    trace_engine,
+)
 from app.infrastructure.passwords import ScryptPasswords
 from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
@@ -120,6 +127,16 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
     return Container(repository, store, sessions, jobs, use_cases)
 
 
+VERSION = "0.5.0"
+
+
+def configure_observability(settings: Settings, service: str, app: FastAPI | None = None) -> None:
+    configure_logging(settings.log_level, settings.log_format)
+    init_sentry(settings.sentry_dsn.get_secret_value(), settings.environment, VERSION)
+    if settings.otel_enabled:
+        init_tracing(service, app)
+
+
 def create_app(settings=None, reviewer=None):
     settings = settings or Settings()
 
@@ -127,6 +144,8 @@ def create_app(settings=None, reviewer=None):
     async def lifespan(app):
         container = build_container(settings, reviewer)
         app.state.container = container
+        if settings.otel_enabled:
+            trace_engine(container.repository.engine)
 
         async def cleanup():
             while True:
@@ -153,10 +172,11 @@ def create_app(settings=None, reviewer=None):
     app = FastAPI(
         title="CareerBot",
         servers=[{"url": "/api", "description": "Docker gateway"}],
-        version="0.4.0",
+        version=VERSION,
         lifespan=lifespan,
         description="Upload, review, compare and export a factual resume. Start with /api/session.",
     )
+    configure_observability(settings, "career-api", app)
     configure_http(app, settings)
     app.include_router(router(settings))
     app.include_router(career_router(settings))
@@ -165,6 +185,8 @@ def create_app(settings=None, reviewer=None):
     app.include_router(voice_router())
     app.include_router(applications_router())
     app.include_router(jobs_router())
+    # Outermost, so the id and the access line cover every other middleware.
+    app.add_middleware(RequestContext)
     return app
 
 
