@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { Textarea } from "@/components/ui/textarea";
 import { PlanCreator } from "@/components/PlanCreator";
 import type { PlanRecord } from "@/types/career";
@@ -11,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { Download, Video } from "lucide-react";
 
 export default function Plan() {
@@ -26,24 +26,26 @@ export default function Plan() {
   useEffect(() => {
     client
       .get("/plan")
-      .then(({ data }) => {
+      .then(({ data }: { data: PlanRecord[] }) => {
         setPlans(data);
         setRecord(data.find((p) => p.id === planId) || null);
       })
       .catch((e) => setError(e.message));
   }, [planId]);
   const toggleWeek = async (week: number) => {
+    if (!record) return;
     setBusy(true);
     try {
       const { data } = await client.post(`/plan/${record.id}/modules/${week}`, {
         revision: record.revision,
         completed: !weekProgress[week],
-        evidence: record.data.modules.find((m) => m.id === String(week))
-          .evidence,
+        evidence:
+          record.data.modules.find((m) => m.id === String(week))?.evidence ??
+          "",
       });
       setRecord(data);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -60,12 +62,13 @@ export default function Plan() {
       });
       setRecord(r.data);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
   };
   const handleExport = () => {
+    if (!record) return;
     window.location.assign(`/api/plan/${record.id}/export`);
   };
   const handleVideoOverview = () => {

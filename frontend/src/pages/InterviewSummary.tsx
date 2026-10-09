@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { InterviewReview } from "@/components/InterviewReview";
 import client from "@/api/client";
 import { getInterview } from "@/api/interview";
@@ -152,7 +153,7 @@ export default function InterviewSummary() {
               });
               navigate(`/plan/${data.id}`);
             } catch (e) {
-              setError(e.message);
+              setError(getErrorMessage(e));
             }
           }}
         >

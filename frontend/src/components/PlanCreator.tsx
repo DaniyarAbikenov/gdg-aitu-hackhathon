@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "@/api/client";
@@ -43,7 +44,7 @@ export function PlanCreator() {
       });
       navigate(`/plan/${r.data.id}`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

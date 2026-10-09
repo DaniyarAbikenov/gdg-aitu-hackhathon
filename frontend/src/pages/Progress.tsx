@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { Journey } from "@/components/Journey";
 import type { ProgressRecord } from "@/types/career";
 import { useEffect, useState } from "react";
@@ -14,13 +15,11 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
 import { Trophy, Target, MessageSquare, FileText, Award } from "lucide-react";
 
 export default function Progress() {
   useLocale();
   const { t } = useTranslation();
-  const { toast } = useToast();
 
   const [progress, setProgress] = useState<ProgressRecord | null>(null);
   const [error, setError] = useState("");
@@ -37,7 +36,7 @@ export default function Progress() {
       await client.post(`/progress/rewards/${id}`);
       await load();
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     }
   };
   const stats = {
@@ -117,7 +116,9 @@ export default function Progress() {
                 </p>
                 <Badge
                   variant={
-                    stats.avgInterviewScore >= 70 ? "default" : "secondary"
+                    (stats.avgInterviewScore ?? 0) >= 70
+                      ? "default"
+                      : "secondary"
                   }
                   className="mt-4"
                 >

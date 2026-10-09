@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { Mic } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +63,7 @@ export function DictationButton({
       setActive(true);
       setError("");
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     }
   };
   return (

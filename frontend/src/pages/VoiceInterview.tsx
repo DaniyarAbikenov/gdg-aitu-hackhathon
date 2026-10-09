@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { VoiceEvent } from "@/types/product";
 import type { InterviewRecord } from "@/api/interview";
 import { useEffect, useRef, useState } from "react";
@@ -168,7 +169,7 @@ export default function VoiceInterview() {
       cleanup();
       void stopServer();
       setConnected(false);
-      setError(e.message || tr("copy.c506"));
+      setError(getErrorMessage(e) || tr("copy.c506"));
       setStatus(tr("copy.c507"));
     } finally {
       if (mounted.current) setBusy(false);
@@ -183,7 +184,7 @@ export default function VoiceInterview() {
       await persist(true);
       navigate(`/interview/summary?id=${id}`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -198,7 +199,7 @@ export default function VoiceInterview() {
       await stopServer();
       await persist();
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     }
   };
   return (

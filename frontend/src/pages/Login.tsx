@@ -57,7 +57,7 @@ export default function Login() {
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? tr("copy.c380"),
+        description: err instanceof Error ? err.message : tr("copy.c380"),
         variant: "destructive",
       });
     } finally {
@@ -77,7 +77,7 @@ export default function Login() {
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? tr("copy.c381"),
+        description: err instanceof Error ? err.message : tr("copy.c381"),
         variant: "destructive",
       });
     } finally {

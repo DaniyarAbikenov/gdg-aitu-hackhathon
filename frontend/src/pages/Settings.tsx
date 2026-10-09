@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { logout } from "@/api/auth";
@@ -30,7 +31,7 @@ export default function Settings() {
       await logout();
       navigate("/login");
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

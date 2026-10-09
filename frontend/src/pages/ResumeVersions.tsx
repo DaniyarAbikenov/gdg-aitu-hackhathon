@@ -1,5 +1,7 @@
 import { tr, useLocale, displayLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { SnapshotRecord } from "@/types/product";
+import type { ResumeFields } from "@/types/resume";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import client from "@/api/client";
@@ -63,7 +65,7 @@ export default function ResumeVersions() {
       setLabel("");
       setNotice(tr("copy.c471"));
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -78,7 +80,7 @@ export default function ResumeVersions() {
       await load();
       setNotice(tr("copy.c473"));
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -148,8 +150,8 @@ export default function ResumeVersions() {
               <summary className="cursor-pointer">{tr("copy.c481")}</summary>
               <div className="space-y-4 pt-4">
                 {Object.entries(names).map(([key, title]) => {
-                  const before = text(v.data.before[key]);
-                  const after = text(v.data.fields[key]);
+                  const before = text(v.data.before[key as keyof ResumeFields]);
+                  const after = text(v.data.fields[key as keyof ResumeFields]);
                   return (
                     <div key={key} className="border-t pt-3">
                       <h3 className="font-semibold">{title}</h3>

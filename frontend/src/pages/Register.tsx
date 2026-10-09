@@ -66,7 +66,7 @@ export default function Register() {
     } catch (err) {
       toast({
         title: t("common.error"),
-        description: err?.message ?? tr("copy.c416"),
+        description: err instanceof Error ? err.message : tr("copy.c416"),
         variant: "destructive",
       });
     } finally {

@@ -1,4 +1,5 @@
 import { updateUserProfile } from "@/api/user";
+import { getErrorMessage } from "@/lib/errors";
 import { useAuthStore } from "@/store/auth";
 import { toast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -32,7 +33,7 @@ export function LanguageSwitcher() {
           }),
         );
       } catch (e) {
-        toast({ title: e.message, variant: "destructive" });
+        toast({ title: getErrorMessage(e), variant: "destructive" });
         return;
       }
     }

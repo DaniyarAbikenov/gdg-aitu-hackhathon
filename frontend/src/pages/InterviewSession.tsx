@@ -1,4 +1,5 @@
 import { DictationButton } from "@/components/DictationButton";
+import { getErrorMessage } from "@/lib/errors";
 import { useState, useEffect } from "react";
 import { useInterviewStore } from "@/store/useInterviewStore";
 import { answerInterview, getInterview } from "@/api/interview";
@@ -30,14 +31,7 @@ const TypingIndicator = () => {
 export default function InterviewSession() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const {
-    sessionId,
-    currentQuestion,
-    messages,
-    addMessage,
-    setResult,
-    finished,
-  } = useInterviewStore();
+  const { sessionId, messages, finished } = useInterviewStore();
 
   const [answer, setAnswer] = useState("");
   const [loading, setLoading] = useState(false);
@@ -77,7 +71,7 @@ export default function InterviewSession() {
       setError("");
       if (record.finished) navigate(`/interview/result?id=${record.id}`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }
