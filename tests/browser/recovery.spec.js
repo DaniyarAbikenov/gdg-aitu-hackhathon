@@ -43,6 +43,10 @@ test("email confirmation and password reset work through emailed links", async (
   await guest.addInitScript(() => localStorage.setItem("language", "en"));
   await guest.goto("/login");
   await guest.getByRole("link", { name: "Forgot password?" }).click();
+  // The sign-in form also has #email; wait for the lazily loaded recovery page.
+  await expect(
+    guest.getByRole("button", { name: "Send link", exact: true }),
+  ).toBeVisible();
   await guest.locator("#email").fill(email);
   await guest.getByRole("button", { name: "Send link", exact: true }).click();
   await expect(guest.getByRole("status")).toContainText("reset link");
