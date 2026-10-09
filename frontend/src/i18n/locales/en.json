@@ -910,7 +910,10 @@
     "credentials": "Incorrect email or password.",
     "password": "Incorrect current password.",
     "accountExists": "Account already exists. Sign in instead.",
-    "letterFacts": "Fill in your profile or choose a resume for this vacancy first."
+    "letterFacts": "Fill in your profile or choose a resume for this vacancy first.",
+    "resetLink": "This reset link has expired or was already used. Request a new one.",
+    "verifyLink": "This confirmation link has expired or was already used.",
+    "emailUnavailable": "Email is not configured on this server."
   },
   "articleLanguage": "Article language",
   "ui": {
@@ -995,5 +998,33 @@
     "list": "List",
     "board": "Board"
   },
-  "planCalendar": "Add to calendar (.ics)"
+  "planCalendar": "Add to calendar (.ics)",
+  "recovery": {
+    "forgotLink": "Forgot password?",
+    "forgotTitle": "Reset your password",
+    "forgotExplain": "Enter your account email. We will send a link to choose a new password.",
+    "send": "Send link",
+    "sent": "If an account with a password uses this address, a reset link is on its way. It works for one hour.",
+    "unavailable": "Password recovery is not available on this server because email is not configured.",
+    "backToLogin": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "newPassword": "New password",
+    "repeatPassword": "Repeat the new password",
+    "passwordRule": "At least 12 characters.",
+    "mismatch": "The passwords do not match.",
+    "save": "Save password",
+    "resetDone": "Your password was changed and every device was signed out. Sign in with the new password.",
+    "noToken": "This page needs the link from the email. Open the link again or request a new one.",
+    "requestAgain": "Request a new link"
+  },
+  "verify": {
+    "title": "Email confirmation",
+    "checking": "Checking the link…",
+    "done": "Your email is confirmed.",
+    "toSettings": "Go to settings",
+    "confirmed": "Email confirmed.",
+    "notConfirmed": "Email not confirmed yet.",
+    "send": "Send confirmation link",
+    "sent": "A confirmation link was sent. It works for 24 hours."
+  }
 }

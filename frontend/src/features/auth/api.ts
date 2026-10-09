@@ -1,4 +1,5 @@
 import { tr } from "@/i18n/copy";
+import i18n from "@/i18n/config";
 import client from "@/api/client";
 import type { Schemas } from "@/api/types";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -13,9 +14,11 @@ export function useAuthOptions() {
     queryKey: authKeys.options,
     queryFn: async () =>
       (
-        await client.get<{ postgres: boolean; google: boolean }>(
-          "/auth/options",
-        )
+        await client.get<{
+          postgres: boolean;
+          google: boolean;
+          email: boolean;
+        }>("/auth/options")
       ).data,
   });
 }
@@ -34,6 +37,59 @@ export function useRegister() {
     mutationFn: ({ email, password }: Credentials) =>
       registerWithEmail(email, password),
   });
+}
+
+/** Emails are written in the interface language. */
+const mailLanguage = () => (i18n.language === "kz" ? "kk" : i18n.language);
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: async (email: string) => {
+      await client.post("/auth/password/forgot", {
+        email,
+        language: mailLanguage(),
+      });
+    },
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: async (payload: { token: string; password: string }) => {
+      await client.post("/auth/password/reset", payload);
+    },
+  });
+}
+
+export function useVerifyEmail() {
+  return useMutation({
+    mutationFn: async (token: string) => {
+      await client.post("/auth/email/verify", { token });
+      await refreshIdentity();
+    },
+  });
+}
+
+export function useSendVerification() {
+  return useMutation({
+    mutationFn: async () => {
+      await client.post("/account/email/verification", {
+        language: mailLanguage(),
+      });
+    },
+  });
+}
+
+/** Link tokens arrive in the URL fragment; remove them from the address bar and history. */
+export function takeLinkToken(): string {
+  const token = new URLSearchParams(window.location.hash.slice(1)).get("token");
+  if (token)
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + window.location.search,
+    );
+  return token ?? "";
 }
 
 export function useGoogleLogin() {
@@ -69,7 +125,11 @@ async function loginWithEmail(email: string, password: string) {
 }
 async function registerWithEmail(email: string, password: string) {
   await client.post("/session");
-  await client.post("/auth/register", { email, password });
+  await client.post("/auth/register", {
+    email,
+    password,
+    language: mailLanguage(),
+  });
   await refreshIdentity();
   if (!useAuthStore.getState().isAuthenticated)
     throw new Error(tr("copy.c001"));

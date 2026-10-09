@@ -9,6 +9,11 @@ import { GuestOnlyRoute } from "./GuestOnlyRoute";
 import { ProtectedRoute } from "./ProtectedRoute";
 const Login = lazy(() => import("@/features/auth/pages/Login"));
 const Register = lazy(() => import("@/features/auth/pages/Register"));
+const ForgotPassword = lazy(
+  () => import("@/features/auth/pages/ForgotPassword"),
+);
+const ResetPassword = lazy(() => import("@/features/auth/pages/ResetPassword"));
+const VerifyEmail = lazy(() => import("@/features/auth/pages/VerifyEmail"));
 const Onboarding = lazy(() => import("@/features/profile/pages/Onboarding"));
 const Settings = lazy(() => import("@/features/profile/pages/Settings"));
 const Companies = lazy(() => import("@/features/applications/pages/Companies"));
@@ -125,6 +130,17 @@ const App = () => {
                 }
               />
 
+              <Route
+                path="/forgot-password"
+                element={
+                  <GuestOnlyRoute>
+                    <ForgotPassword />
+                  </GuestOnlyRoute>
+                }
+              />
+              {/* Links from email work whether or not the reader is signed in. */}
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route
                 path="/register"
                 element={

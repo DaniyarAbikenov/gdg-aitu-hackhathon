@@ -78,6 +78,7 @@ test("protected routes and unavailable Google login never fake success", async (
   ).toHaveCount(0);
   await expect(page.locator("#email")).toBeVisible();
   const options = await (await page.request.get("/api/auth/options")).json();
-  expect(options).toEqual({ postgres: true, google: false });
+  // Docker Compose sends email to its Mailpit catcher, so recovery is offered.
+  expect(options).toEqual({ postgres: true, google: false, email: true });
   await expect(page).toHaveURL(/\/login$/);
 });
