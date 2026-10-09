@@ -2,14 +2,24 @@ from pathlib import Path
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, UploadFile
+from fastapi import APIRouter, Request, Response, UploadFile
 from fastapi.responses import FileResponse
 
-from app.domain.errors import NotFound
-from app.domain.models import ResumeFields, Session
+from app.config import Settings
+from app.domain.models import ResumeFields
+from app.presentation.dependencies import (
+    COOKIE,
+    Cases,
+    ClientId,
+    Workspace,
+    clear_session_cookie,
+    set_session_cookie,
+)
+from app.presentation.errors import ApiError
 from app.presentation.schemas import AnalyzeRequest, ResumeRecord, SaveRequest
 
-COOKIE = "career_session"
+__all__ = ["COOKIE", "router"]
+
 ASSETS = Path(__file__).parents[1] / "assets"
 SAMPLE_JOB = (
     "We are looking for a backend developer to build Python and FastAPI services. "
@@ -19,19 +29,7 @@ SAMPLE_JOB = (
 )
 
 
-def workspace(request: Request) -> Session:
-    try:
-        session = request.app.state.sessions.resolve(request.cookies.get(COOKIE))
-        if session.persistent:
-            account = request.app.state.career.store.account_for_owner(session.owner)
-            if account["auth_version"] != session.auth_version:
-                raise NotFound
-        return session
-    except NotFound as exc:
-        raise HTTPException(401, "Your session expired. Start a new workspace.") from exc
-
-
-def router(settings):
+def router(settings: Settings) -> APIRouter:
     routes = APIRouter()
 
     @routes.get("/", include_in_schema=False)
@@ -47,9 +45,8 @@ def router(settings):
         return FileResponse(ASSETS / "NotoSans-Regular.ttf", media_type="font/ttf")
 
     @routes.get("/health")
-    def health(request: Request):
-        request.app.state.repository.health()
-        request.app.state.sessions.health()
+    def health(cases: Cases):
+        cases.workspaces.health()
         return {
             "status": "ok",
             "version": "0.4.0",
@@ -59,60 +56,40 @@ def router(settings):
 
     @routes.post("/api/session", include_in_schema=False)
     @routes.post("/session")
-    def session(request: Request, response: Response):
-        sessions = request.app.state.sessions
-        try:
-            sessions.resolve(request.cookies.get(COOKIE))
-        except NotFound:
-            token = sessions.create(request.client.host if request.client else "unknown")
-            response.set_cookie(
-                COOKIE,
-                token,
-                httponly=True,
-                secure=settings.secure_cookie,
-                samesite="strict",
-                max_age=settings.session_hours * 3600,
-                path="/",
-            )
+    def session(request: Request, response: Response, cases: Cases, client: ClientId):
+        token = cases.workspaces.open(request.cookies.get(COOKIE), client)
+        if token:
+            set_session_cookie(response, token, settings)
         return {"provider": settings.provider, "expires_in_hours": settings.session_hours}
 
     @routes.delete("/api/session", status_code=204, include_in_schema=False)
     @routes.delete("/session", status_code=204)
-    def end_session(request: Request, response: Response, current: Session = Depends(workspace)):
-        if current.persistent:
-            raise HTTPException(403, "Use account settings to delete registered data.")
-        request.app.state.repository.delete_owner(current.owner)
-        request.app.state.career.store.clear(current.owner)
-        request.app.state.sessions.delete(request.cookies[COOKIE])
-        response.delete_cookie(COOKIE, path="/")
+    def end_session(request: Request, response: Response, cases: Cases, current: Workspace):
+        cases.workspaces.end_guest(current, request.cookies[COOKIE])
+        clear_session_cookie(response)
 
     @routes.get("/api/example")
     def example():
         return {"resume": (ASSETS / "sample-resume.txt").read_text(), "job_description": SAMPLE_JOB}
 
     @routes.get("/resume", response_model=list[ResumeRecord])
-    def list_resumes(request: Request, current: Session = Depends(workspace)):
-        return request.app.state.repository.list(current.owner)
+    def list_resumes(cases: Cases, current: Workspace):
+        return cases.resumes.library(current)
 
     @routes.post("/resume/upload", response_model=ResumeRecord, status_code=201)
-    def upload(request: Request, file: UploadFile, current: Session = Depends(workspace)):
+    def upload(file: UploadFile, cases: Cases, current: Workspace):
         data = file.file.read(settings.max_upload_bytes + 1)
         if len(data) > settings.max_upload_bytes:
-            raise HTTPException(413, "Upload exceeds the configured size limit.")
-        return request.app.state.service.upload(current, file.filename or "resume.txt", data)
+            raise ApiError(413, "payload_too_large", "Upload exceeds the configured size limit.")
+        return cases.resumes.upload(current, file.filename or "resume.txt", data)
 
     @routes.get("/resume/{resume_id}", response_model=ResumeRecord)
-    def get_resume(resume_id: UUID, request: Request, current: Session = Depends(workspace)):
-        return request.app.state.repository.get(current.owner, str(resume_id))
+    def get_resume(resume_id: UUID, cases: Cases, current: Workspace):
+        return cases.resumes.get(current, str(resume_id))
 
     @routes.post("/resume/{resume_id}/save", response_model=ResumeRecord)
-    def save(
-        resume_id: UUID,
-        payload: SaveRequest,
-        request: Request,
-        current: Session = Depends(workspace),
-    ):
-        return request.app.state.service.save(
+    def save(resume_id: UUID, payload: SaveRequest, cases: Cases, current: Workspace):
+        return cases.resumes.save(
             current,
             str(resume_id),
             payload.revision,
@@ -120,34 +97,24 @@ def router(settings):
         )
 
     @routes.post("/resume/{resume_id}/improve", response_model=ResumeRecord)
-    def improve(
-        resume_id: UUID,
-        payload: AnalyzeRequest,
-        request: Request,
-        current: Session = Depends(workspace),
-    ):
-        return request.app.state.service.analyze(
-            current,
-            str(resume_id),
-            payload.revision,
-            payload.jd_text,
-        )
+    def improve(resume_id: UUID, payload: AnalyzeRequest, cases: Cases, current: Workspace):
+        return cases.resumes.analyze(current, str(resume_id), payload.revision, payload.jd_text)
 
     @routes.get("/resume/{resume_id}/pdf")
     def pdf(
         resume_id: UUID,
-        request: Request,
+        cases: Cases,
+        current: Workspace,
         template: Literal["modern", "classic", "minimalist"] = "modern",
-        current: Session = Depends(workspace),
     ):
         return Response(
-            request.app.state.service.export(current, str(resume_id), template),
+            cases.resumes.export(current, str(resume_id), template),
             media_type="application/pdf",
             headers={"Content-Disposition": 'attachment; filename="resume.pdf"'},
         )
 
     @routes.delete("/resume/{resume_id}", status_code=204)
-    def delete(resume_id: UUID, request: Request, current: Session = Depends(workspace)):
-        request.app.state.repository.delete(current.owner, str(resume_id))
+    def delete(resume_id: UUID, cases: Cases, current: Workspace):
+        cases.resumes.delete(current, str(resume_id))
 
     return routes

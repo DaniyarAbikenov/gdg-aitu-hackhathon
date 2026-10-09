@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import client from "@/api/client";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -68,7 +69,7 @@ export default function KnowledgeAdmin() {
       setDirty(false);
       setMessage(r.data.published ? tr("copy.c349") : tr("copy.c350"));
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

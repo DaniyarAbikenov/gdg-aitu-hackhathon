@@ -1,4 +1,5 @@
 import { tr, useLocale, displayLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { TargetRecord } from "@/types/product";
 import type { InterviewRecord } from "@/api/interview";
 import { useEffect, useState } from "react";
@@ -110,7 +111,7 @@ export default function InterviewStart() {
         `/interview/${mode === "voice" ? "voice" : "session"}?id=${r.data.id}`,
       );
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

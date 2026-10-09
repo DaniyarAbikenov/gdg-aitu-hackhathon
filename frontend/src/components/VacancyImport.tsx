@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useState } from "react";
 import { ArrowDownToLine, Link2 } from "lucide-react";
 import client from "@/api/client";
@@ -34,7 +35,7 @@ export function VacancyImport({
       });
       setPreview({ ...r.data.draft, source_url: r.data.source_url });
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

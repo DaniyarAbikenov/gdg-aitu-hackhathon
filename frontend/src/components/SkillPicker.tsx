@@ -162,7 +162,8 @@ export function SkillPicker({
                 >
                   <span className="block font-medium">{item.name}</span>
                   <span className="block text-sm text-muted-foreground break-words">
-                    {ru.seedSkills[item.name] === item.description
+                    {(ru.seedSkills as Record<string, string>)[item.name] ===
+                    item.description
                       ? tr("seedSkills." + item.name)
                       : item.description}
                   </span>

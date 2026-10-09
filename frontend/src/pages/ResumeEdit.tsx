@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { ProfileBlocks } from "@/components/ProfileBlocks";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -8,11 +9,7 @@ import { useResumeStore } from "@/store/resumeStore";
 import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/MainLayout";
 
-import { ResumeSummaryEditor } from "@/components/resume/ResumeSummaryEditor";
 import { ResumeSkillsEditor } from "@/components/resume/ResumeSkillsEditor";
-import { ResumeEducationEditor } from "@/components/resume/ResumeEducationEditor";
-import { ResumeExperienceEditor } from "@/components/resume/ResumeExperienceEditor";
-import { ResumeProjectsEditor } from "@/components/resume/ResumeProjectsEditor";
 
 export default function ResumeEdit() {
   useLocale();
@@ -25,7 +22,6 @@ export default function ResumeEdit() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -67,7 +63,7 @@ export default function ResumeEdit() {
 
       navigate(`/resume/${resumeId}/improvements`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setIsSubmitting(false);
     }
@@ -83,13 +79,6 @@ export default function ResumeEdit() {
     <MainLayout>
       <div className="p-8 max-w-4xl mx-auto space-y-8">
         <h1 className="text-2xl font-bold">{t("resume.edit.title")}</h1>
-
-        {/* ✅ ссылка на оригинальный PDF */}
-        {pdfUrl && (
-          <a href={pdfUrl} target="_blank" className="text-blue-600 underline">
-            {t("resume.edit.openOriginal")}
-          </a>
-        )}
 
         {error && (
           <p role="alert" className="text-destructive">
@@ -133,7 +122,7 @@ export default function ResumeEdit() {
               useResumeStore.getState().setRevision(saved.revision);
               setError("");
             } catch (e) {
-              setError(e.message);
+              setError(getErrorMessage(e));
             } finally {
               setIsSubmitting(false);
             }

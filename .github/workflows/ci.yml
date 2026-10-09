@@ -47,6 +47,7 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check app tests migrations scripts
       - run: ruff format --check app tests migrations scripts
+      - run: mypy
       - run: alembic upgrade head
       - run: alembic check
       - run: pytest --cov=app --cov-report=term-missing --cov-report=xml

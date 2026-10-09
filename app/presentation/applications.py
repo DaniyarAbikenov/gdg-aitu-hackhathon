@@ -2,19 +2,17 @@ from datetime import date
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import ConfigDict, Field, HttpUrl, field_validator
 
 from app.contracts import StrictModel
-from app.domain.errors import NotFound
-from app.domain.models import Session
-from app.presentation.api import COOKIE, workspace
-
-
-def member(current: Session = Depends(workspace)):
-    if not current.persistent:
-        raise HTTPException(401, "Sign in to continue.")
-    return current
+from app.presentation.dependencies import (
+    COOKIE,
+    Cases,
+    ClientId,
+    Member,
+    clear_session_cookie,
+)
 
 
 class Application(StrictModel):
@@ -85,24 +83,20 @@ class AccountDelete(StrictModel):
     email: str = Field(min_length=3, max_length=254)
 
 
-def applications_router():
+def applications_router() -> APIRouter:
     routes = APIRouter()
 
     @routes.get("/companies")
-    def companies(request: Request, current: Session = Depends(member)):
-        return request.app.state.companies.list(current)
+    def companies(cases: Cases, current: Member):
+        return cases.companies.list(current)
 
     @routes.post("/companies", status_code=201)
-    def create_company(payload: Company, request: Request, current: Session = Depends(member)):
-        return request.app.state.companies.save(
-            current, payload.model_dump(mode="json", exclude={"revision"})
-        )
+    def create_company(payload: Company, cases: Cases, current: Member):
+        return cases.companies.save(current, payload.model_dump(mode="json", exclude={"revision"}))
 
     @routes.put("/companies/{company_id}")
-    def update_company(
-        company_id: UUID, payload: Company, request: Request, current: Session = Depends(member)
-    ):
-        return request.app.state.companies.save(
+    def update_company(company_id: UUID, payload: Company, cases: Cases, current: Member):
+        return cases.companies.save(
             current,
             payload.model_dump(mode="json", exclude={"revision"}),
             str(company_id),
@@ -110,36 +104,26 @@ def applications_router():
         )
 
     @routes.post("/applications/import")
-    def import_vacancy(
-        payload: VacancyImport, request: Request, current: Session = Depends(member)
-    ):
-        if not payload.url and len(payload.text.strip()) < 60:
-            raise HTTPException(422, "Paste a vacancy link or at least 60 characters of text.")
-        request.app.state.sessions.consume_analysis(current)
-        return request.app.state.vacancy_reader.parse(
-            str(payload.url or ""), payload.text.strip(), payload.language
+    def import_vacancy(payload: VacancyImport, cases: Cases, current: Member):
+        return cases.applications.import_draft(
+            current, str(payload.url or ""), payload.text, payload.language
         )
 
     @routes.get("/applications")
-    def applications(request: Request, current: Session = Depends(member)):
-        return request.app.state.applications.list(current)
+    def applications(cases: Cases, current: Member):
+        return cases.applications.list(current)
 
     @routes.post("/applications", status_code=201)
-    def create(payload: Application, request: Request, current: Session = Depends(member)):
-        return request.app.state.applications.save(
+    def create(payload: Application, cases: Cases, current: Member):
+        return cases.applications.save(
             current,
             payload.model_dump(mode="json", exclude={"revision"}),
             revision=payload.revision,
         )
 
     @routes.put("/applications/{application_id}")
-    def update(
-        application_id: UUID,
-        payload: Application,
-        request: Request,
-        current: Session = Depends(member),
-    ):
-        return request.app.state.applications.save(
+    def update(application_id: UUID, payload: Application, cases: Cases, current: Member):
+        return cases.applications.save(
             current,
             payload.model_dump(mode="json", exclude={"revision"}),
             str(application_id),
@@ -147,41 +131,35 @@ def applications_router():
         )
 
     @routes.get("/account/export")
-    def export(request: Request, response: Response, current: Session = Depends(member)):
+    def export(response: Response, cases: Cases, current: Member):
         response.headers["Content-Disposition"] = 'attachment; filename="careerbot-data.json"'
         response.headers["Cache-Control"] = "no-store"
-        return request.app.state.accounts.export(current)
+        return cases.accounts.export(current)
 
     @routes.post("/account/password", status_code=204)
     def password(
         payload: PasswordChange,
         request: Request,
         response: Response,
-        current: Session = Depends(member),
+        cases: Cases,
+        current: Member,
+        client: ClientId,
     ):
-        try:
-            request.app.state.accounts.change_password(
-                current, payload.password, payload.new_password, request.client.host
-            )
-        except NotFound as exc:
-            raise HTTPException(403, "Incorrect current password.") from exc
-        request.app.state.sessions.delete(request.cookies[COOKIE])
-        response.delete_cookie(COOKIE, path="/")
+        cases.accounts.change_password(current, payload.password, payload.new_password, client)
+        cases.workspaces.sign_out(request.cookies[COOKIE])
+        clear_session_cookie(response)
 
     @routes.post("/account/delete", status_code=204)
     def delete(
         payload: AccountDelete,
         request: Request,
         response: Response,
-        current: Session = Depends(member),
+        cases: Cases,
+        current: Member,
+        client: ClientId,
     ):
-        try:
-            request.app.state.accounts.delete(
-                current, payload.password, payload.email, request.client.host
-            )
-        except NotFound as exc:
-            raise HTTPException(403, "Incorrect current password.") from exc
-        request.app.state.sessions.delete(request.cookies[COOKIE])
-        response.delete_cookie(COOKIE, path="/")
+        cases.accounts.delete(current, payload.password, payload.email, client)
+        cases.workspaces.sign_out(request.cookies[COOKIE])
+        clear_session_cookie(response)
 
     return routes

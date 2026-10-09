@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useState } from "react";
 import client from "@/api/client";
 import { useAuthStore } from "@/store/auth";
@@ -33,7 +34,7 @@ export function AccountControls({
         `/login?account=${mode === "delete" ? "deleted" : "password-changed"}`,
       );
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

@@ -72,12 +72,12 @@ export default function Onboarding() {
 
           // desired_position: string
           // career_goal: "Role1, Role2"
-          const rolesParsed = [];
+          const rolesParsed: string[] = [];
           if (profile.desired_position)
             rolesParsed.push(profile.desired_position);
           if (profile.career_goal) {
             rolesParsed.push(
-              ...profile.career_goal.split(",").map((r) => r.trim()),
+              ...profile.career_goal.split(",").map((r: string) => r.trim()),
             );
           }
           setSelectedRoles([...new Set(rolesParsed)]);

@@ -38,7 +38,7 @@ export function InterviewReview({ id }: { id: string }) {
           </div>
         </details>
       ))}
-      {record?.transcript?.length > 0 && (
+      {record?.transcript && record.transcript.length > 0 && (
         <details className="border rounded-lg p-4">
           <summary>{tr("copy.c032")}</summary>
           <div className="space-y-3 pt-4">

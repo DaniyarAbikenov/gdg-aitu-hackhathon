@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { BriefcaseBusiness, ArrowRight, Plus } from "lucide-react";
@@ -108,7 +109,9 @@ export default function Applications() {
       };
       // Only editable fields cross the boundary; server-derived context stays server-side.
       const payload = Object.fromEntries(
-        Object.keys({ ...empty, revision: 0 }).map((k) => [k, data[k]]),
+        (Object.keys({ ...empty, revision: 0 }) as (keyof typeof data)[]).map(
+          (k) => [k, data[k]],
+        ),
       );
       const r = editing
         ? await client.put(`/applications/${editing.id}`, payload)
@@ -117,7 +120,7 @@ export default function Applications() {
       setParams({ id: r.data.id });
       setDraft(null);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -204,10 +207,12 @@ export default function Applications() {
               </select>
             </label>
             <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                ["name", tr("copy.c089")],
-                ["company_name", tr("copy.c069")],
-              ].map(([key, label]) => (
+              {(
+                [
+                  ["name", tr("copy.c089")],
+                  ["company_name", tr("copy.c069")],
+                ] as const
+              ).map(([key, label]) => (
                 <label key={key}>
                   {label}
                   <Input
@@ -244,11 +249,13 @@ export default function Applications() {
               />
             </label>
             <div className="grid sm:grid-cols-3 gap-4">
-              {[
-                ["location", tr("copy.c073")],
-                ["employment", tr("copy.c159")],
-                ["salary", tr("copy.c160")],
-              ].map(([key, label]) => (
+              {(
+                [
+                  ["location", tr("copy.c073")],
+                  ["employment", tr("copy.c159")],
+                  ["salary", tr("copy.c160")],
+                ] as const
+              ).map(([key, label]) => (
                 <label key={key}>
                   {label}
                   <Input
@@ -262,10 +269,12 @@ export default function Applications() {
               ))}
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
-              {[
-                ["requirements", tr("copy.c161")],
-                ["responsibilities", tr("copy.c133")],
-              ].map(([key, label]) => (
+              {(
+                [
+                  ["requirements", tr("copy.c161")],
+                  ["responsibilities", tr("copy.c133")],
+                ] as const
+              ).map(([key, label]) => (
                 <label key={key}>
                   {label}
                   <Textarea
@@ -422,7 +431,7 @@ export default function Applications() {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            {["requirements", "responsibilities"].map((key) =>
+            {(["requirements", "responsibilities"] as const).map((key) =>
               selected.data[key]?.length ? (
                 <div key={key}>
                   <h3 className="font-semibold">

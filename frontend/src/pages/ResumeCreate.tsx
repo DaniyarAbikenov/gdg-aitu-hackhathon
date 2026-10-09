@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { Profile } from "@/types/career";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -11,6 +12,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useVacancyContext } from "@/hooks/useVacancyContext";
 import { VacancyContext } from "@/components/VacancyContext";
 import { useCapabilities } from "@/hooks/useCapabilities";
+function sectionStatus(value: unknown) {
+  if (Array.isArray(value))
+    return tr("dynamic.entries", { count: value.length });
+  return value ? tr("copy.c451") : tr("copy.c452");
+}
+
 export default function ResumeCreate() {
   useLocale();
   const blocks = {
@@ -73,7 +80,7 @@ export default function ResumeCreate() {
       if (r.data.questions.length) setQuestions(r.data.questions);
       else navigate(`/resume/${r.data.resume.resume_id}/edit`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -128,12 +135,7 @@ export default function ResumeCreate() {
               />
               {label}
               <span className="text-muted-foreground text-sm">
-                {profile &&
-                  (Array.isArray(profile[key])
-                    ? tr("dynamic.entries", { count: profile[key].length })
-                    : profile[key]
-                      ? tr("copy.c451")
-                      : tr("copy.c452"))}
+                {profile && sectionStatus(profile[key as keyof Profile])}
               </span>
             </label>
           ))}

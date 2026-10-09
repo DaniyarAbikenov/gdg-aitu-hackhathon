@@ -1,4 +1,5 @@
 import { tr, useLocale, displayLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { ResumeRecord } from "@/api/resume";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
@@ -48,7 +49,7 @@ export default function Resume() {
       const r = await uploadResume(file);
       navigate(`/resume/${r.resume_id}/edit`);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -69,7 +70,7 @@ export default function Resume() {
       setSaved(saved.map((r) => (r.resume_id === data.resume_id ? data : r)));
       setEditing(null);
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }

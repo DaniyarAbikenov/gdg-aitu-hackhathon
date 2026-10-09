@@ -2,16 +2,41 @@
 
 from dataclasses import asdict
 from datetime import UTC, datetime
+from typing import Any
 
+from app.application.career import CareerService
+from app.application.ports import VacancyParser
+from app.domain.career import CareerRecord
 from app.domain.errors import Conflict, InvalidDocument
+from app.domain.models import Session
+
+MIN_PASTED_VACANCY = 60
 
 
 class Applications:
-    def __init__(self, career):
+    def __init__(self, career: CareerService, parser: VacancyParser):
         self.career = career
         self.store = career.store
+        self.parser = parser
 
-    def save(self, session, data, record_id=None, revision=0):
+    def import_draft(self, session: Session, url: str, text: str, language: str) -> dict[str, Any]:
+        """Turn a link or pasted text into a reviewable draft; nothing is saved."""
+        text = text.strip()
+        if not url and len(text) < MIN_PASTED_VACANCY:
+            raise InvalidDocument(
+                "Paste a vacancy link or at least 60 characters of text.",
+                code="vacancy_import_failed",
+            )
+        self.career.sessions.consume_analysis(session)
+        return self.parser.parse(url, text, language)
+
+    def save(
+        self,
+        session: Session,
+        data: dict[str, Any],
+        record_id: str | None = None,
+        revision: int = 0,
+    ) -> CareerRecord:
         if data.get("resume_id"):
             self.career.resumes.get(session.owner, data["resume_id"])
         if data.get("company_id"):
@@ -53,7 +78,7 @@ class Applications:
             else self.store.create("vacancy", session, data)
         )
 
-    def list(self, session):
+    def list(self, session: Session) -> list[dict[str, Any]]:
         companies = {c.id: c.data for c in self.store.list("company", session.owner)}
         interviews = self.store.list("interview", session.owner)
         plans = self.store.list("plan", session.owner)
@@ -72,7 +97,7 @@ class Applications:
                 "skills": [],
                 **record.data,
             }
-            company = companies.get(data.get("company_id"), {})
+            company = companies.get(data.get("company_id") or "", {})
             data["company_name"] = company.get("name") or data["company_name"]
             data["company_description"] = company.get("description") or data["company_description"]
             related_interviews = [

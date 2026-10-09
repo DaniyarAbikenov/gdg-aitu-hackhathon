@@ -83,7 +83,7 @@ def test_import_preview_does_not_create_data_and_rejects_guests(client, app, mon
         client.post("/applications/import", json={"text": "A real vacancy " * 10}).status_code
         == 502
     )
-    reader = app.state.vacancy_reader
+    reader = app.state.container.use_cases.applications.parser
     reader.provider = "openai"
     calls = []
     result = {

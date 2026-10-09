@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { getErrorMessage } from "@/lib/errors";
 import { FileUp } from "lucide-react";
 import client from "@/api/client";
 import { structured } from "@/api/resume";
@@ -69,7 +70,7 @@ export function ProfilePdfImport({
           .map(([key]) => key),
       );
     } catch (e) {
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
       if (fileInput.current) fileInput.current.value = "";

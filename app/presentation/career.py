@@ -1,18 +1,31 @@
 """HTTP contracts for the connected CareerBot workflows."""
 
+import re
 from dataclasses import asdict
 from typing import Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
-from app.domain.errors import Conflict, NotFound
-from app.domain.models import ResumeFields as DomainFields
-from app.domain.models import Session
+from app.config import Settings
 from app.domain.periods import validate_history
-from app.presentation.api import COOKIE, workspace
+from app.presentation.dependencies import (
+    COOKIE,
+    Cases,
+    ClientId,
+    Workspace,
+    clear_session_cookie,
+    set_session_cookie,
+)
 from app.presentation.schemas import ResumeFields, StrictModel
+
+EMAIL = re.compile(r"[^\s@]+@[^\s@]+\.[^\s@]+")
+InterviewStyle = Literal["theoretical", "practical"]
+
+
+def theory_only() -> list[InterviewStyle]:
+    return ["theoretical"]
 
 
 class Credentials(StrictModel):
@@ -23,9 +36,7 @@ class Credentials(StrictModel):
     @field_validator("email")
     @classmethod
     def email_address(cls, value):
-        import re
-
-        if not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", value):
+        if not EMAIL.fullmatch(value):
             raise ValueError("Enter a valid email address")
         return value.strip().casefold()
 
@@ -82,9 +93,7 @@ class InterviewStart(StrictModel):
     vacancy_title: str = Field(default="", max_length=200)
     company_id: str = Field(default="", max_length=36)
     vacancy_id: str = Field(default="", max_length=36)
-    modes: list[Literal["theoretical", "practical"]] = Field(
-        default_factory=lambda: ["theoretical"], min_length=1, max_length=2
-    )
+    modes: list[InterviewStyle] = Field(default_factory=theory_only, min_length=1, max_length=2)
     mode: Literal["text", "voice"] = "text"
     company_description: str = Field(min_length=3, max_length=3000)
     job_description: str = Field(min_length=10, max_length=10000)
@@ -111,75 +120,43 @@ class ModuleUpdate(Revision):
     evidence: str = Field(default="", max_length=2000)
 
 
-def career_router(settings):
+def career_router(settings: Settings) -> APIRouter:
     routes = APIRouter()
 
-    def client_id(request):
-        return request.client.host if request.client else "unknown"
-
-    def set_session(request, response, token):
-        old = request.cookies.get(COOKIE)
-        if old:
-            request.app.state.sessions.delete(old)
-        response.set_cookie(
-            COOKIE,
-            token,
-            httponly=True,
-            secure=settings.secure_cookie,
-            samesite="strict",
-            max_age=settings.session_hours * 3600,
-            path="/",
-        )
+    def start_session(request: Request, response: Response, cases: Cases, token: str) -> None:
+        cases.workspaces.sign_out(request.cookies.get(COOKIE))
+        set_session_cookie(response, token, settings)
 
     @routes.post("/auth/register", status_code=201)
     def register(
         payload: Credentials,
         request: Request,
         response: Response,
-        current: Session = Depends(workspace),
+        cases: Cases,
+        current: Workspace,
+        client: ClientId,
     ):
-        if payload.email.casefold() in {
-            e.strip().casefold() for e in settings.admin_emails.split(",") if e.strip()
-        }:
-            raise HTTPException(
-                403, "This administrator address must be provisioned on the server."
-            )
-        try:
-            token = request.app.state.career.register(
-                current, payload.email, payload.password, client_id(request)
-            )
-        except Conflict as exc:
-            raise HTTPException(409, "Account already exists. Sign in instead.") from exc
-        set_session(request, response, token)
+        token = cases.auth.register(current, payload.email, payload.password, client)
+        start_session(request, response, cases, token)
         return {"authenticated": True}
 
     @routes.post("/auth/login")
-    def login(payload: Credentials, request: Request, response: Response):
-        try:
-            token = request.app.state.career.login(
-                payload.email, payload.password, client_id(request)
-            )
-        except NotFound as exc:
-            raise HTTPException(401, "Incorrect email or password.") from exc
-        set_session(request, response, token)
+    def login(
+        payload: Credentials, request: Request, response: Response, cases: Cases, client: ClientId
+    ):
+        token = cases.auth.login(payload.email, payload.password, client)
+        start_session(request, response, cases, token)
         return {"authenticated": True}
 
     @routes.post("/auth/logout", status_code=204)
-    def logout(request: Request, response: Response):
-        token = request.cookies.get(COOKIE)
-        if token:
-            request.app.state.sessions.delete(token)
-        response.delete_cookie(COOKIE, path="/")
+    def logout(request: Request, response: Response, cases: Cases):
+        cases.workspaces.sign_out(request.cookies.get(COOKIE))
+        clear_session_cookie(response)
 
     @routes.post("/auth/google/nonce")
-    def google_nonce(request: Request, current: Session = Depends(workspace)):
-        if not settings.google_client_id:
-            raise HTTPException(503, "Google sign-in is not configured on this server.")
-        if current.persistent:
-            raise HTTPException(409, "Sign out before switching accounts.")
-        request.app.state.sessions.consume_auth(client_id(request))
+    def google_nonce(cases: Cases, current: Workspace, client: ClientId):
         return {
-            "nonce": request.app.state.sessions.google_nonce(current.owner),
+            "nonce": cases.auth.google_nonce(current, client),
             "client_id": settings.google_client_id,
         }
 
@@ -188,31 +165,12 @@ def career_router(settings):
         payload: GoogleCredential,
         request: Request,
         response: Response,
-        current: Session = Depends(workspace),
+        cases: Cases,
+        current: Workspace,
+        client: ClientId,
     ):
-        if not settings.google_client_id:
-            raise HTTPException(503, "Google sign-in is not configured on this server.")
-        if current.persistent:
-            raise HTTPException(409, "Sign out before switching accounts.")
-        try:
-            nonce = request.app.state.sessions.consume_google_nonce(current.owner)
-            identity = request.app.state.google_login.verify(payload.credential, nonce)
-            owner = request.app.state.career.store.google_account(
-                identity["subject"], identity["email"], current.owner
-            )
-        except NotFound as exc:
-            raise HTTPException(
-                401, "Google sign-in expired or could not be verified. Try again."
-            ) from exc
-        except Conflict as exc:
-            raise HTTPException(
-                409, "An account with this email exists. Use its original sign-in method."
-            ) from exc
-        account = request.app.state.career.store.account_for_owner(owner)
-        token = request.app.state.sessions.create(
-            client_id(request), owner=owner, auth_version=account["auth_version"]
-        )
-        set_session(request, response, token)
+        token = cases.auth.google_sign_in(current, payload.credential, client)
+        start_session(request, response, cases, token)
         return {"authenticated": True}
 
     @routes.get("/auth/options")
@@ -220,18 +178,16 @@ def career_router(settings):
         return {"postgres": True, "google": bool(settings.google_client_id)}
 
     @routes.get("/user/me")
-    def me(request: Request, current: Session = Depends(workspace)):
+    def me(cases: Cases, current: Workspace):
         return {
             "uid": current.owner,
             "authenticated": current.persistent,
-            "email": request.app.state.career.store.email_for_owner(current.owner)
-            if current.persistent
-            else "",
+            "email": cases.auth.email(current),
         }
 
     @routes.get("/user/profile")
-    def profile(request: Request, current: Session = Depends(workspace)):
-        record = request.app.state.career.profile(current)
+    def profile(cases: Cases, current: Workspace):
+        record = cases.career.profile(current)
         return (
             asdict(record)
             if record
@@ -239,36 +195,20 @@ def career_router(settings):
         )
 
     @routes.post("/user/profile/update")
-    def save_profile(payload: ProfileSave, request: Request, current: Session = Depends(workspace)):
-        return request.app.state.career.save_profile(
-            current, payload.profile.model_dump(), payload.revision
-        )
+    def save_profile(payload: ProfileSave, cases: Cases, current: Workspace):
+        return cases.career.save_profile(current, payload.profile.model_dump(), payload.revision)
 
     @routes.post("/resume/{resume_id}/adapt")
-    def adapt(
-        resume_id: UUID, payload: Adapt, request: Request, current: Session = Depends(workspace)
-    ):
-        return request.app.state.career.adapt(
-            current, str(resume_id), payload.revision, payload.jd_text
-        )
+    def adapt(resume_id: UUID, payload: Adapt, cases: Cases, current: Workspace):
+        return cases.career.adapt(current, str(resume_id), payload.revision, payload.jd_text)
 
     @routes.get("/resume/{resume_id}/versions")
-    def versions(resume_id: UUID, request: Request, current: Session = Depends(workspace)):
-        request.app.state.repository.get(current.owner, str(resume_id))
-        return [
-            v
-            for v in request.app.state.career.store.list("version", current.owner)
-            if v.data["resume_id"] == str(resume_id)
-        ]
+    def versions(resume_id: UUID, cases: Cases, current: Workspace):
+        return cases.resumes.versions(current, str(resume_id))
 
     @routes.post("/resume/{resume_id}/versions", status_code=201)
-    def save_version(
-        resume_id: UUID,
-        payload: VersionSave,
-        request: Request,
-        current: Session = Depends(workspace),
-    ):
-        return request.app.state.career.save_version(
+    def save_version(resume_id: UUID, payload: VersionSave, cases: Cases, current: Workspace):
+        return cases.career.save_version(
             current,
             str(resume_id),
             payload.revision,
@@ -278,67 +218,50 @@ def career_router(settings):
         )
 
     @routes.post("/versions/{version_id}/restore")
-    def restore(
-        version_id: UUID, payload: Revision, request: Request, current: Session = Depends(workspace)
-    ):
-        return request.app.state.career.restore_version(current, str(version_id), payload.revision)
+    def restore(version_id: UUID, payload: Revision, cases: Cases, current: Workspace):
+        return cases.career.restore_version(current, str(version_id), payload.revision)
 
     @routes.get("/versions/{version_id}/pdf")
-    def version_pdf(version_id: UUID, request: Request, current: Session = Depends(workspace)):
-        version = request.app.state.career.store.get("version", current.owner, str(version_id))
-        pdf = request.app.state.service.documents.pdf(DomainFields(**version.data["fields"]))
+    def version_pdf(version_id: UUID, cases: Cases, current: Workspace):
         return Response(
-            pdf,
+            cases.resumes.export_version(current, str(version_id), "pdf"),
             media_type="application/pdf",
             headers={"Content-Disposition": 'attachment; filename="resume-version.pdf"'},
         )
 
     @routes.post("/interview/start", status_code=201)
-    def start_interview(
-        payload: InterviewStart, request: Request, current: Session = Depends(workspace)
-    ):
-        service = request.app.state.career
-        return service.public_interview(service.start_interview(current, payload.model_dump()))
-
-    @routes.get("/interview")
-    def interviews(request: Request, current: Session = Depends(workspace)):
-        service = request.app.state.career
-        return [service.public_interview(r) for r in service.store.list("interview", current.owner)]
-
-    @routes.get("/interview/{interview_id}")
-    def interview(interview_id: UUID, request: Request, current: Session = Depends(workspace)):
-        service = request.app.state.career
-        return service.public_interview(
-            service.store.get("interview", current.owner, str(interview_id))
+    def start_interview(payload: InterviewStart, cases: Cases, current: Workspace):
+        return cases.career.public_interview(
+            cases.career.start_interview(current, payload.model_dump())
         )
 
+    @routes.get("/interview")
+    def interviews(cases: Cases, current: Workspace):
+        return cases.career.interviews(current)
+
+    @routes.get("/interview/{interview_id}")
+    def interview(interview_id: UUID, cases: Cases, current: Workspace):
+        return cases.career.interview(current, str(interview_id))
+
     @routes.post("/interview/{interview_id}/answer")
-    def answer(
-        interview_id: UUID, payload: Answer, request: Request, current: Session = Depends(workspace)
-    ):
-        service = request.app.state.career
-        return service.public_interview(
-            service.answer(current, str(interview_id), payload.revision, payload.answer)
+    def answer(interview_id: UUID, payload: Answer, cases: Cases, current: Workspace):
+        return cases.career.public_interview(
+            cases.career.answer(current, str(interview_id), payload.revision, payload.answer)
         )
 
     @routes.post("/resume/{resume_id}/apply")
-    def apply_proposal(
-        resume_id: UUID,
-        payload: ApplyProposal,
-        request: Request,
-        current: Session = Depends(workspace),
-    ):
-        return request.app.state.career.apply_proposal(
+    def apply_proposal(resume_id: UUID, payload: ApplyProposal, cases: Cases, current: Workspace):
+        return cases.career.apply_proposal(
             current, str(resume_id), payload.revision, payload.proposal_id
         )
 
     @routes.get("/plan")
-    def plans(request: Request, current: Session = Depends(workspace)):
-        return request.app.state.career.store.list("plan", current.owner)
+    def plans(cases: Cases, current: Workspace):
+        return cases.career.plans(current)
 
     @routes.post("/plan", status_code=201)
-    def create_plan(payload: PlanCreate, request: Request, current: Session = Depends(workspace)):
-        return request.app.state.career.create_plan(
+    def create_plan(payload: PlanCreate, cases: Cases, current: Workspace):
+        return cases.career.create_plan(
             current,
             payload.goal,
             str(payload.resume_id) if payload.resume_id else None,
@@ -350,13 +273,9 @@ def career_router(settings):
 
     @routes.post("/plan/{plan_id}/modules/{module_id}")
     def module(
-        plan_id: UUID,
-        module_id: int,
-        payload: ModuleUpdate,
-        request: Request,
-        current: Session = Depends(workspace),
+        plan_id: UUID, module_id: int, payload: ModuleUpdate, cases: Cases, current: Workspace
     ):
-        return request.app.state.career.complete_module(
+        return cases.career.complete_module(
             current,
             str(plan_id),
             str(module_id),
@@ -366,39 +285,28 @@ def career_router(settings):
         )
 
     @routes.get("/plan/{plan_id}/export")
-    def export_plan(plan_id: UUID, request: Request, current: Session = Depends(workspace)):
-        plan = request.app.state.career.store.get("plan", current.owner, str(plan_id))
-        lines = [plan.data["goal"], plan.data["explanation"], f"Provider: {plan.data['provider']}"]
-        for week in plan.data["modules"]:
-            lines += [
-                f"\nWeek {week['id']}: {week['title']} ({week['hours']} hours)",
-                *week["goals"],
-                week["exercise"],
-                "Resource topic: " + week["resource_topic"],
-                "Completed: " + str(week["completed"]),
-                "Evidence: " + week["evidence"],
-            ]
+    def export_plan(plan_id: UUID, cases: Cases, current: Workspace):
         return Response(
-            "\n".join(lines),
+            cases.career.plan_text(current, str(plan_id)),
             media_type="text/plain",
             headers={"Content-Disposition": 'attachment; filename="career-plan.txt"'},
         )
 
     @routes.get("/progress")
-    def progress(request: Request, current: Session = Depends(workspace)):
-        return request.app.state.career.progress(current)
+    def progress(cases: Cases, current: Workspace):
+        return cases.career.progress(current)
 
     @routes.post("/progress/rewards/{key}", status_code=201)
-    def claim_reward(key: str, request: Request, current: Session = Depends(workspace)):
-        return request.app.state.career.claim_reward(current, key)
+    def claim_reward(key: str, cases: Cases, current: Workspace):
+        return cases.career.claim_reward(current, key)
 
     @routes.delete("/career/{kind}/{record_id}", status_code=204)
     def delete_record(
         kind: Literal["plan", "interview", "version"],
         record_id: UUID,
-        request: Request,
-        current: Session = Depends(workspace),
+        cases: Cases,
+        current: Workspace,
     ):
-        request.app.state.career.store.delete(kind, current.owner, str(record_id))
+        cases.career.delete(current, kind, str(record_id))
 
     return routes

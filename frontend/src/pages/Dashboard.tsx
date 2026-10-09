@@ -1,4 +1,5 @@
 import { tr, useLocale, displayLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import type { OverviewData } from "@/types/product";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
@@ -9,9 +10,17 @@ import { Button } from "@/components/ui/button";
 
 import { NextSteps } from "@/components/NextSteps";
 
+type Widget =
+  | "resumes"
+  | "skills"
+  | "companies"
+  | "learning"
+  | "activity"
+  | "journey";
+
 export default function Dashboard() {
   useLocale();
-  const labels = {
+  const labels: Record<Widget, string> = {
     resumes: tr("copy.c242"),
     skills: tr("copy.c243"),
     companies: tr("copy.c244"),
@@ -22,7 +31,7 @@ export default function Dashboard() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [prefs, setPrefs] = useState({
     revision: 0,
-    data: { widgets: Object.keys(labels) },
+    data: { widgets: Object.keys(labels) as Widget[] },
   });
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -42,7 +51,7 @@ export default function Dashboard() {
       .catch((e) => setError(e.message));
   };
   useEffect(load, []);
-  const toggle = async (key: string) => {
+  const toggle = async (key: Widget) => {
     setBusy(true);
     try {
       const widgets = prefs.data.widgets.includes(key)
@@ -56,7 +65,7 @@ export default function Dashboard() {
       setPrefs(r.data);
     } catch (e) {
       setPrefs(prefs);
-      setError(e.message);
+      setError(getErrorMessage(e));
     } finally {
       setBusy(false);
     }
@@ -78,17 +87,19 @@ export default function Dashboard() {
         {editing && (
           <fieldset className="flex flex-wrap gap-4 rounded-lg border p-4">
             <legend>{tr("copy.c251")}</legend>
-            {Object.entries(labels).map(([key, label]) => (
-              <label key={key} className="flex gap-2 items-center">
-                <input
-                  type="checkbox"
-                  disabled={busy}
-                  checked={prefs.data.widgets.includes(key)}
-                  onChange={() => toggle(key)}
-                />
-                {label}
-              </label>
-            ))}
+            {(Object.entries(labels) as [Widget, string][]).map(
+              ([key, label]) => (
+                <label key={key} className="flex gap-2 items-center">
+                  <input
+                    type="checkbox"
+                    disabled={busy}
+                    checked={prefs.data.widgets.includes(key)}
+                    onChange={() => toggle(key)}
+                  />
+                  {label}
+                </label>
+              ),
+            )}
           </fieldset>
         )}
         {error && (

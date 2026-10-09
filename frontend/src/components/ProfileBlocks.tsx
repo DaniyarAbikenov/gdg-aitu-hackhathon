@@ -201,8 +201,8 @@ export function ProfileBlocks({
                   );
                 })}
                 {section.key === "experience" &&
-                  row.date_from &&
-                  row.date_to &&
+                  Boolean(row.date_from) &&
+                  Boolean(row.date_to) &&
                   canonicalPeriod(String(row.date_from)) &&
                   canonicalPeriod(String(row.date_to)) &&
                   canonicalPeriod(String(row.date_to)) !== "present" &&

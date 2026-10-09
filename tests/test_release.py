@@ -148,8 +148,8 @@ def test_atomic_proposal_preserves_both_snapshots_and_rejects_stale_replay(clien
 def test_password_change_revokes_all_old_sessions_without_deleting_data(client, app):
     email = member(client)
     application(client)
-    owner = app.state.sessions.resolve(client.cookies.get("career_session")).owner
-    old_cookie = app.state.sessions.create("other-device", owner=owner)
+    owner = app.state.container.sessions.resolve(client.cookies.get("career_session")).owner
+    old_cookie = app.state.container.sessions.create("other-device", owner=owner)
     client.post("/auth/login", json={"email": email, "password": PASSWORD})
     second_cookie = client.cookies.get("career_session")
     assert (
@@ -195,10 +195,12 @@ def test_export_and_confirmed_deletion_preserve_other_accounts(client, app):
     assert client.delete("/session").status_code == 403
     assert len(client.get("/resume").json()) == 1
     cookie = client.cookies.get("career_session")
-    owner = app.state.sessions.resolve(cookie).owner
+    owner = app.state.container.sessions.resolve(cookie).owner
     # Another account and shared reference data must survive private deletion.
     other_owner = str(uuid4())
-    app.state.career.store.register("other@example.com", "not-a-real-password", other_owner)
+    app.state.container.career_store.register(
+        "other@example.com", "not-a-real-password", other_owner
+    )
     assert (
         client.post(
             "/account/delete", json={"password": PASSWORD, "email": "wrong@example.com"}
@@ -217,7 +219,7 @@ def test_export_and_confirmed_deletion_preserve_other_accounts(client, app):
     )
     client.cookies.set("career_session", cookie)
     assert client.get("/account/export").status_code == 401
-    with app.state.repository.sessions() as db:
+    with app.state.container.repository.sessions() as db:
         assert db.get(AccountRow, owner) is None
         assert db.get(AccountRow, other_owner) is not None
         for table in [ResumeRow, *TABLES.values()]:

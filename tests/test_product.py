@@ -8,11 +8,17 @@ import httpx
 import pytest
 from sqlalchemy import text
 
+from app.application.auth import Administrators
 from app.config import Settings
 from app.domain.errors import InvalidDocument, ProviderUnavailable
 from app.domain.models import ResumeFields
 from app.infrastructure.documents import Documents, extract_text
 from app.infrastructure.voice import RealtimeVoice
+
+
+def allow_admins(client, emails):
+    """Administrator allowlists are read once at startup; tests swap the parsed policy."""
+    client.app.state.container.use_cases.auth.administrators = Administrators.parse(emails)
 
 
 def member(client, email=None):
@@ -130,7 +136,7 @@ def test_composer_clarifications_and_document_import(settings, client):
     }
     documents = Documents(settings, httpx.MockTransport(lambda r: response(output)))
     assert documents.compose({"full_name": "Alex"}, "Engineer", "", "")["questions"]
-    client.app.state.service.documents = documents
+    client.app.state.container.use_cases.resumes.documents = documents
     member(client)
     result = client.post(
         "/resume/create", json={"title": "AI draft", "position": "Engineer", "use_ai": True}
@@ -251,7 +257,7 @@ def test_learning_activity_idempotency_and_calendar(client, app):
     stats = client.get("/overview").json()
     assert stats["xp"] == 25 and stats["week"]["learning_current"] == 1
     owner = client.get("/user/me").json()["uid"]
-    with app.state.repository.engine.begin() as db:
+    with app.state.container.repository.engine.begin() as db:
         db.execute(
             text("UPDATE career_activity SET created_at = :old WHERE owner = :owner"),
             {"old": datetime.now(UTC) - timedelta(days=7), "owner": owner},
@@ -266,7 +272,7 @@ def test_knowledge_admin_authorization_drafts_and_conflicts(client, settings):
     assert client.get("/capabilities").json()["admin"] is False
     assert client.get("/admin/knowledge").status_code == 403
     assert len(client.get("/knowledge").json()) >= 8
-    settings.admin_emails = email
+    allow_admins(client, email)
     assert client.get("/capabilities").json()["admin"] is True
     value = {
         "title": f"Article {uuid4()}",
@@ -341,7 +347,7 @@ def test_voice_signalling_and_failure_contract():
 
 def test_voice_transcript_persists_finish_evaluation_and_ownership(client, app):
     member(client)
-    app.state.voice = RealtimeVoice(
+    app.state.container.use_cases.voice.voice = RealtimeVoice(
         voice_settings(),
         httpx.MockTransport(
             lambda r: httpx.Response(
@@ -410,7 +416,7 @@ def test_voice_transcript_persists_finish_evaluation_and_ownership(client, app):
 
 
 def test_admin_address_cannot_be_claimed_through_registration(client, settings):
-    settings.admin_emails = "admin@a2d.local"
+    allow_admins(client, "admin@a2d.local")
     response = client.post(
         "/auth/register", json={"email": "admin@a2d.local", "password": "some long password"}
     )

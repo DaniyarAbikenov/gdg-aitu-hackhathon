@@ -41,6 +41,8 @@ export async function loginWithGoogle() {
         reject(new Error("Google sign-in could not load."));
       document.head.append(script);
     });
+  const google = window.google;
+  if (!google) throw new Error("Google sign-in could not load.");
   const credential = await new Promise<string>((resolve, reject) => {
     const dialog = document.createElement("dialog");
     const button = document.createElement("div");
@@ -61,7 +63,7 @@ export async function loginWithGoogle() {
       finish();
       reject(new Error("Google sign-in cancelled."));
     };
-    window.google.accounts.id.initialize({
+    google.accounts.id.initialize({
       client_id: data.client_id,
       nonce: data.nonce,
       callback: (result: { credential: string }) => {
@@ -69,7 +71,7 @@ export async function loginWithGoogle() {
         resolve(result.credential);
       },
     });
-    window.google.accounts.id.renderButton(button, {
+    google.accounts.id.renderButton(button, {
       theme: "outline",
       size: "large",
     });

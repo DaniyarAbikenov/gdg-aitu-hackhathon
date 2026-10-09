@@ -43,9 +43,13 @@ def client(app, settings):
     with TestClient(app) as client:
         client.post("/api/session")
         yield client
-        keys = list(app.state.sessions.client.scan_iter(app.state.sessions.namespace + ":*"))
+        keys = list(
+            app.state.container.sessions.client.scan_iter(
+                app.state.container.sessions.namespace + ":*"
+            )
+        )
         if keys:
-            app.state.sessions.client.delete(*keys)
+            app.state.container.sessions.client.delete(*keys)
 
 
 @pytest.fixture

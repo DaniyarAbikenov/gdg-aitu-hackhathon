@@ -1,4 +1,5 @@
 import { tr, useLocale } from "@/i18n/copy";
+import { getErrorMessage } from "@/lib/errors";
 import { resumeText } from "@/lib/resumeText";
 import client from "@/api/client";
 import { useEffect, useState } from "react";
@@ -81,7 +82,7 @@ export default function ResumeImprove() {
       setImprovements(resp.improvements);
       setAnalyzed(true);
     } catch (e) {
-      setError(e?.response?.data?.detail || "Error analyzing resume");
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -198,7 +199,7 @@ export default function ResumeImprove() {
                         items.filter((item) => item.section !== impr.section),
                       );
                     } catch (e) {
-                      setError(e.message);
+                      setError(getErrorMessage(e));
                     } finally {
                       setLoading(false);
                     }

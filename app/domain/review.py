@@ -44,7 +44,7 @@ SKILLS = {
 }
 
 
-def skills_in(text):
+def skills_in(text: str) -> list[str]:
     text = text.casefold()
     return [
         skill
@@ -53,10 +53,10 @@ def skills_in(text):
     ]
 
 
-def extract_fields(text):
+def extract_fields(text: str) -> ResumeFields:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     email = re.search(r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}", text)
-    sections = {
+    sections: dict[str, list[str]] = {
         key: []
         for key in ["summary", "experience", "education", "projects", "certificates", "languages"]
     }
@@ -101,7 +101,7 @@ def extract_fields(text):
     )
 
 
-def compare(fields: ResumeFields, jd_text: str):
+def compare(fields: ResumeFields, jd_text: str) -> Analysis:
     # Only verified resume fields participate; job-description terms never become claimed skills.
     resume_skills = set(skills_in(json.dumps(asdict(fields))))
     requested = skills_in(jd_text)
