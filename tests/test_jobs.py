@@ -6,10 +6,10 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from rq import SimpleWorker
 from rq.serializers import JSONSerializer
+from test_career import CONTEXT
+from test_product import member
 
 from app import worker
-from tests.test_career import CONTEXT
-from tests.test_product import member
 
 LATER = {"Prefer": "respond-async"}
 JOB = "Python developer building and testing public APIs"

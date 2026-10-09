@@ -14,6 +14,7 @@ Operation = Literal[
     "interview.answer",
     "plan.create",
     "vacancy.import",
+    "letter.draft",
 ]
 OPERATIONS: tuple[str, ...] = get_args(Operation)
 

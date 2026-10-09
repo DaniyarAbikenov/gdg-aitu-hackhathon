@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from app.config import Settings
 from app.domain.errors import ProviderUnavailable
 from app.infrastructure.ai import OpenAIJSON, strict_schema, structured_ai
-from app.infrastructure.coach import Evaluation, Improvements, Plan, Questions
+from app.infrastructure.coach import Coach, CoverLetter, Evaluation, Improvements, Plan, Questions
 from app.infrastructure.documents import ExtractedResume
 from app.infrastructure.reviewer import ProviderAdvice
 
@@ -32,7 +32,8 @@ def completed(value):
 
 
 @pytest.mark.parametrize(
-    "schema", [Evaluation, Improvements, Plan, Questions, ExtractedResume, ProviderAdvice]
+    "schema",
+    [Evaluation, Improvements, Plan, Questions, ExtractedResume, ProviderAdvice, CoverLetter],
 )
 def test_strict_schemas(schema):
     def check(node):
@@ -151,3 +152,20 @@ def test_openai_document_extraction_and_review():
     assert result.suggestions[0].title == "Explain impact"
     assert bodies[0]["input"][0]["content"][1]["type"] == "input_file"
     assert len(bodies[1]["input"][0]["content"]) == 1
+
+
+def test_cover_letter_sends_only_confirmed_facts():
+    letter = {"text": ("A factual letter. " * 15).strip(), "facts_used": ["Python"]}
+    facts = {"full_name": "Alex", "skills": ["Python"], "summary": "", "experience": []}
+
+    def handle(request):
+        body = json.loads(request.content)
+        prompt = body["input"][0]["content"][0]["text"]
+        assert "never add employers" in body["instructions"]
+        assert '"candidate": {"full_name": "Alex"' in prompt
+        assert '"missing_skills": ["Docker"]' in prompt
+        return httpx.Response(200, json=completed(letter))
+
+    coach = Coach(config(), httpx.MockTransport(handle))
+    result = coach.cover_letter(facts, {"name": "Backend"}, ["Python"], ["Docker"], "en")
+    assert result == {**letter, "provider": "openai"}

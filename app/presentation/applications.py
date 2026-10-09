@@ -15,7 +15,7 @@ from app.presentation.dependencies import (
     clear_session_cookie,
 )
 from app.presentation.jobs import ACCEPTED, accepted
-from app.presentation.responses import ApplicationItem, Record
+from app.presentation.responses import ApplicationItem, CoverLetterDraft, Record
 
 
 class Application(StrictModel):
@@ -39,6 +39,14 @@ class Application(StrictModel):
     notes: str = Field(default="", max_length=5000)
     next_action: str = Field(default="", max_length=500)
     follow_up: date | None = None
+    # Omitted means "keep the saved letter", so older clients never erase it.
+    cover_letter: str | None = Field(default=None, max_length=6000)
+
+    def document(self) -> dict:
+        data = self.model_dump(mode="json", exclude={"revision"})
+        if data["cover_letter"] is None:
+            del data["cover_letter"]
+        return data
 
     @field_validator("name", "company_name", "description")
     @classmethod
@@ -66,6 +74,10 @@ class Company(StrictModel):
     notes: str = Field(default="", max_length=5000)
     assignments: list[Assignment] = Field(default_factory=list, max_length=30)
     archived: bool = False
+
+
+class LetterRequest(StrictModel):
+    language: Literal["ru", "en", "kk"] = "ru"
 
 
 class VacancyImport(StrictModel):
@@ -117,6 +129,31 @@ def applications_router() -> APIRouter:
             return accepted(cases.jobs.submit(current, "vacancy.import", **arguments))
         return cases.applications.import_draft(current, **arguments)
 
+    @routes.post(
+        "/applications/{application_id}/cover-letter",
+        response_model=CoverLetterDraft,
+        responses=ACCEPTED,
+    )
+    def cover_letter(
+        application_id: UUID,
+        payload: LetterRequest,
+        cases: Cases,
+        current: Member,
+        later: RespondAsync,
+    ):
+        arguments = {"vacancy_id": str(application_id), "language": payload.language}
+        if later:
+            return accepted(cases.jobs.submit(current, "letter.draft", **arguments))
+        return cases.applications.cover_letter(current, **arguments)
+
+    @routes.get("/applications/calendar.ics")
+    def follow_up_calendar(cases: Cases, current: Member):
+        return Response(
+            cases.applications.follow_ups(current),
+            media_type="text/calendar; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="career-follow-ups.ics"'},
+        )
+
     @routes.get("/applications", response_model=list[ApplicationItem])
     def applications(cases: Cases, current: Member):
         return cases.applications.board(current)
@@ -125,7 +162,7 @@ def applications_router() -> APIRouter:
     def create(payload: Application, cases: Cases, current: Member):
         return cases.applications.save(
             current,
-            payload.model_dump(mode="json", exclude={"revision"}),
+            payload.document(),
             revision=payload.revision,
         )
 
@@ -133,7 +170,7 @@ def applications_router() -> APIRouter:
     def update(application_id: UUID, payload: Application, cases: Cases, current: Member):
         return cases.applications.save(
             current,
-            payload.model_dump(mode="json", exclude={"revision"}),
+            payload.document(),
             str(application_id),
             payload.revision,
         )

@@ -56,6 +56,45 @@ class Plan(Contract):
     modules: list[Module] = Field(min_length=8, max_length=8)
 
 
+class CoverLetter(Contract):
+    text: str = Field(min_length=200, max_length=5000)
+    facts_used: list[str] = Field(min_length=1, max_length=12)
+
+
+LOCAL_LETTER = {
+    "en": {
+        "greeting": "Dear {company} team,",
+        "apply": "I am applying for the {vacancy} position.",
+        "skills": "Skills from my profile that match the role: {skills}.",
+        "experience": "Most recently I worked as {role} at {employer}.",
+        "project": "One project I can discuss in detail: {project}.",
+        "missing": "I have not yet worked with {skills} and would be glad to discuss how I would close that gap.",
+        "closing": "Thank you for your time. I would welcome the chance to talk.",
+        "signature": "Kind regards,",
+    },
+    "ru": {
+        "greeting": "Здравствуйте, команда {company}!",
+        "apply": "Откликаюсь на вакансию «{vacancy}».",
+        "skills": "Навыки из моего профиля, которые нужны в этой роли: {skills}.",
+        "experience": "Последнее место работы: {role} в {employer}.",
+        "project": "Проект, о котором могу подробно рассказать: {project}.",
+        "missing": "С {skills} я пока не работал(а) и готов(а) обсудить, как быстро закрою этот пробел.",
+        "closing": "Спасибо за внимание. Буду рад(а) пообщаться.",
+        "signature": "С уважением,",
+    },
+    "kk": {
+        "greeting": "Құрметті {company} командасы!",
+        "apply": "«{vacancy}» лауазымына өтінім беремін.",
+        "skills": "Профилімдегі осы рөлге сәйкес дағдылар: {skills}.",
+        "experience": "Соңғы жұмыс орным: {employer}, {role}.",
+        "project": "Толық айтып бере алатын жобам: {project}.",
+        "missing": "{skills} бойынша тәжірибем әлі жоқ, бірақ оны қалай меңгеретінімді талқылауға дайынмын.",
+        "closing": "Уақыт бөлгеніңізге рахмет. Сөйлесуге қуанышты боламын.",
+        "signature": "Құрметпен,",
+    },
+}
+
+
 class Coach:
     def __init__(self, settings, transport=None):
         self.provider = settings.provider
@@ -227,3 +266,50 @@ class Coach:
         for index, module in enumerate(result["modules"]):
             module.update(id=str(index + 1), completed=False, evidence="")
         return {**result, "provider": self.provider, "goal": goal}
+
+    def cover_letter(self, facts, vacancy, matched, missing, language):
+        if self.provider == "unconfigured":
+            raise ProviderUnavailable
+        if self.provider in {"gemini", "openai"}:
+            result = self.ai.generate(
+                "Write a cover letter of 150 to 250 words for this vacancy in the requested language. "
+                "Use only facts from `candidate`: never add employers, dates, numbers, achievements or "
+                "skills that are not there. Relate matched skills to the vacancy. Do not claim missing "
+                "skills; you may say the candidate is ready to learn them. No placeholders. "
+                "List every candidate fact the letter relies on in facts_used.",
+                {
+                    "candidate": facts,
+                    "vacancy": vacancy,
+                    "matched_skills": matched,
+                    "missing_skills": missing,
+                    "language": language,
+                },
+                CoverLetter,
+            )
+        else:
+            copy = LOCAL_LETTER[language]
+            used = []
+            lines = [
+                copy["greeting"].format(company=vacancy.get("company_name") or "—"),
+                "",
+                copy["apply"].format(vacancy=vacancy.get("name") or facts["position"]),
+            ]
+            if facts["summary"]:
+                lines.append(facts["summary"])
+                used.append(facts["summary"])
+            if matched:
+                lines.append(copy["skills"].format(skills=", ".join(matched)))
+                used += matched
+            job = next((e for e in facts["experience"] if e.get("role") and e.get("company")), None)
+            if job:
+                lines.append(copy["experience"].format(role=job["role"], employer=job["company"]))
+                used.append(f"{job['role']}, {job['company']}")
+            project = next((p["title"] for p in facts["projects"] if p.get("title")), None)
+            if project:
+                lines.append(copy["project"].format(project=project))
+                used.append(project)
+            if missing:
+                lines.append(copy["missing"].format(skills=", ".join(missing[:3])))
+            lines += ["", copy["closing"], "", copy["signature"], facts["full_name"]]
+            result = {"text": "\n".join(lines).strip(), "facts_used": used}
+        return {**result, "provider": self.provider}

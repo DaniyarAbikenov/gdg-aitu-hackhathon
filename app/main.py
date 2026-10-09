@@ -117,7 +117,9 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         learning=LearningService(store, repository, sessions, coach, profile),
         progress=progress,
         voice=VoiceInterviews(interviews, sessions, RealtimeVoice(settings), coach),
-        applications=Applications(store, repository, sessions, VacancyReader(settings)),
+        applications=Applications(
+            store, repository, sessions, VacancyReader(settings), coach, profile
+        ),
         companies=Companies(store),
         overview=Overview(store, repository, progress, profile, activity),
         skills=SkillCatalog(PostgresSkillRepository(repository.engine), sessions),

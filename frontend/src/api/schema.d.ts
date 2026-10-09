@@ -125,6 +125,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/applications/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Follow Up Calendar */
+        get: operations["follow_up_calendar_applications_calendar_ics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/applications/import": {
         parameters: {
             query?: never;
@@ -153,6 +170,23 @@ export interface paths {
         /** Update */
         put: operations["update_applications__application_id__put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{application_id}/cover-letter": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cover Letter */
+        post: operations["cover_letter_applications__application_id__cover_letter_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -549,6 +583,23 @@ export interface paths {
         put?: never;
         /** Create Plan */
         post: operations["create_plan_plan_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/plan/{plan_id}/calendar.ics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plan Calendar */
+        get: operations["plan_calendar_plan__plan_id__calendar_ics_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1094,6 +1145,8 @@ export interface components {
             company_id?: string | null;
             /** Company Name */
             company_name: string;
+            /** Cover Letter */
+            cover_letter?: string | null;
             /** Description */
             description: string;
             /**
@@ -1161,6 +1214,11 @@ export interface components {
              * @default
              */
             company_name: string;
+            /**
+             * Cover Letter
+             * @default
+             */
+            cover_letter: string;
             /**
              * Description
              * @default
@@ -1339,6 +1397,23 @@ export interface components {
             skills?: string[];
             /** Website */
             website?: string | null;
+        };
+        /** CoverLetterDraft */
+        CoverLetterDraft: {
+            /** Facts Used */
+            facts_used: string[];
+            /** Matched Skills */
+            matched_skills: string[];
+            /** Missing Skills */
+            missing_skills: string[];
+            /** Provider */
+            provider: string;
+            /** Resume Id */
+            resume_id: string | null;
+            /** Text */
+            text: string;
+        } & {
+            [key: string]: unknown;
         };
         /** Credentials */
         Credentials: {
@@ -1613,6 +1688,15 @@ export interface components {
             status: "queued" | "running" | "done" | "failed";
         } & {
             [key: string]: unknown;
+        };
+        /** LetterRequest */
+        LetterRequest: {
+            /**
+             * Language
+             * @default ru
+             * @enum {string}
+             */
+            language: "ru" | "en" | "kk";
         };
         /** LinkedInterview */
         LinkedInterview: {
@@ -2644,6 +2728,26 @@ export interface operations {
             };
         };
     };
+    follow_up_calendar_applications_calendar_ics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     import_vacancy_applications_import_post: {
         parameters: {
             query?: never;
@@ -2708,6 +2812,50 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Record"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cover_letter_applications__application_id__cover_letter_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LetterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CoverLetterDraft"];
+                };
+            };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
                 };
             };
             /** @description Validation Error */
@@ -3446,6 +3594,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plan_calendar_plan__plan_id__calendar_ics_get: {
+        parameters: {
+            query?: {
+                start?: string | null;
+            };
+            header?: never;
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

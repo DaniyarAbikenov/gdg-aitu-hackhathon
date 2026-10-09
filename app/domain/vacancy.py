@@ -15,6 +15,7 @@ VACANCY_DEFAULTS = {
     "follow_up": "",
     "resume_id": "",
     "skills": [],
+    "cover_letter": "",
 }
 
 
