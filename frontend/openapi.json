@@ -160,6 +160,18 @@
             "title": "Company Name",
             "type": "string"
           },
+          "cover_letter": {
+            "anyOf": [
+              {
+                "maxLength": 6000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Letter"
+          },
           "description": {
             "maxLength": 10000,
             "minLength": 10,
@@ -315,6 +327,11 @@
           "company_name": {
             "default": "",
             "title": "Company Name",
+            "type": "string"
+          },
+          "cover_letter": {
+            "default": "",
+            "title": "Cover Letter",
             "type": "string"
           },
           "description": {
@@ -715,6 +732,61 @@
           "name"
         ],
         "title": "Company",
+        "type": "object"
+      },
+      "CoverLetterDraft": {
+        "additionalProperties": true,
+        "properties": {
+          "facts_used": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Facts Used",
+            "type": "array"
+          },
+          "matched_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Matched Skills",
+            "type": "array"
+          },
+          "missing_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Skills",
+            "type": "array"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "resume_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resume Id"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "facts_used",
+          "provider",
+          "matched_skills",
+          "missing_skills",
+          "resume_id"
+        ],
+        "title": "CoverLetterDraft",
         "type": "object"
       },
       "Credentials": {
@@ -1228,6 +1300,23 @@
           "status"
         ],
         "title": "JobView",
+        "type": "object"
+      },
+      "LetterRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "default": "ru",
+            "enum": [
+              "ru",
+              "en",
+              "kk"
+            ],
+            "title": "Language",
+            "type": "string"
+          }
+        },
+        "title": "LetterRequest",
         "type": "object"
       },
       "LinkedInterview": {
@@ -3249,6 +3338,22 @@
         "summary": "Create"
       }
     },
+    "/applications/calendar.ics": {
+      "get": {
+        "operationId": "follow_up_calendar_applications_calendar_ics_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Follow Up Calendar"
+      }
+    },
     "/applications/import": {
       "post": {
         "operationId": "import_vacancy_applications_import_post",
@@ -3343,6 +3448,66 @@
           }
         },
         "summary": "Update"
+      }
+    },
+    "/applications/{application_id}/cover-letter": {
+      "post": {
+        "operationId": "cover_letter_applications__application_id__cover_letter_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LetterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CoverLetterDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Accepted as a background job"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cover Letter"
       }
     },
     "/auth/google": {
@@ -4231,6 +4396,61 @@
           }
         },
         "summary": "Create Plan"
+      }
+    },
+    "/plan/{plan_id}/calendar.ics": {
+      "get": {
+        "operationId": "plan_calendar_plan__plan_id__calendar_ics_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plan Calendar"
       }
     },
     "/plan/{plan_id}/export": {

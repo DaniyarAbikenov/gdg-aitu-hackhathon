@@ -1,5 +1,8 @@
 """Learning plans generated from the profile, vacancy gaps and interview feedback."""
 
+from datetime import date, timedelta
+
+from app.application.calendar import CalendarEvent, calendar
 from app.application.ports import ResumeRepository, SessionStore
 from app.application.profile import ProfileService
 from app.domain.career import CareerCoach, CareerRecord, CareerRepository
@@ -106,3 +109,17 @@ class LearningService:
 
     def delete(self, session: Session, plan_id: str) -> None:
         self.store.delete("plan", session.owner, plan_id)
+
+    def calendar(self, session: Session, plan_id: str, start: date) -> str:
+        """One all-day reminder at the start of each plan week."""
+        plan = LearningPlan.from_record(self.store.get("plan", session.owner, plan_id))
+        events = [
+            CalendarEvent(
+                uid=f"{plan.id}-week-{index}@career-studio",
+                day=start + timedelta(weeks=index),
+                summary=f"Week {module['id']}: {module['title']}",
+                description="\n".join([*module["goals"], module["exercise"]]),
+            )
+            for index, module in enumerate(plan.modules)
+        ]
+        return calendar(plan.data["goal"], events)

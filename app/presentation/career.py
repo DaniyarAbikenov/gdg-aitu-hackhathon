@@ -2,6 +2,7 @@
 
 import re
 from dataclasses import asdict
+from datetime import date
 from typing import Any, Literal
 from uuid import UUID
 
@@ -326,6 +327,14 @@ def career_router(settings: Settings) -> APIRouter:
             cases.learning.as_text(current, str(plan_id)),
             media_type="text/plain",
             headers={"Content-Disposition": 'attachment; filename="career-plan.txt"'},
+        )
+
+    @routes.get("/plan/{plan_id}/calendar.ics")
+    def plan_calendar(plan_id: UUID, cases: Cases, current: Workspace, start: date | None = None):
+        return Response(
+            cases.learning.calendar(current, str(plan_id), start or date.today()),
+            media_type="text/calendar; charset=utf-8",
+            headers={"Content-Disposition": 'attachment; filename="career-plan.ics"'},
         )
 
     @routes.get("/progress", response_model=Progress)

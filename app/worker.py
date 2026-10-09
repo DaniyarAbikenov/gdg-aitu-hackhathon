@@ -31,6 +31,7 @@ OPERATIONS: dict[str, Handler] = {
     "interview.answer": lambda cases, session, a: cases.interviews.answer(session, **a),
     "plan.create": lambda cases, session, a: cases.learning.create(session, **a),
     "vacancy.import": lambda cases, session, a: cases.applications.import_draft(session, **a),
+    "letter.draft": lambda cases, session, a: cases.applications.cover_letter(session, **a),
 }
 
 log = logging.getLogger("career.worker")

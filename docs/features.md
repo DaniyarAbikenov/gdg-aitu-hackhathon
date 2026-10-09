@@ -49,3 +49,9 @@ Saved vacancies now connect a selected resume, interview history and learning pl
 `/applications/import` reads a public HTTP(S) vacancy or pasted text through the configured structured AI adapter. A reviewable draft contains role, employer, stack, requirements, responsibilities, location, employment and salary. The user applies the preview to the form and saves separately. Missing facts stay blank. Sites requiring sign-in, JavaScript rendering or blocking requests may need pasted text.
 
 The fetcher rejects private/reserved IPs, credentials and nonstandard ports, pins the resolved public IP, revalidates redirects, bounds bytes/time and strips active HTML. It does not send application cookies or provider secrets to the supplied URL.
+
+## Cover letters and calendar reminders
+
+`POST /applications/{id}/cover-letter` drafts a letter for a saved vacancy from the selected resume (or the profile when none is selected). Only confirmed facts are sent: name, summary, skills, roles, projects and education. The response lists the facts the letter relies on, the vacancy skills the candidate has, and the ones they lack; a missing skill is named as a gap, never claimed. The draft is not stored until the user edits and saves it with the application. The rule-based provider writes a template letter in English, Russian or Kazakh and is labelled as a test provider.
+
+`GET /applications/calendar.ics` exports next-contact dates of open applications, and `GET /plan/{id}/calendar.ics?start=YYYY-MM-DD` adds one reminder per learning week. Both are standard iCalendar files for Google Calendar, Outlook or Apple Calendar.

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { Download, Video } from "lucide-react";
+import { CalendarPlus, Download, Video } from "lucide-react";
 
 export default function Plan() {
   useLocale();
@@ -66,6 +66,18 @@ export default function Plan() {
   const handleExport = () => {
     if (!record) return;
     window.location.assign(`/api/plan/${record.id}/export`);
+  };
+  const handleCalendar = () => {
+    if (!record) return;
+    const now = new Date();
+    const start = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+    ].join("-");
+    window.location.assign(
+      `/api/plan/${record.id}/calendar.ics?start=${start}`,
+    );
   };
   const handleVideoOverview = () => {
     handleExport();
@@ -214,6 +226,10 @@ export default function Plan() {
           <Button onClick={handleExport} variant="outline" className="flex-1">
             <Download className="h-4 w-4 mr-2" />
             {t("plan.export")}
+          </Button>
+          <Button onClick={handleCalendar} variant="outline" className="flex-1">
+            <CalendarPlus className="h-4 w-4 mr-2" />
+            {tr("planCalendar")}
           </Button>
           <Button
             onClick={handleVideoOverview}

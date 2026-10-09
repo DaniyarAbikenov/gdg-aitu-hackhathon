@@ -202,6 +202,7 @@ class ApplicationFields(View):
     notes: str = ""
     next_action: str = ""
     follow_up: str | None = None
+    cover_letter: str = ""
 
 
 class LinkedInterview(View):
@@ -241,3 +242,12 @@ class JobView(View):
     status: Literal["queued", "running", "done", "failed"]
     result: Any = None
     error: JobError | None = None
+
+
+class CoverLetterDraft(View):
+    text: str
+    facts_used: list[str]
+    provider: str
+    matched_skills: list[str]
+    missing_skills: list[str]
+    resume_id: str | None

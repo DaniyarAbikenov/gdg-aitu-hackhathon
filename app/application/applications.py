@@ -1,14 +1,17 @@
 """A saved vacancy is the shared context for the preparation journey."""
 
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any, Literal
 
+from app.application.calendar import CalendarEvent, calendar
 from app.application.ports import ResumeRepository, SessionStore, VacancyParser
-from app.domain.career import CareerRecord, CareerRepository
+from app.application.profile import ProfileService
+from app.domain.career import CareerCoach, CareerRecord, CareerRepository
 from app.domain.errors import Conflict, InvalidDocument
+from app.domain.letter import candidate_facts, skill_match
 from app.domain.models import Session
-from app.domain.vacancy import VACANCY_DEFAULTS, company_key, next_step
+from app.domain.vacancy import CLOSED_STATUSES, VACANCY_DEFAULTS, company_key, next_step
 
 MIN_PASTED_VACANCY = 60
 TargetKind = Literal["company", "vacancy"]
@@ -21,9 +24,11 @@ class Applications:
         resumes: ResumeRepository,
         sessions: SessionStore,
         parser: VacancyParser,
+        coach: CareerCoach,
+        profiles: ProfileService,
     ):
         self.store, self.resumes, self.sessions = store, resumes, sessions
-        self.parser = parser
+        self.parser, self.coach, self.profiles = parser, coach, profiles
 
     def import_draft(self, session: Session, url: str, text: str, language: str) -> dict[str, Any]:
         """Turn a link or pasted text into a reviewable draft; nothing is saved."""
@@ -136,3 +141,50 @@ class Applications:
         if data.get("company_id"):
             self.store.get("company", session.owner, data["company_id"])
         return self.store.create(kind, session, data)
+
+    def cover_letter(self, session: Session, vacancy_id: str, language: str) -> dict[str, Any]:
+        """A draft from confirmed facts only. It is saved when the user accepts it in the form."""
+        vacancy = {**VACANCY_DEFAULTS, **self.store.get("vacancy", session.owner, vacancy_id).data}
+        resume = (
+            asdict(self.resumes.get(session.owner, vacancy["resume_id"]).fields)
+            if vacancy["resume_id"]
+            else None
+        )
+        facts = candidate_facts(self.profiles.data(session), resume)
+        if not any(facts[k] for k in ("summary", "skills", "experience", "projects")):
+            raise InvalidDocument(
+                "Fill in your profile or choose a resume for this vacancy first.",
+                code="letter_needs_facts",
+            )
+        matched, missing = skill_match(facts, vacancy)
+        self.sessions.consume_analysis(session)
+        context = {
+            k: vacancy[k] for k in ("name", "company_name", "description", "skills") if k in vacancy
+        } | {k: vacancy.get(k, []) for k in ("requirements", "responsibilities")}
+        letter = self.coach.cover_letter(facts, context, matched, missing, language)
+        return {
+            **letter,
+            "matched_skills": matched,
+            "missing_skills": missing,
+            "resume_id": vacancy["resume_id"] or None,
+        }
+
+    def follow_ups(self, session: Session) -> str:
+        """Open applications with a next-contact date, as an iCalendar feed."""
+        events = []
+        for record in self.store.list("vacancy", session.owner):
+            data = {**VACANCY_DEFAULTS, **record.data}
+            if not data["follow_up"] or data["status"] in CLOSED_STATUSES:
+                continue
+            company = data["company_name"]
+            events.append(
+                CalendarEvent(
+                    uid=f"{record.id}-follow-up@career-studio",
+                    day=date.fromisoformat(str(data["follow_up"])[:10]),
+                    summary=f"{data.get('name', '')} — {company}"
+                    if company
+                    else data.get("name", ""),
+                    description=data["next_action"],
+                )
+            )
+        return calendar("Career Studio", events)
