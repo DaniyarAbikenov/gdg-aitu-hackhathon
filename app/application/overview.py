@@ -2,19 +2,29 @@ from collections import Counter
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from app.application.career import CareerService
-from app.application.ports import ActivityLog
+from app.application.ports import ActivityLog, ResumeRepository
+from app.application.profile import ProfileService
+from app.application.progress import ProgressService
+from app.domain.career import CareerRepository
 from app.domain.models import Session
 
 
 class Overview:
-    def __init__(self, career: CareerService, activity: ActivityLog):
-        self.career, self.activity = career, activity
+    def __init__(
+        self,
+        store: CareerRepository,
+        resumes: ResumeRepository,
+        progress: ProgressService,
+        profiles: ProfileService,
+        activity: ActivityLog,
+    ):
+        self.store, self.resumes, self.activity = store, resumes, activity
+        self.progress, self.profiles = progress, profiles
 
     def summary(self, session: Session, offset_minutes: int = 0) -> dict[str, Any]:
-        progress = self.career.progress(session)
-        resumes = self.career.resumes.list(session.owner)
-        interviews = self.career.store.list("interview", session.owner)
+        progress = self.progress.summary(session)
+        resumes = self.resumes.list(session.owner)
+        interviews = self.store.list("interview", session.owner)
         events = self.activity.list(session.owner)
         local_now = datetime.now(UTC) + timedelta(minutes=offset_minutes)
         monday = (local_now - timedelta(days=local_now.weekday())).replace(
@@ -46,7 +56,7 @@ class Overview:
         while cursor.isoformat() in days:
             streak += 1
             cursor -= timedelta(days=1)
-        assessments = self.career.store.list("assessment", session.owner)
+        assessments = self.store.list("assessment", session.owner)
         latest: dict[str, dict[str, Any]] = {}
         for assessment in assessments:
             latest.setdefault(assessment.data["resume_id"], assessment.data)
@@ -61,7 +71,7 @@ class Overview:
                 gaps.update(set(resume.analysis.missing_skills))
         return {
             **progress,
-            "goal": self.career.profile_data(session).get("career_goal", ""),
+            "goal": self.profiles.data(session).get("career_goal", ""),
             "reviewed_resumes": len(
                 {r.resume_id for r in resumes if r.status == "reviewed"}
                 | (set(latest) & {r.resume_id for r in resumes})

@@ -9,6 +9,7 @@ from app.contracts import ResumeFields, StrictModel
 from app.domain.models import ResumeFields as DomainFields
 from app.presentation.dependencies import Cases, Member
 from app.presentation.errors import ApiError
+from app.presentation.responses import Overview, PreferencesRecord, Record
 
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
@@ -92,7 +93,7 @@ def product_router(settings: Settings) -> APIRouter:
             "fields": ResumeFields.model_validate(result["fields"]).model_dump(),
         }
 
-    @routes.get("/overview")
+    @routes.get("/overview", response_model=Overview)
     def overview(
         cases: Cases,
         current: Member,
@@ -100,13 +101,13 @@ def product_router(settings: Settings) -> APIRouter:
     ):
         return cases.overview.summary(current, offset)
 
-    @routes.get("/preferences")
+    @routes.get("/preferences", response_model=PreferencesRecord)
     def preferences(cases: Cases, current: Member):
-        return cases.career.preferences(current)
+        return cases.profile.preferences(current)
 
-    @routes.put("/preferences")
+    @routes.put("/preferences", response_model=PreferencesRecord)
     def save_preferences(payload: Preferences, cases: Cases, current: Member):
-        return cases.career.save_preferences(current, payload.widgets, payload.revision)
+        return cases.profile.save_preferences(current, payload.widgets, payload.revision)
 
     @routes.post("/resume/create", status_code=201)
     def create_resume(payload: ResumeCreate, cases: Cases, current: Member):
@@ -146,15 +147,15 @@ def product_router(settings: Settings) -> APIRouter:
             headers={"Content-Disposition": 'attachment; filename="resume-version.docx"'},
         )
 
-    @routes.get("/targets/{kind}")
+    @routes.get("/targets/{kind}", response_model=list[Record])
     def targets(kind: Literal["company", "vacancy"], cases: Cases, current: Member):
-        return cases.career.targets(current, kind)
+        return cases.applications.targets(current, kind)
 
-    @routes.post("/targets/{kind}", status_code=201)
+    @routes.post("/targets/{kind}", response_model=Record, status_code=201)
     def save_target(
         kind: Literal["company", "vacancy"], payload: Target, cases: Cases, current: Member
     ):
-        return cases.career.save_target(current, kind, payload.model_dump())
+        return cases.applications.save_target(current, kind, payload.model_dump())
 
     @routes.get("/knowledge")
     def knowledge(

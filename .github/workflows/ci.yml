@@ -48,6 +48,8 @@ jobs:
       - run: ruff check app tests migrations scripts
       - run: ruff format --check app tests migrations scripts
       - run: mypy
+      - name: OpenAPI schema is up to date
+        run: python scripts/export_openapi.py --check
       - run: alembic upgrade head
       - run: alembic check
       - run: pytest --cov=app --cov-report=term-missing --cov-report=xml
@@ -73,6 +75,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: node ../scripts/check_locales.cjs
+      - name: Generated API types match openapi.json
+        run: npm run api:types && git diff --exit-code src/api/schema.d.ts
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build

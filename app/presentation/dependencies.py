@@ -6,13 +6,17 @@ from typing import Annotated
 from fastapi import Depends, Request, Response
 
 from app.application.accounts import Accounts
+from app.application.adaptation import ResumeAdaptation
 from app.application.applications import Applications
 from app.application.auth import Auth
-from app.application.career import CareerService
 from app.application.companies import Companies
+from app.application.interviews import InterviewService
 from app.application.knowledge import Knowledge
+from app.application.learning import LearningService
 from app.application.overview import Overview
+from app.application.profile import ProfileService
 from app.application.profile_import import ProfileImport
+from app.application.progress import ProgressService
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
@@ -30,7 +34,11 @@ class UseCases:
     accounts: Accounts
     resumes: ResumeService
     profile_import: ProfileImport
-    career: CareerService
+    profile: ProfileService
+    adaptation: ResumeAdaptation
+    interviews: InterviewService
+    learning: LearningService
+    progress: ProgressService
     voice: VoiceInterviews
     applications: Applications
     companies: Companies

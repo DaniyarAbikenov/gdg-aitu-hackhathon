@@ -10,14 +10,18 @@ from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.application.accounts import Accounts
+from app.application.adaptation import ResumeAdaptation
 from app.application.applications import Applications
 from app.application.auth import Administrators, Auth
-from app.application.career import CareerService
 from app.application.companies import Companies
+from app.application.interviews import InterviewService
 from app.application.knowledge import Knowledge
+from app.application.learning import LearningService
 from app.application.overview import Overview
 from app.application.ports import ResumeReviewer
+from app.application.profile import ProfileService
 from app.application.profile_import import ProfileImport
+from app.application.progress import ProgressService
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
@@ -76,7 +80,10 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         documents,
         settings.max_upload_bytes,
     )
-    career = CareerService(store, repository, sessions, Coach(settings))
+    coach = Coach(settings)
+    profile = ProfileService(store)
+    interviews = InterviewService(store, sessions, coach, profile)
+    progress = ProgressService(store, repository)
     auth = Auth(
         store,
         sessions,
@@ -91,11 +98,15 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         accounts=Accounts(store, repository, sessions, passwords, activity),
         resumes=resumes,
         profile_import=ProfileImport(documents, sessions, settings.max_upload_bytes),
-        career=career,
-        voice=VoiceInterviews(career, store, sessions, RealtimeVoice(settings)),
-        applications=Applications(career, VacancyReader(settings)),
+        profile=profile,
+        adaptation=ResumeAdaptation(store, repository, sessions, coach, profile),
+        interviews=interviews,
+        learning=LearningService(store, repository, sessions, coach, profile),
+        progress=progress,
+        voice=VoiceInterviews(interviews, sessions, RealtimeVoice(settings), coach),
+        applications=Applications(store, repository, sessions, VacancyReader(settings)),
         companies=Companies(store),
-        overview=Overview(career, activity),
+        overview=Overview(store, repository, progress, profile, activity),
         skills=SkillCatalog(PostgresSkillRepository(repository.engine), sessions),
         knowledge=Knowledge(KnowledgeRepository(repository.sessions), auth),
     )

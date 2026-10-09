@@ -1,12 +1,11 @@
 import { tr, useLocale } from "@/i18n/copy";
 import { useEffect, useId, useState, useRef } from "react";
 import ru from "@/i18n/locales/ru.json";
-import client from "@/api/client";
+import { type Skill, useCreateSkill, useSkillSearch } from "@/api/skills";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
-type Skill = { id: string; name: string; description: string };
 const key = (name: string) =>
   name.normalize("NFKC").trim().replace(/\s+/g, " ").toLocaleLowerCase();
 
@@ -35,37 +34,22 @@ export function SkillPicker({
     };
   }, []);
   const [query, setQuery] = useState("");
+  const [term, setTerm] = useState("");
   const [description, setDescription] = useState("");
-  const [items, setItems] = useState<Skill[]>([]);
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [createError, setCreateError] = useState("");
   const [active, setActive] = useState(-1);
   useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setItems([]);
-    setActive(-1);
-    const timer = setTimeout(() => {
-      client
-        .get("/skills", { params: { q: query }, signal: controller.signal })
-        .then(({ data }) => {
-          setItems(data.skills);
-          setError("");
-        })
-        .catch(() => {
-          if (!controller.signal.aborted) setError(tr("copy.c100"));
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, 200);
-    return () => {
-      clearTimeout(timer);
-      controller.abort();
-    };
+    const timer = setTimeout(() => setTerm(query), 200);
+    return () => clearTimeout(timer);
   }, [query]);
+  const search = useSkillSearch(term);
+  const createSkill = useCreateSkill();
+  const loading = query !== term || search.isFetching;
+  const items = loading ? [] : (search.data ?? []);
+  const saving = createSkill.isPending;
+  const error =
+    createError || (!loading && search.isError ? tr("copy.c100") : "");
   const choose = (skill: Skill) => {
     if (
       selected.length < 60 &&
@@ -73,23 +57,17 @@ export function SkillPicker({
     )
       onChange([...selected, skill.name]);
     setQuery("");
+    setActive(-1);
     setDescription("");
     setOpen(false);
   };
   const exact = items.find((item) => key(item.name) === key(query));
   const create = async () => {
-    setSaving(true);
-    setError("");
+    setCreateError("");
     try {
-      const { data } = await client.post("/skills", {
-        name: query,
-        description,
-      });
-      choose(data);
+      choose(await createSkill.mutateAsync({ name: query, description }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : tr("copy.c101"));
-    } finally {
-      setSaving(false);
+      setCreateError(err instanceof Error ? err.message : tr("copy.c101"));
     }
   };
   return (
@@ -117,6 +95,8 @@ export function SkillPicker({
         onClick={() => setOpen(true)}
         onChange={(e) => {
           setQuery(e.target.value);
+          setActive(-1);
+          setCreateError("");
           setOpen(true);
         }}
         onKeyDown={(e) => {

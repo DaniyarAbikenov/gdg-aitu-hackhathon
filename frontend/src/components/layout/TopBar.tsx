@@ -13,15 +13,16 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 
-import { logout } from "@/api/auth";
+import { useLogout } from "@/features/auth/api";
 
 export function TopBar() {
   useLocale();
   const navigate = useNavigate();
+  const logout = useLogout();
 
   async function handleLogout() {
     try {
-      await logout();
+      await logout.mutateAsync();
       navigate("/login");
     } catch (e) {
       console.error(e);

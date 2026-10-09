@@ -3,11 +3,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.application.ports import ActivityLog, ResumeRepository, SessionStore
-from app.domain.career import CareerRepository, PasswordHasher
+from app.domain.career import CareerRepository, PasswordHasher, RecordKind
 from app.domain.errors import Forbidden, InvalidDocument
 from app.domain.models import Session
 
-EXPORTED_KINDS = [
+EXPORTED_KINDS: list[RecordKind] = [
     "profile",
     "preferences",
     "company",
