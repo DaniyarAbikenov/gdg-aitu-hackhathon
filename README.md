@@ -96,6 +96,7 @@ Updates include revisions to reject stale writes. Passwords use salted scrypt. G
 npm ci --prefix frontend
 npm run typecheck --prefix frontend
 npm run lint --prefix frontend
+npm test --prefix frontend   # Vitest + Testing Library, API mocked with MSW
 npm run build --prefix frontend
 
 # Hot reload frontend, forwarding /api to the Docker gateway on port 8080:
