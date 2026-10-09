@@ -25,6 +25,7 @@ const messageByCode: Record<string, string> = {
   text_interview: "conflict",
   signed_in: "conflict",
   rate_limited: "limit",
+  letter_needs_facts: "letterFacts",
   provider_unavailable: "provider",
   google_unavailable: "provider",
   validation_failed: "validation",
@@ -46,16 +47,22 @@ const messageByStatus: Record<number, string> = {
   503: "network",
 };
 
+/** The translated message for a backend error code, falling back to the HTTP status. */
+export function errorMessage(code: unknown, status?: number): string {
+  const key =
+    (typeof code === "string" && messageByCode[code]) ||
+    (status !== undefined && messageByStatus[status]) ||
+    "network";
+  return tr("errors." + key);
+}
+
 client.interceptors.response.use(
   (response) => response,
   (error) => {
-    const code: unknown = error.response?.data?.code;
-    const status: number | undefined = error.response?.status;
-    const key =
-      (typeof code === "string" && messageByCode[code]) ||
-      (status !== undefined && messageByStatus[status]) ||
-      "network";
-    error.message = tr("errors." + key);
+    error.message = errorMessage(
+      error.response?.data?.code,
+      error.response?.status,
+    );
     return Promise.reject(error);
   },
 );

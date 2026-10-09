@@ -1,3 +1,4 @@
+import { postJob } from "@/api/jobs";
 import client from "@/api/client";
 import type {
   ApplicationItem,
@@ -124,12 +125,10 @@ export function useCreateTarget() {
 export function useImportVacancy() {
   return useMutation({
     mutationFn: async ({ url, text }: { url: string | null; text: string }) =>
-      (
-        await client.post<VacancyImportResult>("/applications/import", {
-          url,
-          text,
-          language: i18n.language === "kz" ? "kk" : i18n.language,
-        })
-      ).data,
+      postJob<VacancyImportResult>("/applications/import", {
+        url,
+        text,
+        language: i18n.language === "kz" ? "kk" : i18n.language,
+      }),
   });
 }
