@@ -24,3 +24,4 @@ export type CompanyPayload = Schemas["Company"];
 export type TargetPayload = Schemas["Target"];
 export type ArticlePayload = Schemas["Article"];
 export type GenericRecord = Schemas["Record"];
+export type CoverLetterDraft = Schemas["CoverLetterDraft"];

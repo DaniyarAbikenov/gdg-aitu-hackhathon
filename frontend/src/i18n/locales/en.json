@@ -971,5 +971,29 @@
   "jobs": {
     "queued": "AI request is queued…",
     "running": "AI is working on your request…"
-  }
+  },
+  "letter": {
+    "title": "Cover letter",
+    "drafting": "Drafting…",
+    "redraft": "Draft again",
+    "draft": "Draft a cover letter",
+    "explain": "The draft uses only facts from your profile and active resume. Review and edit it before sending.",
+    "testProvider": "Test provider: a rule-based template, not AI writing.",
+    "facts": "Facts used:",
+    "missing": "Skills the vacancy asks for that are not in your resume:",
+    "save": "Save letter",
+    "copy": "Copy",
+    "saved": "Cover letter saved.",
+    "copied": "Copied to clipboard.",
+    "copyFailed": "Could not copy. Select the text and copy it manually."
+  },
+  "board": {
+    "label": "Applications by stage",
+    "move": "Move {{name}} to stage",
+    "calendar": "Follow-ups (.ics)",
+    "view": "View",
+    "list": "List",
+    "board": "Board"
+  },
+  "planCalendar": "Add to calendar (.ics)"
 }

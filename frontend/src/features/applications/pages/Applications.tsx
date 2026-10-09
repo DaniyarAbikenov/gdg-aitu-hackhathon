@@ -2,41 +2,38 @@ import { tr, useLocale } from "@/i18n/copy";
 import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { BriefcaseBusiness, ArrowRight, Plus } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  ArrowRight,
+  CalendarPlus,
+  Plus,
+} from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { VacancyImport } from "../components/VacancyImport";
+import { ApplicationBoard } from "../components/ApplicationBoard";
+import { CoverLetter } from "../components/CoverLetter";
 import { SkillPicker } from "@/components/SkillPicker";
-import type {
-  ApplicationItem,
-  ApplicationPayload,
-  ResumeRecord,
-} from "@/api/types";
+import type { ApplicationItem, ResumeRecord } from "@/api/types";
 import type { ApplicationDraft, CompanyRecord } from "../types";
 import { useApplications, useCompanies, useSaveApplication } from "../api";
+import { applicationPayload, emptyApplication } from "../payload";
 import { useResumes } from "@/features/resume/api";
 
-const empty: ApplicationDraft = {
-  location: "",
-  employment: "",
-  salary: "",
-  requirements: [],
-  responsibilities: [],
-  name: "",
-  company_name: "",
-  company_description: "",
-  description: "",
-  skills: [],
-  status: "saved",
-  source_url: "",
-  resume_id: "",
-  company_id: "",
-  notes: "",
-  next_action: "",
-  follow_up: "",
-};
+type View = "list" | "board";
+
+function storedView(): View {
+  try {
+    return localStorage.getItem("applications.view") === "board"
+      ? "board"
+      : "list";
+  } catch {
+    return "list";
+  }
+}
+
 const none = {
   records: [] as ApplicationItem[],
   resumes: [] as ResumeRecord[],
@@ -68,6 +65,15 @@ export default function Applications() {
     [error, setError] = useState("");
   const [query, setQuery] = useState(""),
     [filter, setFilter] = useState("active");
+  const [view, setView] = useState<View>(storedView);
+  const chooseView = (next: View) => {
+    setView(next);
+    try {
+      localStorage.setItem("applications.view", next);
+    } catch {
+      // The choice simply is not remembered.
+    }
+  };
   const queries = [applications, resumesQuery, companiesQuery];
   const loadFailure = queries.find((q) => q.isError)?.error;
   const loading = !loadFailure && queries.some((q) => q.isPending);
@@ -80,7 +86,7 @@ export default function Applications() {
     const company = companies.find((c) => c.id === params.get("company"));
     if (company)
       setDraft({
-        ...empty,
+        ...emptyApplication,
         company_id: company.id,
         company_name: company.data.name,
         company_description: company.data.description,
@@ -96,7 +102,11 @@ export default function Applications() {
     }));
   const edit = (record: ApplicationItem | null) => {
     setEditing(record);
-    setDraft(record ? { ...empty, ...record.data } : { ...empty });
+    setDraft(
+      record
+        ? { ...emptyApplication, ...record.data }
+        : { ...emptyApplication },
+    );
     setError("");
   };
   const save = async (e: React.FormEvent) => {
@@ -105,20 +115,7 @@ export default function Applications() {
     setBusy(true);
     setError("");
     try {
-      const data = {
-        ...draft,
-        revision: editing?.revision || 0,
-        source_url: draft.source_url || null,
-        resume_id: draft.resume_id || null,
-        company_id: draft.company_id || null,
-        follow_up: draft.follow_up || null,
-      };
-      // Only editable fields cross the boundary; server-derived context stays server-side.
-      const payload = Object.fromEntries(
-        (Object.keys({ ...empty, revision: 0 }) as (keyof typeof data)[]).map(
-          (k) => [k, data[k]],
-        ),
-      ) as ApplicationPayload;
+      const payload = applicationPayload(draft, editing?.revision || 0);
       const r = await saveApplication.mutateAsync({
         id: editing?.id,
         payload,
@@ -131,15 +128,17 @@ export default function Applications() {
       setBusy(false);
     }
   };
-  const visible = records.filter(
+  const matching = records.filter((r) =>
+    `${r.data.name} ${r.data.company_name}`
+      .toLowerCase()
+      .includes(query.toLowerCase()),
+  );
+  const visible = matching.filter(
     (r) =>
-      (filter === "all" ||
-        (filter === "active"
-          ? !["archived", "rejected", "offer"].includes(r.data.status)
-          : r.data.status === filter)) &&
-      `${r.data.name} ${r.data.company_name}`
-        .toLowerCase()
-        .includes(query.toLowerCase()),
+      filter === "all" ||
+      (filter === "active"
+        ? !["archived", "rejected", "offer"].includes(r.data.status)
+        : r.data.status === filter),
   );
   const today = new Date();
   const localDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -151,10 +150,18 @@ export default function Applications() {
             <h1 className="text-3xl font-bold">{tr("copy.c148")}</h1>
             <p className="text-muted-foreground mt-2">{tr("copy.c149")}</p>
           </div>
-          <Button onClick={() => edit(null)}>
-            <Plus className="h-4 w-4 mr-2" />
-            {tr("copy.c150")}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <a href="/api/applications/calendar.ics" download>
+                <CalendarPlus className="h-4 w-4 mr-2" />
+                {tr("board.calendar")}
+              </a>
+            </Button>
+            <Button onClick={() => edit(null)}>
+              <Plus className="h-4 w-4 mr-2" />
+              {tr("copy.c150")}
+            </Button>
+          </div>
         </header>
         {shownError && (
           <p role="alert" className="text-destructive">
@@ -538,6 +545,7 @@ export default function Applications() {
                 {tr("copy.c192")} {p.goal}
               </Link>
             ))}
+            <CoverLetter key={selected.id} application={selected} />
             {selected.data.notes && (
               <div>
                 <h3 className="font-semibold">{tr("copy.c193")}</h3>
@@ -556,23 +564,50 @@ export default function Applications() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <select
-            aria-label={tr("copy.c196")}
-            className="border rounded p-2 bg-background"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+          {view === "list" && (
+            <select
+              aria-label={tr("copy.c196")}
+              className="border rounded p-2 bg-background"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="active">{tr("copy.c197")}</option>
+              <option value="all">{tr("copy.c198")}</option>
+              {Object.entries(stages).map(([k, v]) => (
+                <option value={k} key={k}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          )}
+          <div
+            role="group"
+            aria-label={tr("board.view")}
+            className="flex rounded border"
           >
-            <option value="active">{tr("copy.c197")}</option>
-            <option value="all">{tr("copy.c198")}</option>
-            {Object.entries(stages).map(([k, v]) => (
-              <option value={k} key={k}>
-                {v}
-              </option>
+            {(["list", "board"] as const).map((v) => (
+              <Button
+                key={v}
+                variant={view === v ? "default" : "ghost"}
+                aria-pressed={view === v}
+                onClick={() => chooseView(v)}
+              >
+                {tr("board." + v)}
+              </Button>
             ))}
-          </select>
+          </div>
         </div>
         {loading ? (
           <p role="status">{tr("copy.c199")}</p>
+        ) : view === "board" && matching.length > 0 ? (
+          <ApplicationBoard
+            records={matching}
+            stages={stages}
+            onOpen={(id) => {
+              setParams({ id });
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          />
         ) : visible.length === 0 ? (
           <section className="border border-dashed rounded-xl p-8 text-center space-y-3">
             <BriefcaseBusiness className="mx-auto h-9 w-9 text-primary" />

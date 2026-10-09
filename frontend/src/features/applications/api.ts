@@ -3,6 +3,7 @@ import client from "@/api/client";
 import type {
   ApplicationItem,
   ApplicationPayload,
+  CoverLetterDraft,
   CompanyPayload,
   GenericRecord,
   TargetPayload,
@@ -128,6 +129,15 @@ export function useImportVacancy() {
       postJob<VacancyImportResult>("/applications/import", {
         url,
         text,
+        language: i18n.language === "kz" ? "kk" : i18n.language,
+      }),
+  });
+}
+
+export function useCoverLetter() {
+  return useMutation({
+    mutationFn: (id: string) =>
+      postJob<CoverLetterDraft>(`/applications/${id}/cover-letter`, {
         language: i18n.language === "kz" ? "kk" : i18n.language,
       }),
   });
