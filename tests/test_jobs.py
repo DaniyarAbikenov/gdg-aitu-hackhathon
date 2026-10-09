@@ -112,3 +112,21 @@ def test_events_stream_reports_the_final_status(client, app, resume):
     name, data = events[0].split("\n")
     assert name == "event: status"
     assert json.loads(data.removeprefix("data: "))["status"] == "done"
+
+
+def test_healthcheck_sees_only_a_registered_worker(client, app):
+    container = app.state.container
+    name = f"health-{uuid4().hex}"
+    assert not worker.healthy(container.jobs.connection, name)
+    running = SimpleWorker(
+        [container.jobs.queue],
+        name=name,
+        connection=container.jobs.connection,
+        serializer=JSONSerializer,
+    )
+    running.register_birth()
+    try:
+        assert worker.healthy(container.jobs.connection, name)
+    finally:
+        running.register_death()
+    assert not worker.healthy(container.jobs.connection, name)

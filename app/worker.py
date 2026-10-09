@@ -1,10 +1,13 @@
 """Background worker: runs slow AI use cases queued by the API.
 
-python -m app.worker
+python -m app.worker          run jobs
+python -m app.worker --check  exit 0 if this container's worker is registered (healthcheck)
 """
 
 import dataclasses
 import logging
+import socket
+import sys
 from collections.abc import Callable
 from typing import Any
 
@@ -15,6 +18,7 @@ from app.application.jobs import session_from
 from app.config import Settings
 from app.domain.errors import DomainError
 from app.domain.models import Session
+from app.infrastructure.jobs import RedisJobQueue
 from app.infrastructure.observability import request_id, trace_engine
 from app.presentation.dependencies import UseCases
 
@@ -64,10 +68,20 @@ def run(operation: str, payload: dict[str, Any]) -> dict[str, Any]:
     return {"result": plain(result)}
 
 
+def healthy(connection: Any, name: str) -> bool:
+    """A worker refreshes its Redis key on every heartbeat; a hung one expires, a stopped one
+    is marked dead."""
+    key = SimpleWorker.redis_worker_namespace_prefix + name
+    return bool(connection.exists(key)) and not connection.hexists(key, "death")
+
+
 def main() -> None:
     from app.main import build_container, configure_observability
 
     settings = Settings()
+    if "--check" in sys.argv[1:]:
+        connection = RedisJobQueue(settings.redis_url, settings.redis_namespace).connection
+        sys.exit(0 if healthy(connection, socket.gethostname()) else 1)
     configure_observability(settings, "career-worker")
     container = build_container(settings)
     if settings.otel_enabled:
@@ -78,7 +92,10 @@ def main() -> None:
     worker.bind(container.use_cases)
     try:
         SimpleWorker(
-            [container.jobs.queue], connection=container.jobs.connection, serializer=JSONSerializer
+            [container.jobs.queue],
+            name=socket.gethostname(),
+            connection=container.jobs.connection,
+            serializer=JSONSerializer,
         ).work(with_scheduler=False)
     finally:
         container.close()
