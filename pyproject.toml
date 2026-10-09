@@ -18,3 +18,16 @@ omit = ["app/__init__.py"]
 [tool.coverage.report]
 show_missing = true
 fail_under = 85
+
+[tool.mypy]
+python_version = "3.12"
+files = ["app"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+plugins = ["pydantic.mypy"]
+
+# Inner layers are fully annotated; adapters and routers are checked but may infer types.
+[[tool.mypy.overrides]]
+module = ["app.domain.*", "app.application.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
