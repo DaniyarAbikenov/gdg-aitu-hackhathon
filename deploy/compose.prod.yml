@@ -11,6 +11,9 @@ services:
     environment:
       CAREER_SECURE_COOKIE: "true"
       CAREER_WEB_WORKERS: ${CAREER_WEB_WORKERS:-2}
+  worker:
+    image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-backend:${CAREER_VERSION:?set CAREER_VERSION}
+    pull_policy: always
   frontend:
     image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-frontend:${CAREER_VERSION:?set CAREER_VERSION}
     pull_policy: always

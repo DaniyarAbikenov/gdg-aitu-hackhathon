@@ -1,3 +1,23 @@
+# Shared by the API and the worker, which run the same use cases.
+x-career-environment: &career-environment
+  CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
+  CAREER_REDIS_URL: redis://redis:6379/0
+  CAREER_GOOGLE_CLIENT_ID: ${CAREER_GOOGLE_CLIENT_ID:-}
+  CAREER_ENVIRONMENT: ${CAREER_ENVIRONMENT:-production}
+  CAREER_SESSION_CREATIONS_PER_HOUR: ${CAREER_SESSION_CREATIONS_PER_HOUR:-30}
+  CAREER_AUTH_PER_15_MINUTES: ${CAREER_AUTH_PER_15_MINUTES:-15}
+  CAREER_ADMIN_EMAILS: ${CAREER_ADMIN_EMAILS:-}
+  CAREER_OPENAI_REALTIME_MODEL: ${CAREER_OPENAI_REALTIME_MODEL:-}
+  CAREER_OPENAI_TRANSCRIPTION_MODEL: ${CAREER_OPENAI_TRANSCRIPTION_MODEL:-}
+  CAREER_PROVIDER: ${CAREER_PROVIDER:-unconfigured}
+  CAREER_OPENAI_API_KEY: ${CAREER_OPENAI_API_KEY:-}
+  CAREER_OPENAI_MODEL: ${CAREER_OPENAI_MODEL:-}
+  CAREER_GEMINI_API_KEY: ${CAREER_GEMINI_API_KEY:-}
+  CAREER_GEMINI_MODEL: ${CAREER_GEMINI_MODEL:-}
+  CAREER_SECURE_COOKIE: ${CAREER_SECURE_COOKIE:-false}
+  CAREER_SESSION_HOURS: ${CAREER_SESSION_HOURS:-24}
+  CAREER_ANALYSIS_PER_HOUR: ${CAREER_ANALYSIS_PER_HOUR:-30}
+
 services:
   postgres:
     image: postgres:17-alpine
@@ -36,24 +56,27 @@ services:
     build:
       context: .
       target: runtime
-    environment:
-      CAREER_DATABASE_URL: postgresql+psycopg://career:${CAREER_DB_PASSWORD:-career-local-only}@postgres:5432/career
-      CAREER_REDIS_URL: redis://redis:6379/0
-      CAREER_GOOGLE_CLIENT_ID: ${CAREER_GOOGLE_CLIENT_ID:-}
-      CAREER_ENVIRONMENT: ${CAREER_ENVIRONMENT:-production}
-      CAREER_SESSION_CREATIONS_PER_HOUR: ${CAREER_SESSION_CREATIONS_PER_HOUR:-30}
-      CAREER_AUTH_PER_15_MINUTES: ${CAREER_AUTH_PER_15_MINUTES:-15}
-      CAREER_ADMIN_EMAILS: ${CAREER_ADMIN_EMAILS:-}
-      CAREER_OPENAI_REALTIME_MODEL: ${CAREER_OPENAI_REALTIME_MODEL:-}
-      CAREER_OPENAI_TRANSCRIPTION_MODEL: ${CAREER_OPENAI_TRANSCRIPTION_MODEL:-}
-      CAREER_PROVIDER: ${CAREER_PROVIDER:-unconfigured}
-      CAREER_OPENAI_API_KEY: ${CAREER_OPENAI_API_KEY:-}
-      CAREER_OPENAI_MODEL: ${CAREER_OPENAI_MODEL:-}
-      CAREER_GEMINI_API_KEY: ${CAREER_GEMINI_API_KEY:-}
-      CAREER_GEMINI_MODEL: ${CAREER_GEMINI_MODEL:-}
-      CAREER_SECURE_COOKIE: ${CAREER_SECURE_COOKIE:-false}
-      CAREER_SESSION_HOURS: ${CAREER_SESSION_HOURS:-24}
-      CAREER_ANALYSIS_PER_HOUR: ${CAREER_ANALYSIS_PER_HOUR:-30}
+    environment: *career-environment
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+  worker:
+    build:
+      context: .
+      target: runtime
+    # Runs slow AI requests queued by the API (Prefer: respond-async).
+    command: ["python", "-m", "app.worker"]
+    environment: *career-environment
+    healthcheck:
+      disable: true
     depends_on:
       migrate:
         condition: service_completed_successfully

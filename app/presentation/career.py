@@ -2,7 +2,7 @@
 
 import re
 from dataclasses import asdict
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Request, Response
@@ -14,10 +14,12 @@ from app.presentation.dependencies import (
     COOKIE,
     Cases,
     ClientId,
+    RespondAsync,
     Workspace,
     clear_session_cookie,
     set_session_cookie,
 )
+from app.presentation.jobs import ACCEPTED, accepted
 from app.presentation.responses import (
     InterviewView,
     PlanRecord,
@@ -206,9 +208,18 @@ def career_router(settings: Settings) -> APIRouter:
     def save_profile(payload: ProfileSave, cases: Cases, current: Workspace):
         return cases.profile.save(current, payload.profile.model_dump(), payload.revision)
 
-    @routes.post("/resume/{resume_id}/adapt")
-    def adapt(resume_id: UUID, payload: Adapt, cases: Cases, current: Workspace):
-        return cases.adaptation.adapt(current, str(resume_id), payload.revision, payload.jd_text)
+    @routes.post("/resume/{resume_id}/adapt", responses=ACCEPTED)
+    def adapt(
+        resume_id: UUID, payload: Adapt, cases: Cases, current: Workspace, later: RespondAsync
+    ):
+        arguments: dict[str, Any] = {
+            "resume_id": str(resume_id),
+            "revision": payload.revision,
+            "job": payload.jd_text,
+        }
+        if later:
+            return accepted(cases.jobs.submit(current, "resume.adapt", **arguments))
+        return cases.adaptation.adapt(current, **arguments)
 
     @routes.get("/resume/{resume_id}/versions", response_model=list[VersionRecord])
     def versions(resume_id: UUID, cases: Cases, current: Workspace):
@@ -237,8 +248,16 @@ def career_router(settings: Settings) -> APIRouter:
             headers={"Content-Disposition": 'attachment; filename="resume-version.pdf"'},
         )
 
-    @routes.post("/interview/start", response_model=InterviewView, status_code=201)
-    def start_interview(payload: InterviewStart, cases: Cases, current: Workspace):
+    @routes.post(
+        "/interview/start", response_model=InterviewView, status_code=201, responses=ACCEPTED
+    )
+    def start_interview(
+        payload: InterviewStart, cases: Cases, current: Workspace, later: RespondAsync
+    ):
+        if later:
+            return accepted(
+                cases.jobs.submit(current, "interview.start", context=payload.model_dump())
+            )
         return cases.interviews.start(current, payload.model_dump())
 
     @routes.get("/interview", response_model=list[InterviewView])
@@ -249,9 +268,20 @@ def career_router(settings: Settings) -> APIRouter:
     def interview(interview_id: UUID, cases: Cases, current: Workspace):
         return cases.interviews.get(current, str(interview_id))
 
-    @routes.post("/interview/{interview_id}/answer", response_model=InterviewView)
-    def answer(interview_id: UUID, payload: Answer, cases: Cases, current: Workspace):
-        return cases.interviews.answer(current, str(interview_id), payload.revision, payload.answer)
+    @routes.post(
+        "/interview/{interview_id}/answer", response_model=InterviewView, responses=ACCEPTED
+    )
+    def answer(
+        interview_id: UUID, payload: Answer, cases: Cases, current: Workspace, later: RespondAsync
+    ):
+        arguments: dict[str, Any] = {
+            "interview_id": str(interview_id),
+            "revision": payload.revision,
+            "answer": payload.answer,
+        }
+        if later:
+            return accepted(cases.jobs.submit(current, "interview.answer", **arguments))
+        return cases.interviews.answer(current, **arguments)
 
     @routes.post("/resume/{resume_id}/apply")
     def apply_proposal(resume_id: UUID, payload: ApplyProposal, cases: Cases, current: Workspace):
@@ -263,17 +293,19 @@ def career_router(settings: Settings) -> APIRouter:
     def plans(cases: Cases, current: Workspace):
         return cases.learning.plans(current)
 
-    @routes.post("/plan", response_model=PlanRecord, status_code=201)
-    def create_plan(payload: PlanCreate, cases: Cases, current: Workspace):
-        return cases.learning.create(
-            current,
-            payload.goal,
-            str(payload.resume_id) if payload.resume_id else None,
-            str(payload.interview_id) if payload.interview_id else None,
-            payload.position,
-            payload.stacks,
-            str(payload.vacancy_id) if payload.vacancy_id else None,
-        )
+    @routes.post("/plan", response_model=PlanRecord, status_code=201, responses=ACCEPTED)
+    def create_plan(payload: PlanCreate, cases: Cases, current: Workspace, later: RespondAsync):
+        arguments: dict[str, Any] = {
+            "goal": payload.goal,
+            "resume_id": str(payload.resume_id) if payload.resume_id else None,
+            "interview_id": str(payload.interview_id) if payload.interview_id else None,
+            "position": payload.position,
+            "stacks": payload.stacks,
+            "vacancy_id": str(payload.vacancy_id) if payload.vacancy_id else None,
+        }
+        if later:
+            return accepted(cases.jobs.submit(current, "plan.create", **arguments))
+        return cases.learning.create(current, **arguments)
 
     @routes.post("/plan/{plan_id}/modules/{module_id}", response_model=PlanRecord)
     def module(

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Request, Response, UploadFile
@@ -11,11 +11,13 @@ from app.presentation.dependencies import (
     COOKIE,
     Cases,
     ClientId,
+    RespondAsync,
     Workspace,
     clear_session_cookie,
     set_session_cookie,
 )
 from app.presentation.errors import ApiError
+from app.presentation.jobs import ACCEPTED, accepted
 from app.presentation.schemas import AnalyzeRequest, ResumeRecord, SaveRequest
 
 __all__ = ["COOKIE", "router"]
@@ -96,9 +98,22 @@ def router(settings: Settings) -> APIRouter:
             ResumeFields(**payload.fields.model_dump()),
         )
 
-    @routes.post("/resume/{resume_id}/improve", response_model=ResumeRecord)
-    def improve(resume_id: UUID, payload: AnalyzeRequest, cases: Cases, current: Workspace):
-        return cases.resumes.analyze(current, str(resume_id), payload.revision, payload.jd_text)
+    @routes.post("/resume/{resume_id}/improve", response_model=ResumeRecord, responses=ACCEPTED)
+    def improve(
+        resume_id: UUID,
+        payload: AnalyzeRequest,
+        cases: Cases,
+        current: Workspace,
+        later: RespondAsync,
+    ):
+        arguments: dict[str, Any] = {
+            "resume_id": str(resume_id),
+            "revision": payload.revision,
+            "jd_text": payload.jd_text,
+        }
+        if later:
+            return accepted(cases.jobs.submit(current, "resume.analyze", **arguments))
+        return cases.resumes.analyze(current, **arguments)
 
     @routes.get("/resume/{resume_id}/pdf")
     def pdf(

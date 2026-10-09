@@ -8,6 +8,7 @@ reportlab>=4.4.4,<5
 sqlalchemy>=2.0.44,<3
 psycopg[binary]>=3.2.12,<4
 redis>=6.4,<8
+rq>=2.12,<3
 alembic>=1.17,<2
 google-auth>=2.40,<3
 requests>=2.32,<3

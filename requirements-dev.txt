@@ -34,9 +34,13 @@ charset-normalizer==3.5.2
     #   reportlab
     #   requests
 click==8.5.0
-    # via uvicorn
+    # via
+    #   rq
+    #   uvicorn
 coverage[toml]==7.16.2
     # via pytest-cov
+croniter==6.2.4
+    # via rq
 cryptography==50.0.2
     # via google-auth
 cyclonedx-python-lib==9.1.0
@@ -143,6 +147,8 @@ pytest==8.4.2
     #   pytest-cov
 pytest-cov==7.0.0
     # via -r requirements-dev.in
+python-dateutil==2.9.0.post0
+    # via croniter
 python-docx==1.2.0
     # via -r requirements.in
 python-dotenv==1.2.4
@@ -150,7 +156,9 @@ python-dotenv==1.2.4
 python-multipart==0.0.32
     # via -r requirements.in
 redis==7.4.1
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   rq
 reportlab==4.5.1
     # via -r requirements.in
 requests==2.34.2
@@ -160,8 +168,12 @@ requests==2.34.2
     #   pip-audit
 rich==15.0.0
     # via pip-audit
+rq==2.12.0
+    # via -r requirements.in
 ruff==0.14.3
     # via -r requirements-dev.in
+six==1.17.0
+    # via python-dateutil
 sortedcontainers==2.4.0
     # via cyclonedx-python-lib
 sqlalchemy==2.1.3
