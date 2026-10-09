@@ -1,6 +1,6 @@
-import { updateUserProfile } from "@/api/user";
+import { useUpdateProfile } from "@/features/profile/api";
 import { getErrorMessage } from "@/lib/errors";
-import { useAuthStore } from "@/store/auth";
+import { useAuthStore } from "@/features/auth/store";
 import { toast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
@@ -20,12 +20,13 @@ const languages = [
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const updateProfile = useUpdateProfile();
 
   const changeLanguage = async (lng: string) => {
     if (useAuthStore.getState().isAuthenticated) {
       try {
-        const profile = await updateUserProfile({
-          language: lng === "kz" ? "kk" : lng,
+        const profile = await updateProfile.mutateAsync({
+          patch: { language: lng === "kz" ? "kk" : lng },
         });
         window.dispatchEvent(
           new CustomEvent("profile-language-saved", {
