@@ -22,8 +22,24 @@ x-career-environment: &career-environment
   CAREER_OTEL_ENABLED: ${CAREER_OTEL_ENABLED:-false}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
   OTEL_EXPORTER_OTLP_HEADERS: ${OTEL_EXPORTER_OTLP_HEADERS:-}
+  # Locally, mail goes to Mailpit (http://127.0.0.1:8025). Set it to empty to turn email off.
+  CAREER_SMTP_URL: ${CAREER_SMTP_URL-smtp://mailpit:1025}
+  CAREER_MAIL_FROM: ${CAREER_MAIL_FROM:-Career Studio <no-reply@career.local>}
+  CAREER_PUBLIC_URL: ${CAREER_PUBLIC_URL:-http://localhost:${CAREER_PORT:-8080}}
 
 services:
+  mailpit:
+    # Catches every outgoing email for local development and browser tests; nothing leaves.
+    image: axllent/mailpit:v1.27
+    environment:
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "127.0.0.1:${CAREER_MAIL_PORT:-8025}:8025"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
   postgres:
     image: postgres:17-alpine
     environment:

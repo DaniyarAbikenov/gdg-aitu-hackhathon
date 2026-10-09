@@ -55,3 +55,7 @@ The fetcher rejects private/reserved IPs, credentials and nonstandard ports, pin
 `POST /applications/{id}/cover-letter` drafts a letter for a saved vacancy from the selected resume (or the profile when none is selected). Only confirmed facts are sent: name, summary, skills, roles, projects and education. The response lists the facts the letter relies on, the vacancy skills the candidate has, and the ones they lack; a missing skill is named as a gap, never claimed. The draft is not stored until the user edits and saves it with the application. The rule-based provider writes a template letter in English, Russian or Kazakh and is labelled as a test provider.
 
 `GET /applications/calendar.ics` exports next-contact dates of open applications, and `GET /plan/{id}/calendar.ics?start=YYYY-MM-DD` adds one reminder per learning week. Both are standard iCalendar files for Google Calendar, Outlook or Apple Calendar.
+
+## Password recovery and email confirmation
+
+The sign-in page offers "Forgot password?" when email is configured. The emailed link opens a page that sets a new password and signs out every device. New accounts receive a confirmation link; settings show the status and can send a new one. Messages are written in the interface language (English, Russian or Kazakh). See `docs/operations.md#account-controls` for limits and SMTP settings.

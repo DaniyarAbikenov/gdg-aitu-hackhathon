@@ -23,6 +23,7 @@ from app.application.ports import ResumeReviewer
 from app.application.profile import ProfileService
 from app.application.profile_import import ProfileImport
 from app.application.progress import ProgressService
+from app.application.recovery import Recovery
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
@@ -33,8 +34,9 @@ from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
 from app.infrastructure.google_login import GoogleLogin
-from app.infrastructure.jobs import RedisJobQueue
+from app.infrastructure.jobs import QueuedMailer, RedisJobQueue
 from app.infrastructure.knowledge import KnowledgeRepository
+from app.infrastructure.mail import SmtpMailer
 from app.infrastructure.observability import (
     RequestContext,
     configure_logging,
@@ -69,6 +71,8 @@ class Container:
     sessions: RedisSessions
     jobs: RedisJobQueue
     use_cases: UseCases
+    # Used by the worker to deliver queued email; None when SMTP is not configured.
+    smtp: SmtpMailer | None = None
 
     def close(self) -> None:
         self.jobs.close()
@@ -84,6 +88,8 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
     activity = ActivityRepository(repository.sessions)
     documents = Documents(settings)
     passwords = ScryptPasswords()
+    smtp_url = settings.smtp_url.get_secret_value()
+    smtp = SmtpMailer(smtp_url, settings.mail_from) if smtp_url else None
 
     resumes = ResumeService(
         repository,
@@ -125,8 +131,15 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         skills=SkillCatalog(PostgresSkillRepository(repository.engine), sessions),
         knowledge=Knowledge(KnowledgeRepository(repository.sessions), auth),
         jobs=Jobs(jobs),
+        recovery=Recovery(
+            store,
+            sessions,
+            passwords,
+            QueuedMailer(jobs) if smtp else None,
+            settings.public_url,
+        ),
     )
-    return Container(repository, store, sessions, jobs, use_cases)
+    return Container(repository, store, sessions, jobs, use_cases, smtp)
 
 
 VERSION = "0.5.0"

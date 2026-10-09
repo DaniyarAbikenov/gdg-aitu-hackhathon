@@ -8,12 +8,20 @@ services:
   backend:
     image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-backend:${CAREER_VERSION:?set CAREER_VERSION}
     pull_policy: always
-    environment:
+    environment: &production-mail
       CAREER_SECURE_COOKIE: "true"
       CAREER_WEB_WORKERS: ${CAREER_WEB_WORKERS:-2}
+      # Real SMTP only; without it password recovery is shown as unavailable.
+      CAREER_SMTP_URL: ${CAREER_SMTP_URL:-}
+      CAREER_MAIL_FROM: ${CAREER_MAIL_FROM:-Career Studio <no-reply@localhost>}
+      CAREER_PUBLIC_URL: https://${CAREER_DOMAIN:?set CAREER_DOMAIN}
   worker:
     image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-backend:${CAREER_VERSION:?set CAREER_VERSION}
     pull_policy: always
+    environment: *production-mail
+  mailpit:
+    # The local mail catcher never runs in production.
+    profiles: ["local-mail"]
   frontend:
     image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-frontend:${CAREER_VERSION:?set CAREER_VERSION}
     pull_policy: always

@@ -43,7 +43,7 @@ STATUS: dict[type[DomainError], int] = {
 }
 
 # Codes whose HTTP status differs from their error class.
-STATUS_BY_CODE = {"google_unavailable": 503}
+STATUS_BY_CODE = {"google_unavailable": 503, "email_unavailable": 503}
 
 DEFAULT_MESSAGES: dict[type[DomainError], str] = {
     NotFound: "Resume not found.",

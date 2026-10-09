@@ -52,6 +52,33 @@ class Credentials(StrictModel):
         return value.strip().casefold()
 
 
+Language = Literal["en", "ru", "kk"]
+
+
+class Registration(Credentials):
+    language: Language = "en"
+
+
+class PasswordForgot(StrictModel):
+    email: str = Field(min_length=3, max_length=254)
+    language: Language = "en"
+
+    @field_validator("email")
+    @classmethod
+    def email_address(cls, value):
+        return Credentials.email_address(value)
+
+
+class PasswordReset(StrictModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
+    token: str = Field(min_length=20, max_length=200)
+    password: str = Field(min_length=12, max_length=256)
+
+
+class EmailToken(StrictModel):
+    token: str = Field(min_length=20, max_length=200)
+
+
 class GoogleCredential(StrictModel):
     credential: str = Field(min_length=20, max_length=10000)
 
@@ -140,7 +167,7 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.post("/auth/register", status_code=201)
     def register(
-        payload: Credentials,
+        payload: Registration,
         request: Request,
         response: Response,
         cases: Cases,
@@ -149,6 +176,7 @@ def career_router(settings: Settings) -> APIRouter:
     ):
         token = cases.auth.register(current, payload.email, payload.password, client)
         start_session(request, response, cases, token)
+        cases.recovery.welcome(cases.workspaces.resolve(token), payload.language)
         return {"authenticated": True}
 
     @routes.post("/auth/login")
@@ -158,6 +186,20 @@ def career_router(settings: Settings) -> APIRouter:
         token = cases.auth.login(payload.email, payload.password, client)
         start_session(request, response, cases, token)
         return {"authenticated": True}
+
+    @routes.post("/auth/password/forgot", status_code=202)
+    def forgot_password(payload: PasswordForgot, cases: Cases, client: ClientId):
+        cases.recovery.request_reset(payload.email, client, payload.language)
+        return {"sent": True}
+
+    @routes.post("/auth/password/reset", status_code=204)
+    def reset_password(payload: PasswordReset, cases: Cases, client: ClientId):
+        cases.recovery.reset(payload.token, payload.password, client)
+
+    @routes.post("/auth/email/verify")
+    def verify_email(payload: EmailToken, cases: Cases, client: ClientId):
+        cases.recovery.verify(payload.token, client)
+        return {"verified": True}
 
     @routes.post("/auth/logout", status_code=204)
     def logout(request: Request, response: Response, cases: Cases):
@@ -186,7 +228,11 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.get("/auth/options")
     def auth_options():
-        return {"postgres": True, "google": bool(settings.google_client_id)}
+        return {
+            "postgres": True,
+            "google": bool(settings.google_client_id),
+            "email": bool(settings.smtp_url.get_secret_value()),
+        }
 
     @routes.get("/user/me")
     def me(cases: Cases, current: Workspace):
@@ -194,6 +240,7 @@ def career_router(settings: Settings) -> APIRouter:
             "uid": current.owner,
             "authenticated": current.persistent,
             "email": cases.auth.email(current),
+            "email_verified": cases.auth.email_verified(current),
         }
 
     @routes.get("/user/profile", response_model=ProfileRecord)

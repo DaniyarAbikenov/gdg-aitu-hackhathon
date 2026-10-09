@@ -30,7 +30,7 @@ cp .env.example .env
 docker compose up --build --wait
 ```
 
-Open **http://localhost:8080**. Set `CAREER_PORT=8088` in `.env` for another port.
+Open **http://localhost:8080**. Set `CAREER_PORT=8088` in `.env` for another port. Emails such as password reset links are caught by Mailpit at **http://127.0.0.1:8025**.
 
 Compose starts React/Nginx, FastAPI, PostgreSQL 17, Redis 7.4 and the migration job. Only Nginx is exposed, on loopback. Frontend routes and `/api/*` share one origin and an HttpOnly session cookie. Database volumes survive rebuilds; **`docker compose down --volumes` deletes them**.
 

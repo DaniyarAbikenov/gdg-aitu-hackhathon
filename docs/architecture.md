@@ -20,6 +20,8 @@ Each step of the journey has its own use case: `ProfileService`, `ResumeAdaptati
 
 AI calls can take up to a minute. Endpoints that call a provider (resume review and adaptation, interview start and answers, learning plans, vacancy import) accept `Prefer: respond-async`: they return `202` with a job and a `Location: /api/jobs/{id}` header instead of holding the request. The job is queued in Redis with RQ and executed by `python -m app.worker`, which builds the same use cases as the API from the composition root. `GET /api/jobs/{id}` returns `queued`, `running`, `done` with the operation's normal response as `result`, or `failed` with a coded `error`; `GET /api/jobs/{id}/events` streams the same states as server-sent events. Jobs belong to their owner, payloads and results are JSON, and unstarted jobs expire after ten minutes. Without the header the endpoints keep working synchronously.
 
+Email uses the same worker. `Recovery` (password reset and address confirmation) depends on a `Mailer` port; the API is wired with a mailer that only enqueues the message, and the worker delivers it over SMTP. Request timing therefore does not depend on the SMTP server, which also keeps the reset endpoint from revealing whether an account exists.
+
 ## Error contract
 
 Domain errors carry a stable `code`. Every error response has the shape `{"detail": "<message>", "code": "<code>"}`; request validation adds a per-field `errors` list. The frontend translates by `code` (with an HTTP status fallback), so changing server wording never breaks localisation.
