@@ -1,0 +1,41 @@
+# Production overlay: prebuilt images from GHCR, HTTPS through Caddy, secure cookies.
+#   docker compose -f docker-compose.yml -f deploy/compose.prod.yml --env-file deploy/.env up -d
+# See docs/deploy.md.
+services:
+  migrate:
+    image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-backend:${CAREER_VERSION:?set CAREER_VERSION}
+    pull_policy: always
+  backend:
+    image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-backend:${CAREER_VERSION:?set CAREER_VERSION}
+    pull_policy: always
+    environment:
+      CAREER_SECURE_COOKIE: "true"
+      CAREER_WEB_WORKERS: ${CAREER_WEB_WORKERS:-2}
+  frontend:
+    image: ghcr.io/${CAREER_IMAGE_OWNER:-daniyarabikenov}/career-studio-frontend:${CAREER_VERSION:?set CAREER_VERSION}
+    pull_policy: always
+    # The base file publishes the gateway on 127.0.0.1 only, for health checks and seeding.
+  caddy:
+    image: caddy:2.10-alpine
+    environment:
+      CAREER_DOMAIN: ${CAREER_DOMAIN:?set CAREER_DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # Relative paths resolve from the repository root, where docker-compose.yml lives.
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      frontend:
+        condition: service_healthy
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:

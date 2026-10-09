@@ -121,6 +121,10 @@ The home page explains the product before sign-in. Run `python3 scripts/seed_dem
 
 API schema: **http://localhost:8080/api/openapi.json**. Swagger: **http://localhost:8080/api/docs**. The frontend's request and response types are generated from the same schema (`frontend/openapi.json` → `frontend/src/api/schema.d.ts`); after changing an endpoint run `npm run api:generate --prefix frontend`. CI fails if the generated files are stale.
 
+## Deploy
+
+Tagging `vX.Y.Z` publishes backend and frontend images to GitHub Container Registry. `deploy/compose.prod.yml` runs them behind Caddy with automatic HTTPS, secure cookies and several API workers. Step-by-step instructions, including a public demo with the labelled test provider: [docs/deploy.md](docs/deploy.md).
+
 Noto Sans is bundled under the [SIL Open Font License](app/assets/OFL.txt). No license is inferred for the original project.
 
 ### Shared skill catalog
