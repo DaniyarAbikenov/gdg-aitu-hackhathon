@@ -8,8 +8,16 @@ reportlab>=4.4.4,<5
 sqlalchemy>=2.0.44,<3
 psycopg[binary]>=3.2.12,<4
 redis>=6.4,<8
+rq>=2.12,<3
 alembic>=1.17,<2
 google-auth>=2.40,<3
 requests>=2.32,<3
 
 python-docx>=1.2,<2
+sentry-sdk>=2.40,<3
+opentelemetry-sdk>=1.45,<2
+opentelemetry-exporter-otlp-proto-http>=1.45,<2
+opentelemetry-instrumentation-fastapi>=0.55b0
+opentelemetry-instrumentation-sqlalchemy>=0.55b0
+opentelemetry-instrumentation-redis>=0.55b0
+opentelemetry-instrumentation-httpx>=0.55b0

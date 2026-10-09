@@ -1,3 +1,4 @@
+import { postJob } from "@/api/jobs";
 import client from "@/api/client";
 import type { ResumeRecord, VersionRecord } from "@/api/types";
 import { invalidateSummaries } from "@/features/dashboard/api";
@@ -179,13 +180,7 @@ export function useAdaptResume() {
       id: string;
       jd_text: string;
       revision: number;
-    }) =>
-      (
-        await client.post<Adaptation>(`/resume/${id}/adapt`, {
-          jd_text,
-          revision,
-        })
-      ).data,
+    }) => postJob<Adaptation>(`/resume/${id}/adapt`, { jd_text, revision }),
     onSuccess: () => invalidateResumes(queryClient),
   });
 }

@@ -11,6 +11,7 @@ from app.application.applications import Applications
 from app.application.auth import Auth
 from app.application.companies import Companies
 from app.application.interviews import InterviewService
+from app.application.jobs import Jobs
 from app.application.knowledge import Knowledge
 from app.application.learning import LearningService
 from app.application.overview import Overview
@@ -45,6 +46,7 @@ class UseCases:
     overview: Overview
     skills: SkillCatalog
     knowledge: Knowledge
+    jobs: Jobs
 
 
 def use_cases(request: Request) -> UseCases:
@@ -63,10 +65,16 @@ def member(request: Request, cases: Annotated[UseCases, Depends(use_cases)]) -> 
     return cases.workspaces.member(request.cookies.get(COOKIE))
 
 
+def prefers_async(request: Request) -> bool:
+    """`Prefer: respond-async` (RFC 7240) asks for a 202 with a job instead of waiting."""
+    return "respond-async" in request.headers.get("prefer", "")
+
+
 Cases = Annotated[UseCases, Depends(use_cases)]
 Workspace = Annotated[Session, Depends(workspace)]
 Member = Annotated[Session, Depends(member)]
 ClientId = Annotated[str, Depends(client_id)]
+RespondAsync = Annotated[bool, Depends(prefers_async)]
 
 
 def set_session_cookie(response: Response, token: str, settings: Settings) -> None:

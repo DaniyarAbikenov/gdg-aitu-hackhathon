@@ -466,6 +466,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Job */
+        get: operations["job_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/jobs/{job_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Events
+         * @description Server-sent events: one `status` event per change, ending with done or failed.
+         */
+        get: operations["events_jobs__job_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/knowledge": {
         parameters: {
             query?: never;
@@ -1545,6 +1582,38 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** JobError */
+        JobError: {
+            /** Code */
+            code: string;
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /**
+         * JobView
+         * @description `result` has the same shape as the synchronous response of the operation.
+         */
+        JobView: {
+            error?: components["schemas"]["JobError"] | null;
+            /** Id */
+            id: string;
+            /** Operation */
+            operation: string;
+            /** Result */
+            result?: unknown;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "done" | "failed";
+        } & {
+            [key: string]: unknown;
+        };
         /** LinkedInterview */
         LinkedInterview: {
             /** Finished */
@@ -2597,6 +2666,15 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -3000,6 +3078,15 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewView"];
                 };
             };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -3165,6 +3252,77 @@ export interface operations {
                     "application/json": components["schemas"]["InterviewView"];
                 };
             };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    events_jobs__job_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -3279,6 +3437,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlanRecord"];
+                };
+            };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
                 };
             };
             /** @description Validation Error */
@@ -3633,6 +3800,15 @@ export interface operations {
                     "application/json": unknown;
                 };
             };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
             /** @description Validation Error */
             422: {
                 headers: {
@@ -3763,6 +3939,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ResumeRecord"];
+                };
+            };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
                 };
             };
             /** @description Validation Error */

@@ -87,5 +87,9 @@ def install_error_handlers(app: FastAPI) -> None:
         logging.getLogger("career").error("Infrastructure unavailable: %s", type(exc).__name__)
         return error_response(503, "storage_unavailable", "Storage is temporarily unavailable.")
 
+    async def unexpected(request: Request, exc: Exception) -> JSONResponse:
+        return error_response(500, "internal_error", "Something went wrong. Please try again.")
+
     app.add_exception_handler(RedisError, unavailable)
     app.add_exception_handler(SQLAlchemyError, unavailable)
+    app.add_exception_handler(Exception, unexpected)

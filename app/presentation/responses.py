@@ -226,3 +226,18 @@ class ApplicationItem(View):
     resume_title: str | None
     interviews: list[LinkedInterview]
     plans: list[LinkedPlan]
+
+
+class JobError(View):
+    code: str
+    detail: str = ""
+
+
+class JobView(View):
+    """`result` has the same shape as the synchronous response of the operation."""
+
+    id: str
+    operation: str
+    status: Literal["queued", "running", "done", "failed"]
+    result: Any = None
+    error: JobError | None = None

@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     session_creations_per_hour: int = Field(default=30, ge=1, le=500)
     auth_per_15_minutes: int = Field(default=15, ge=1, le=100)
     analysis_per_hour: int = Field(default=30, ge=1, le=1000)
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
+    log_format: Literal["json", "text"] = "json"
+    # Error reporting and tracing stay off unless configured.
+    sentry_dsn: SecretStr = SecretStr("")
+    otel_enabled: bool = False
 
     @field_validator("database_url")
     @classmethod

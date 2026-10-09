@@ -1,3 +1,4 @@
+import { postJob } from "@/api/jobs";
 import client from "@/api/client";
 import type { PlanCreate, PlanRecord } from "@/api/types";
 import { invalidateCatalog } from "@/features/applications/api";
@@ -20,7 +21,7 @@ export function useCreatePlan() {
   return useMutation({
     mutationFn: async (
       payload: Partial<PlanCreate> & Pick<PlanCreate, "goal">,
-    ) => (await client.post<PlanRecord>("/plan", payload)).data,
+    ) => postJob<PlanRecord>("/plan", payload),
     onSuccess: (plan) => {
       queryClient.setQueryData<PlanRecord[]>(planKeys.all, (plans) =>
         plans ? [...plans, plan] : plans,

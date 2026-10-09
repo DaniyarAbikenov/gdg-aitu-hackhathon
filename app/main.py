@@ -15,6 +15,7 @@ from app.application.applications import Applications
 from app.application.auth import Administrators, Auth
 from app.application.companies import Companies
 from app.application.interviews import InterviewService
+from app.application.jobs import Jobs
 from app.application.knowledge import Knowledge
 from app.application.learning import LearningService
 from app.application.overview import Overview
@@ -32,7 +33,15 @@ from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
 from app.infrastructure.documents import Documents
 from app.infrastructure.google_login import GoogleLogin
+from app.infrastructure.jobs import RedisJobQueue
 from app.infrastructure.knowledge import KnowledgeRepository
+from app.infrastructure.observability import (
+    RequestContext,
+    configure_logging,
+    init_sentry,
+    init_tracing,
+    trace_engine,
+)
 from app.infrastructure.passwords import ScryptPasswords
 from app.infrastructure.postgres import PostgresRepository
 from app.infrastructure.redis_sessions import RedisSessions
@@ -45,6 +54,7 @@ from app.presentation.applications import applications_router
 from app.presentation.career import career_router
 from app.presentation.dependencies import UseCases
 from app.presentation.http import configure_http
+from app.presentation.jobs import jobs_router
 from app.presentation.product import product_router
 from app.presentation.skills import skill_router
 from app.presentation.voice import voice_router
@@ -57,9 +67,11 @@ class Container:
     repository: PostgresRepository
     career_store: PostgresCareerRepository
     sessions: RedisSessions
+    jobs: RedisJobQueue
     use_cases: UseCases
 
     def close(self) -> None:
+        self.jobs.close()
         self.sessions.close()
         self.repository.close()
 
@@ -67,6 +79,7 @@ class Container:
 def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) -> Container:
     repository = PostgresRepository(settings.database_url)
     sessions = RedisSessions(settings)
+    jobs = RedisJobQueue(settings.redis_url, settings.redis_namespace)
     store = PostgresCareerRepository(repository)
     activity = ActivityRepository(repository.sessions)
     documents = Documents(settings)
@@ -109,8 +122,19 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         overview=Overview(store, repository, progress, profile, activity),
         skills=SkillCatalog(PostgresSkillRepository(repository.engine), sessions),
         knowledge=Knowledge(KnowledgeRepository(repository.sessions), auth),
+        jobs=Jobs(jobs),
     )
-    return Container(repository, store, sessions, use_cases)
+    return Container(repository, store, sessions, jobs, use_cases)
+
+
+VERSION = "0.5.0"
+
+
+def configure_observability(settings: Settings, service: str, app: FastAPI | None = None) -> None:
+    configure_logging(settings.log_level, settings.log_format)
+    init_sentry(settings.sentry_dsn.get_secret_value(), settings.environment, VERSION)
+    if settings.otel_enabled:
+        init_tracing(service, app)
 
 
 def create_app(settings=None, reviewer=None):
@@ -120,6 +144,8 @@ def create_app(settings=None, reviewer=None):
     async def lifespan(app):
         container = build_container(settings, reviewer)
         app.state.container = container
+        if settings.otel_enabled:
+            trace_engine(container.repository.engine)
 
         async def cleanup():
             while True:
@@ -146,10 +172,11 @@ def create_app(settings=None, reviewer=None):
     app = FastAPI(
         title="CareerBot",
         servers=[{"url": "/api", "description": "Docker gateway"}],
-        version="0.4.0",
+        version=VERSION,
         lifespan=lifespan,
         description="Upload, review, compare and export a factual resume. Start with /api/session.",
     )
+    configure_observability(settings, "career-api", app)
     configure_http(app, settings)
     app.include_router(router(settings))
     app.include_router(career_router(settings))
@@ -157,6 +184,9 @@ def create_app(settings=None, reviewer=None):
     app.include_router(product_router(settings))
     app.include_router(voice_router())
     app.include_router(applications_router())
+    app.include_router(jobs_router())
+    # Outermost, so the id and the access line cover every other middleware.
+    app.add_middleware(RequestContext)
     return app
 
 

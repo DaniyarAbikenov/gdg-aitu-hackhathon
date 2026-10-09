@@ -14,6 +14,8 @@ anyio==4.15.1
     # via
     #   httpx
     #   starlette
+asgiref==3.12.1
+    # via opentelemetry-instrumentation-asgi
 ast-serialize==0.12.1
     # via mypy
 boolean-py==5.0
@@ -27,6 +29,7 @@ certifi==2026.7.22
     #   httpcore
     #   httpx
     #   requests
+    #   sentry-sdk
 cffi==2.1.1
     # via cryptography
 charset-normalizer==3.5.2
@@ -34,9 +37,13 @@ charset-normalizer==3.5.2
     #   reportlab
     #   requests
 click==8.5.0
-    # via uvicorn
+    # via
+    #   rq
+    #   uvicorn
 coverage[toml]==7.16.2
     # via pytest-cov
+croniter==6.2.4
+    # via rq
 cryptography==50.0.2
     # via google-auth
 cyclonedx-python-lib==9.1.0
@@ -49,6 +56,8 @@ filelock==4.0.10
     # via cachecontrol
 google-auth==2.59.1
     # via -r requirements.in
+googleapis-common-protos==1.75.5
+    # via opentelemetry-exporter-otlp-proto-http
 h11==0.16.0
     # via
     #   httpcore
@@ -85,11 +94,72 @@ mypy==2.4.0
 mypy-extensions==1.1.0
     # via mypy
 opentelemetry-api==1.45.0
-    # via fastapi
+    # via
+    #   fastapi
+    #   opentelemetry-exporter-http-transport
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-instrumentation-httpx
+    #   opentelemetry-instrumentation-redis
+    #   opentelemetry-instrumentation-sqlalchemy
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
+opentelemetry-exporter-http-transport[urllib3]==0.66b0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-common==0.66b0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-common==1.45.0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-http==1.45.0
+    # via -r requirements.in
+opentelemetry-instrumentation==0.66b0
+    # via
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-instrumentation-httpx
+    #   opentelemetry-instrumentation-redis
+    #   opentelemetry-instrumentation-sqlalchemy
+opentelemetry-instrumentation-asgi==0.66b0
+    # via opentelemetry-instrumentation-fastapi
+opentelemetry-instrumentation-fastapi==0.66b0
+    # via -r requirements.in
+opentelemetry-instrumentation-httpx==0.66b0
+    # via -r requirements.in
+opentelemetry-instrumentation-redis==0.66b0
+    # via -r requirements.in
+opentelemetry-instrumentation-sqlalchemy==0.66b0
+    # via -r requirements.in
+opentelemetry-proto==1.45.0
+    # via
+    #   opentelemetry-exporter-otlp-proto-common
+    #   opentelemetry-exporter-otlp-proto-http
+opentelemetry-sdk==1.45.0
+    # via
+    #   -r requirements.in
+    #   opentelemetry-exporter-otlp-common
+    #   opentelemetry-exporter-otlp-proto-http
+opentelemetry-semantic-conventions==0.66b0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-instrumentation-httpx
+    #   opentelemetry-instrumentation-redis
+    #   opentelemetry-instrumentation-sqlalchemy
+    #   opentelemetry-sdk
+opentelemetry-util-http==0.66b0
+    # via
+    #   opentelemetry-instrumentation-asgi
+    #   opentelemetry-instrumentation-fastapi
+    #   opentelemetry-instrumentation-httpx
 packageurl-python==0.17.6
     # via cyclonedx-python-lib
 packaging==26.3
     # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-sqlalchemy
     #   pip-audit
     #   pip-requirements-parser
     #   pytest
@@ -109,6 +179,10 @@ pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
+protobuf==7.36.2
+    # via
+    #   googleapis-common-protos
+    #   opentelemetry-proto
 psycopg[binary]==3.3.6
     # via -r requirements.in
 psycopg-binary==3.3.6
@@ -143,6 +217,8 @@ pytest==8.4.2
     #   pytest-cov
 pytest-cov==7.0.0
     # via -r requirements-dev.in
+python-dateutil==2.9.0.post0
+    # via croniter
 python-docx==1.2.0
     # via -r requirements.in
 python-dotenv==1.2.4
@@ -150,7 +226,9 @@ python-dotenv==1.2.4
 python-multipart==0.0.32
     # via -r requirements.in
 redis==7.4.1
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   rq
 reportlab==4.5.1
     # via -r requirements.in
 requests==2.34.2
@@ -160,8 +238,14 @@ requests==2.34.2
     #   pip-audit
 rich==15.0.0
     # via pip-audit
+rq==2.12.0
+    # via -r requirements.in
 ruff==0.14.3
     # via -r requirements-dev.in
+sentry-sdk==2.71.0
+    # via -r requirements.in
+six==1.17.0
+    # via python-dateutil
 sortedcontainers==2.4.0
     # via cyclonedx-python-lib
 sqlalchemy==2.1.3
@@ -179,6 +263,9 @@ typing-extensions==4.16.0
     #   fastapi
     #   mypy
     #   opentelemetry-api
+    #   opentelemetry-exporter-otlp-proto-http
+    #   opentelemetry-sdk
+    #   opentelemetry-semantic-conventions
     #   psycopg
     #   pydantic
     #   pydantic-core
@@ -192,9 +279,18 @@ typing-inspection==0.4.4
     #   pydantic
     #   pydantic-settings
 urllib3==2.8.0
-    # via requests
+    # via
+    #   opentelemetry-exporter-http-transport
+    #   requests
+    #   sentry-sdk
 uvicorn==0.54.0
     # via -r requirements.in
+wrapt==2.5.0
+    # via
+    #   opentelemetry-instrumentation
+    #   opentelemetry-instrumentation-httpx
+    #   opentelemetry-instrumentation-redis
+    #   opentelemetry-instrumentation-sqlalchemy
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

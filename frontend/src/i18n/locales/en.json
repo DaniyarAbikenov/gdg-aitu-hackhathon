@@ -909,7 +909,8 @@
     "duplicate": "This company is already in your catalog.",
     "credentials": "Incorrect email or password.",
     "password": "Incorrect current password.",
-    "accountExists": "Account already exists. Sign in instead."
+    "accountExists": "Account already exists. Sign in instead.",
+    "letterFacts": "Fill in your profile or choose a resume for this vacancy first."
   },
   "articleLanguage": "Article language",
   "ui": {
@@ -966,5 +967,9 @@
     "missing": "Not found in PDF",
     "edit": "Review and edit extracted facts",
     "apply": "Apply selected facts to profile"
+  },
+  "jobs": {
+    "queued": "AI request is queued…",
+    "running": "AI is working on your request…"
   }
 }

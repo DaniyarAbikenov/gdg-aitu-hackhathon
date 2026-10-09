@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Literal
+from typing import Any, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Request, Response
@@ -11,8 +11,10 @@ from app.presentation.dependencies import (
     Cases,
     ClientId,
     Member,
+    RespondAsync,
     clear_session_cookie,
 )
+from app.presentation.jobs import ACCEPTED, accepted
 from app.presentation.responses import ApplicationItem, Record
 
 
@@ -104,11 +106,16 @@ def applications_router() -> APIRouter:
             payload.revision,
         )
 
-    @routes.post("/applications/import")
-    def import_vacancy(payload: VacancyImport, cases: Cases, current: Member):
-        return cases.applications.import_draft(
-            current, str(payload.url or ""), payload.text, payload.language
-        )
+    @routes.post("/applications/import", responses=ACCEPTED)
+    def import_vacancy(payload: VacancyImport, cases: Cases, current: Member, later: RespondAsync):
+        arguments: dict[str, Any] = {
+            "url": str(payload.url or ""),
+            "text": payload.text,
+            "language": payload.language,
+        }
+        if later:
+            return accepted(cases.jobs.submit(current, "vacancy.import", **arguments))
+        return cases.applications.import_draft(current, **arguments)
 
     @routes.get("/applications", response_model=list[ApplicationItem])
     def applications(cases: Cases, current: Member):

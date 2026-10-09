@@ -1,3 +1,4 @@
+import { postJob } from "@/api/jobs";
 import { tr } from "@/i18n/copy";
 import client from "@/api/client";
 import i18n from "@/i18n/config";
@@ -72,12 +73,10 @@ export function useStartInterview() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: Omit<InterviewStartRequest, "language">) =>
-      (
-        await client.post<InterviewView>("/interview/start", {
-          ...payload,
-          language: i18n.language === "kz" ? "kk" : i18n.language,
-        })
-      ).data,
+      postJob<InterviewView>("/interview/start", {
+        ...payload,
+        language: i18n.language === "kz" ? "kk" : i18n.language,
+      }),
     onSuccess: (record) => updated(queryClient, record),
   });
 }
@@ -94,12 +93,7 @@ export function useAnswerInterview() {
       answer: string;
       revision: number;
     }) =>
-      (
-        await client.post<InterviewView>(`/interview/${id}/answer`, {
-          answer,
-          revision,
-        })
-      ).data,
+      postJob<InterviewView>(`/interview/${id}/answer`, { answer, revision }),
     onSuccess: (record) => updated(queryClient, record),
   });
 }

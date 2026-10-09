@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from contextlib import AbstractContextManager
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from app.domain.models import Analysis, ResumeFields, ResumeRecord, Session
 
@@ -93,3 +94,23 @@ class KnowledgeStore(Protocol):
 
 class ActivityLog(Protocol):
     def list(self, owner: str) -> list[dict[str, Any]]: ...
+
+
+JobStatus = Literal["queued", "running", "done", "failed"]
+
+
+@dataclass(frozen=True)
+class JobState:
+    """A background operation. `result` or `error` is set once the job has ended."""
+
+    id: str
+    owner: str
+    operation: str
+    status: JobStatus
+    result: Any = None
+    error: dict[str, str] | None = None
+
+
+class JobQueue(Protocol):
+    def submit(self, owner: str, operation: str, payload: dict[str, Any]) -> str: ...
+    def get(self, job_id: str) -> JobState | None: ...

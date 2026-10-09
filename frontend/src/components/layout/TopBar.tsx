@@ -4,6 +4,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { JobIndicator } from "@/components/JobIndicator";
 
 import {
   DropdownMenu,
@@ -36,6 +37,7 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center gap-2">
+        <JobIndicator />
         <LanguageSwitcher />
 
         {/* Dropdown menu */}
