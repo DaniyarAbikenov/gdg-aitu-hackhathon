@@ -10,6 +10,8 @@ Domain and application modules contain no FastAPI, Pydantic, SQLAlchemy, Redis o
 
 `app/main.py` builds one `Container` per process. Routers receive use cases through typed dependencies in `app/presentation/dependencies.py` (`Cases`, `Workspace`, `Member`) and make one use-case call per endpoint; they never touch repositories, Redis or provider adapters. A second AST test fails if a router imports infrastructure or reaches an adapter attribute. Domain and application code is fully annotated and checked by mypy in CI.
 
+Each step of the journey has its own use case: `ProfileService`, `ResumeAdaptation`, `InterviewService` (plus `VoiceInterviews` for live calls), `LearningService`, `ProgressService` and `Applications`. Rules that do not need storage live in domain models and are unit-tested without services: `Interview` (question flow, scoring, transcript merging, the public view that hides reference answers), `LearningPlan`, milestone rules in `progress.py` and the vacancy next-step rules in `vacancy.py`. Stored record kinds form the `RecordKind` literal, so mypy rejects an unknown kind.
+
 ## Error contract
 
 Domain errors carry a stable `code`. Every error response has the shape `{"detail": "<message>", "code": "<code>"}`; request validation adds a per-field `errors` list. The frontend translates by `code` (with an HTTP status fallback), so changing server wording never breaks localisation.

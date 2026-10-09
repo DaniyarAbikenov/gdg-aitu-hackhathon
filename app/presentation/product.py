@@ -102,11 +102,11 @@ def product_router(settings: Settings) -> APIRouter:
 
     @routes.get("/preferences")
     def preferences(cases: Cases, current: Member):
-        return cases.career.preferences(current)
+        return cases.profile.preferences(current)
 
     @routes.put("/preferences")
     def save_preferences(payload: Preferences, cases: Cases, current: Member):
-        return cases.career.save_preferences(current, payload.widgets, payload.revision)
+        return cases.profile.save_preferences(current, payload.widgets, payload.revision)
 
     @routes.post("/resume/create", status_code=201)
     def create_resume(payload: ResumeCreate, cases: Cases, current: Member):
@@ -148,13 +148,13 @@ def product_router(settings: Settings) -> APIRouter:
 
     @routes.get("/targets/{kind}")
     def targets(kind: Literal["company", "vacancy"], cases: Cases, current: Member):
-        return cases.career.targets(current, kind)
+        return cases.applications.targets(current, kind)
 
     @routes.post("/targets/{kind}", status_code=201)
     def save_target(
         kind: Literal["company", "vacancy"], payload: Target, cases: Cases, current: Member
     ):
-        return cases.career.save_target(current, kind, payload.model_dump())
+        return cases.applications.save_target(current, kind, payload.model_dump())
 
     @routes.get("/knowledge")
     def knowledge(

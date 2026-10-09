@@ -111,7 +111,7 @@ def applications_router() -> APIRouter:
 
     @routes.get("/applications")
     def applications(cases: Cases, current: Member):
-        return cases.applications.list(current)
+        return cases.applications.board(current)
 
     @routes.post("/applications", status_code=201)
     def create(payload: Application, cases: Cases, current: Member):

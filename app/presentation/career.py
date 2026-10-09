@@ -187,7 +187,7 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.get("/user/profile")
     def profile(cases: Cases, current: Workspace):
-        record = cases.career.profile(current)
+        record = cases.profile.get(current)
         return (
             asdict(record)
             if record
@@ -196,11 +196,11 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.post("/user/profile/update")
     def save_profile(payload: ProfileSave, cases: Cases, current: Workspace):
-        return cases.career.save_profile(current, payload.profile.model_dump(), payload.revision)
+        return cases.profile.save(current, payload.profile.model_dump(), payload.revision)
 
     @routes.post("/resume/{resume_id}/adapt")
     def adapt(resume_id: UUID, payload: Adapt, cases: Cases, current: Workspace):
-        return cases.career.adapt(current, str(resume_id), payload.revision, payload.jd_text)
+        return cases.adaptation.adapt(current, str(resume_id), payload.revision, payload.jd_text)
 
     @routes.get("/resume/{resume_id}/versions")
     def versions(resume_id: UUID, cases: Cases, current: Workspace):
@@ -208,7 +208,7 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.post("/resume/{resume_id}/versions", status_code=201)
     def save_version(resume_id: UUID, payload: VersionSave, cases: Cases, current: Workspace):
-        return cases.career.save_version(
+        return cases.adaptation.save_version(
             current,
             str(resume_id),
             payload.revision,
@@ -219,7 +219,7 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.post("/versions/{version_id}/restore")
     def restore(version_id: UUID, payload: Revision, cases: Cases, current: Workspace):
-        return cases.career.restore_version(current, str(version_id), payload.revision)
+        return cases.adaptation.restore_version(current, str(version_id), payload.revision)
 
     @routes.get("/versions/{version_id}/pdf")
     def version_pdf(version_id: UUID, cases: Cases, current: Workspace):
@@ -231,37 +231,33 @@ def career_router(settings: Settings) -> APIRouter:
 
     @routes.post("/interview/start", status_code=201)
     def start_interview(payload: InterviewStart, cases: Cases, current: Workspace):
-        return cases.career.public_interview(
-            cases.career.start_interview(current, payload.model_dump())
-        )
+        return cases.interviews.start(current, payload.model_dump())
 
     @routes.get("/interview")
     def interviews(cases: Cases, current: Workspace):
-        return cases.career.interviews(current)
+        return cases.interviews.history(current)
 
     @routes.get("/interview/{interview_id}")
     def interview(interview_id: UUID, cases: Cases, current: Workspace):
-        return cases.career.interview(current, str(interview_id))
+        return cases.interviews.get(current, str(interview_id))
 
     @routes.post("/interview/{interview_id}/answer")
     def answer(interview_id: UUID, payload: Answer, cases: Cases, current: Workspace):
-        return cases.career.public_interview(
-            cases.career.answer(current, str(interview_id), payload.revision, payload.answer)
-        )
+        return cases.interviews.answer(current, str(interview_id), payload.revision, payload.answer)
 
     @routes.post("/resume/{resume_id}/apply")
     def apply_proposal(resume_id: UUID, payload: ApplyProposal, cases: Cases, current: Workspace):
-        return cases.career.apply_proposal(
+        return cases.adaptation.apply_proposal(
             current, str(resume_id), payload.revision, payload.proposal_id
         )
 
     @routes.get("/plan")
     def plans(cases: Cases, current: Workspace):
-        return cases.career.plans(current)
+        return cases.learning.plans(current)
 
     @routes.post("/plan", status_code=201)
     def create_plan(payload: PlanCreate, cases: Cases, current: Workspace):
-        return cases.career.create_plan(
+        return cases.learning.create(
             current,
             payload.goal,
             str(payload.resume_id) if payload.resume_id else None,
@@ -275,7 +271,7 @@ def career_router(settings: Settings) -> APIRouter:
     def module(
         plan_id: UUID, module_id: int, payload: ModuleUpdate, cases: Cases, current: Workspace
     ):
-        return cases.career.complete_module(
+        return cases.learning.complete_module(
             current,
             str(plan_id),
             str(module_id),
@@ -287,18 +283,18 @@ def career_router(settings: Settings) -> APIRouter:
     @routes.get("/plan/{plan_id}/export")
     def export_plan(plan_id: UUID, cases: Cases, current: Workspace):
         return Response(
-            cases.career.plan_text(current, str(plan_id)),
+            cases.learning.as_text(current, str(plan_id)),
             media_type="text/plain",
             headers={"Content-Disposition": 'attachment; filename="career-plan.txt"'},
         )
 
     @routes.get("/progress")
     def progress(cases: Cases, current: Workspace):
-        return cases.career.progress(current)
+        return cases.progress.summary(current)
 
     @routes.post("/progress/rewards/{key}", status_code=201)
     def claim_reward(key: str, cases: Cases, current: Workspace):
-        return cases.career.claim_reward(current, key)
+        return cases.progress.claim(current, key)
 
     @routes.delete("/career/{kind}/{record_id}", status_code=204)
     def delete_record(
@@ -307,6 +303,11 @@ def career_router(settings: Settings) -> APIRouter:
         cases: Cases,
         current: Workspace,
     ):
-        cases.career.delete(current, kind, str(record_id))
+        delete = {
+            "plan": cases.learning.delete,
+            "interview": cases.interviews.delete,
+            "version": cases.adaptation.delete_version,
+        }[kind]
+        delete(current, str(record_id))
 
     return routes

@@ -2,21 +2,27 @@
 
 from dataclasses import asdict
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
-from app.application.career import CareerService
-from app.application.ports import VacancyParser
-from app.domain.career import CareerRecord
+from app.application.ports import ResumeRepository, SessionStore, VacancyParser
+from app.domain.career import CareerRecord, CareerRepository
 from app.domain.errors import Conflict, InvalidDocument
 from app.domain.models import Session
+from app.domain.vacancy import VACANCY_DEFAULTS, company_key, next_step
 
 MIN_PASTED_VACANCY = 60
+TargetKind = Literal["company", "vacancy"]
 
 
 class Applications:
-    def __init__(self, career: CareerService, parser: VacancyParser):
-        self.career = career
-        self.store = career.store
+    def __init__(
+        self,
+        store: CareerRepository,
+        resumes: ResumeRepository,
+        sessions: SessionStore,
+        parser: VacancyParser,
+    ):
+        self.store, self.resumes, self.sessions = store, resumes, sessions
         self.parser = parser
 
     def import_draft(self, session: Session, url: str, text: str, language: str) -> dict[str, Any]:
@@ -27,7 +33,7 @@ class Applications:
                 "Paste a vacancy link or at least 60 characters of text.",
                 code="vacancy_import_failed",
             )
-        self.career.sessions.consume_analysis(session)
+        self.sessions.consume_analysis(session)
         return self.parser.parse(url, text, language)
 
     def save(
@@ -38,7 +44,7 @@ class Applications:
         revision: int = 0,
     ) -> CareerRecord:
         if data.get("resume_id"):
-            self.career.resumes.get(session.owner, data["resume_id"])
+            self.resumes.get(session.owner, data["resume_id"])
         if data.get("company_id"):
             selected_company = self.store.get("company", session.owner, data["company_id"])
             data["company_name"] = selected_company.data["name"]
@@ -51,12 +57,12 @@ class Applications:
             data = {**current.data, **data}
         elif revision:
             raise InvalidDocument("A new vacancy starts at revision zero.")
-        company_key = " ".join(data["company_name"].casefold().split())
+        key = company_key(data["company_name"])
         company = next(
             (
                 c
                 for c in self.store.list("company", session.owner)
-                if " ".join(c.data["name"].casefold().split()) == company_key
+                if company_key(c.data["name"]) == key
             ),
             None,
         )
@@ -78,25 +84,14 @@ class Applications:
             else self.store.create("vacancy", session, data)
         )
 
-    def list(self, session: Session) -> list[dict[str, Any]]:
+    def board(self, session: Session) -> list[dict[str, Any]]:
         companies = {c.id: c.data for c in self.store.list("company", session.owner)}
         interviews = self.store.list("interview", session.owner)
         plans = self.store.list("plan", session.owner)
-        resumes = {r.resume_id: r for r in self.career.resumes.list(session.owner)}
+        resumes = {r.resume_id: r for r in self.resumes.list(session.owner)}
         results = []
         for record in self.store.list("vacancy", session.owner):
-            data = {
-                "status": "saved",
-                "company_name": "",
-                "company_description": "",
-                "source_url": "",
-                "notes": "",
-                "next_action": "",
-                "follow_up": "",
-                "resume_id": "",
-                "skills": [],
-                **record.data,
-            }
+            data = {**VACANCY_DEFAULTS, **record.data}
             company = companies.get(data.get("company_id") or "", {})
             data["company_name"] = company.get("name") or data["company_name"]
             data["company_description"] = company.get("description") or data["company_description"]
@@ -105,33 +100,20 @@ class Applications:
             ]
             related_plans = [p for p in plans if p.data.get("vacancy_id") == record.id]
             resume = resumes.get(data["resume_id"])
-            next_step_key = "custom"
-            if data["status"] in {"offer", "rejected", "archived"}:
-                next_step = "Подведите итоги и сохраните полезные выводы."
-                next_step_key = "wrapUp"
-            elif data["next_action"]:
-                next_step = data["next_action"]
-            elif not resume:
-                next_step = "Выберите резюме для этой вакансии."
-                next_step_key = "chooseResume"
-            elif not related_interviews:
-                next_step = "Пройдите тренировку по требованиям вакансии."
-                next_step_key = "practice"
-            elif not any(i.data["finished"] for i in related_interviews):
-                next_step = "Завершите начатую тренировку."
-                next_step_key = "finish"
-            elif not related_plans:
-                next_step = "Составьте план по результатам подготовки."
-                next_step_key = "plan"
-            else:
-                next_step = "Запланируйте отклик или следующий контакт."
-                next_step_key = "contact"
+            step = next_step(
+                data["status"],
+                data["next_action"],
+                has_resume=resume is not None,
+                interviews_started=len(related_interviews),
+                interviews_finished=sum(bool(i.data["finished"]) for i in related_interviews),
+                plans=len(related_plans),
+            )
             results.append(
                 {
                     **asdict(record),
                     "data": data,
-                    "next_step": next_step,
-                    "next_step_key": next_step_key,
+                    "next_step": step.text,
+                    "next_step_key": step.key,
                     "resume_title": resume.title if resume else None,
                     "interviews": [
                         {
@@ -146,3 +128,11 @@ class Applications:
                 }
             )
         return results
+
+    def targets(self, session: Session, kind: TargetKind) -> list[CareerRecord]:
+        return self.store.list(kind, session.owner)
+
+    def save_target(self, session: Session, kind: TargetKind, data: dict[str, Any]) -> CareerRecord:
+        if data.get("company_id"):
+            self.store.get("company", session.owner, data["company_id"])
+        return self.store.create(kind, session, data)
