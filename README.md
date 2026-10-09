@@ -82,7 +82,7 @@ Screenshots show a separate fictional account persisted in the local production 
 - View real progress and claim milestones backed by saved data.
 - Dictation uses the browser speech API when supported; its provider may process audio. Typed input is always available.
 
-The original core UI is localized in English, Russian and Kazakh; some helper copy is Russian. Support contacts and notification delivery were unfinished in the prototype and are not represented as functioning services. Password recovery and email verification are not implemented.
+The original core UI is localized in English, Russian and Kazakh; some helper copy is Russian. Support contacts and notification delivery were unfinished in the prototype and are not represented as functioning services. Password recovery and email confirmation work through emailed links (Mailpit catches them locally).
 
 ## Persistence and concurrency
 

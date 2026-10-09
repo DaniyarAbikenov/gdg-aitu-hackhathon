@@ -50,7 +50,7 @@ Tests use real PostgreSQL and Redis. Mock transports isolate external Google/Ope
 
 ## Remaining deployment concerns
 
-The shipped configuration is for local evaluation. Public hosting needs HTTPS, secure cookies, operational credentials/backups and monitoring. Account recovery, legacy data migration and complete translation of explanatory copy are separate follow-up work. Dictation is a browser integration; NotebookLM is a manual exported-source workflow.
+The shipped configuration is for local evaluation. Public hosting needs HTTPS, secure cookies, operational credentials/backups and monitoring. Legacy data migration and complete translation of explanatory copy are separate follow-up work. Dictation is a browser integration; NotebookLM is a manual exported-source workflow.
 
 ## Vacancy-centred preparation
 
