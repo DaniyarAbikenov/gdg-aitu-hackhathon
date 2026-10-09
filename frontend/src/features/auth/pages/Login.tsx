@@ -22,7 +22,8 @@ export default function Login() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const googleEnabled = useAuthOptions().data?.google ?? false;
+  const options = useAuthOptions().data;
+  const googleEnabled = options?.google ?? false;
   const login = useLogin();
   const googleLogin = useGoogleLogin();
 
@@ -122,6 +123,14 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {options?.email && (
+                <Link
+                  to="/forgot-password"
+                  className="block text-sm text-primary hover:underline"
+                >
+                  {tr("recovery.forgotLink")}
+                </Link>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
               {t("login.signIn") ?? tr("copy.c296")}

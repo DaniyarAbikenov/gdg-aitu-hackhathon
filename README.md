@@ -30,7 +30,7 @@ cp .env.example .env
 docker compose up --build --wait
 ```
 
-Open **http://localhost:8080**. Set `CAREER_PORT=8088` in `.env` for another port.
+Open **http://localhost:8080**. Set `CAREER_PORT=8088` in `.env` for another port. Emails such as password reset links are caught by Mailpit at **http://127.0.0.1:8025**.
 
 Compose starts React/Nginx, FastAPI, PostgreSQL 17, Redis 7.4 and the migration job. Only Nginx is exposed, on loopback. Frontend routes and `/api/*` share one origin and an HttpOnly session cookie. Database volumes survive rebuilds; **`docker compose down --volumes` deletes them**.
 
@@ -82,7 +82,7 @@ Screenshots show a separate fictional account persisted in the local production 
 - View real progress and claim milestones backed by saved data.
 - Dictation uses the browser speech API when supported; its provider may process audio. Typed input is always available.
 
-The original core UI is localized in English, Russian and Kazakh; some helper copy is Russian. Support contacts and notification delivery were unfinished in the prototype and are not represented as functioning services. Password recovery and email verification are not implemented.
+The original core UI is localized in English, Russian and Kazakh; some helper copy is Russian. Support contacts and notification delivery were unfinished in the prototype and are not represented as functioning services. Password recovery and email confirmation work through emailed links (Mailpit catches them locally).
 
 ## Persistence and concurrency
 

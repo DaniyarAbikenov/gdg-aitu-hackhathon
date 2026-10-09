@@ -32,7 +32,11 @@ Backups contain private data. Store them outside published artifacts, encrypt/ar
 
 Email/password accounts can export all private material, change a password and delete their account after re-entering the current password and email. The database stores an authentication version; changing a password invalidates old Redis sessions on the next request even across workers. Deletion is a database transaction and removes private aggregates and activity. Shared skill definitions and knowledge articles remain shared content.
 
-Google accounts can export data; self-service deletion and recovery for those accounts are not implemented. The operator should verify identity using the configured provider before an administrative deletion. Never accept a public issue as identity proof.
+A forgotten password is reset through an emailed link (`POST /auth/password/forgot`, then `POST /auth/password/reset`). The response is the same whether or not the address has an account, each address receives at most three emails an hour, and the link works once for one hour. Setting the new password bumps the authentication version, so every existing session ends. After registration the user also receives a confirmation link valid for 24 hours; settings show whether the address is confirmed and can send a new link. Tokens are random, stored in Redis only as SHA-256 hashes, and travel in the URL fragment, so they never appear in server or proxy logs.
+
+Email is sent by the worker from its own Redis queue, ahead of AI jobs, and retried twice. Locally, Docker Compose delivers it to Mailpit at http://127.0.0.1:8025, so no message leaves the machine. In production set `CAREER_SMTP_URL` (`smtp+starttls://user:password@host:587` or `smtps://...:465`), `CAREER_MAIL_FROM` and `CAREER_PUBLIC_URL`; without SMTP, recovery is reported as unavailable instead of pretending to send.
+
+Google accounts can export data; self-service deletion and password recovery for those accounts are not implemented (they have no password, and Google confirms their address). The operator should verify identity using the configured provider before an administrative deletion. Never accept a public issue as identity proof.
 
 ## Known scale boundaries
 

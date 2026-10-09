@@ -65,6 +65,17 @@ class AccountRow(Base):
     google_subject: Mapped[str | None] = mapped_column(String(255), unique=True)
     auth_version: Mapped[int] = mapped_column(Integer, server_default="0", default=0)
     password_hash: Mapped[str | None] = mapped_column(String(512))
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+def account_view(row: AccountRow) -> dict:
+    return {
+        "owner": row.owner,
+        "email": row.email,
+        "password_hash": row.password_hash,
+        "auth_version": row.auth_version,
+        "email_verified": row.email_verified_at is not None,
+    }
 
 
 TABLES = {
@@ -287,24 +298,26 @@ class PostgresCareerRepository:
             row = db.scalar(select(AccountRow).where(AccountRow.email == email))
             if not row:
                 raise NotFound
-            return {
-                "owner": row.owner,
-                "email": row.email,
-                "password_hash": row.password_hash,
-                "auth_version": row.auth_version,
-            }
+            return account_view(row)
 
     def account_for_owner(self, owner):
         with self.sessions() as db:
             row = db.get(AccountRow, owner)
             if not row:
                 raise NotFound
-            return {
-                "owner": row.owner,
-                "email": row.email,
-                "password_hash": row.password_hash,
-                "auth_version": row.auth_version,
-            }
+            return account_view(row)
+
+    def verify_email(self, owner, email):
+        with self.sessions.begin() as db:
+            db.execute(
+                update(AccountRow)
+                .where(
+                    AccountRow.owner == owner,
+                    AccountRow.email == email,
+                    AccountRow.email_verified_at.is_(None),
+                )
+                .values(email_verified_at=datetime.now(UTC))
+            )
 
     def change_password(self, owner, auth_version, password_hash):
         with self.sessions.begin() as db:
@@ -344,7 +357,11 @@ class PostgresCareerRepository:
                 # Never silently link an existing password account by email.
                 db.add(
                     AccountRow(
-                        owner=guest_owner, email=email, google_subject=subject, password_hash=None
+                        owner=guest_owner,
+                        email=email,
+                        google_subject=subject,
+                        password_hash=None,
+                        email_verified_at=datetime.now(UTC),
                     )
                 )
                 db.flush()

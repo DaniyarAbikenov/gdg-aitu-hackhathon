@@ -18,6 +18,7 @@ from app.application.overview import Overview
 from app.application.profile import ProfileService
 from app.application.profile_import import ProfileImport
 from app.application.progress import ProgressService
+from app.application.recovery import Recovery
 from app.application.resumes import ResumeService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
@@ -47,6 +48,7 @@ class UseCases:
     skills: SkillCatalog
     knowledge: Knowledge
     jobs: Jobs
+    recovery: Recovery
 
 
 def use_cases(request: Request) -> UseCases:

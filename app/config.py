@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     # Error reporting and tracing stay off unless configured.
     sentry_dsn: SecretStr = SecretStr("")
     otel_enabled: bool = False
+    # Password recovery and email confirmation are offered only when SMTP is configured.
+    smtp_url: SecretStr = SecretStr("")
+    mail_from: str = "Career Studio <no-reply@localhost>"
+    public_url: str = ""
 
     @field_validator("database_url")
     @classmethod
@@ -45,6 +49,14 @@ class Settings(BaseSettings):
         if not value.startswith(("redis://", "rediss://")):
             raise ValueError("Use a Redis service URL")
         return value
+
+    @model_validator(mode="after")
+    def require_public_url_for_mail(self):
+        if self.smtp_url.get_secret_value() and not self.public_url.startswith(
+            ("http://", "https://")
+        ):
+            raise ValueError("Email links need CAREER_PUBLIC_URL, for example https://example.com")
+        return self
 
     @model_validator(mode="after")
     def require_provider_configuration(self):

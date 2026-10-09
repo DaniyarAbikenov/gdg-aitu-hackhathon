@@ -80,6 +80,10 @@ class LetterRequest(StrictModel):
     language: Literal["ru", "en", "kk"] = "ru"
 
 
+class MailLanguage(StrictModel):
+    language: Literal["ru", "en", "kk"] = "en"
+
+
 class VacancyImport(StrictModel):
     url: HttpUrl | None = None
     text: str = Field(default="", max_length=45000)
@@ -193,6 +197,11 @@ def applications_router() -> APIRouter:
         cases.accounts.change_password(current, payload.password, payload.new_password, client)
         cases.workspaces.sign_out(request.cookies[COOKIE])
         clear_session_cookie(response)
+
+    @routes.post("/account/email/verification", status_code=202)
+    def send_verification(payload: MailLanguage, cases: Cases, current: Member):
+        cases.recovery.send_verification(current, payload.language)
+        return {"sent": True}
 
     @routes.post("/account/delete", status_code=204)
     def delete(

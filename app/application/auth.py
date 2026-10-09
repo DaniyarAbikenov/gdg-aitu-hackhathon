@@ -108,6 +108,9 @@ class Auth:
     def email(self, session: Session) -> str:
         return self.store.email_for_owner(session.owner) if session.persistent else ""
 
+    def email_verified(self, session: Session) -> bool:
+        return session.persistent and self.store.account_for_owner(session.owner)["email_verified"]
+
     def is_admin(self, session: Session) -> bool:
         return session.persistent and self.administrators.includes(self.email(session))
 

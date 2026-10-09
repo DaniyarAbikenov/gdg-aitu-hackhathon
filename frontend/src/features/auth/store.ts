@@ -10,36 +10,51 @@ interface AuthState {
   isAuthenticated: boolean;
   uid: string | null;
   email: string | null;
-  setAuthenticated: (uid: string, email: string) => void;
+  emailVerified: boolean;
+  setAuthenticated: (
+    uid: string,
+    email: string,
+    emailVerified: boolean,
+  ) => void;
   setUnauthenticated: () => void;
 }
 interface Identity {
   uid: string;
   authenticated: boolean;
   email: string | null;
+  email_verified: boolean;
 }
 export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
   uid: null,
   email: null,
-  setAuthenticated: (uid, email) => {
+  emailVerified: false,
+  setAuthenticated: (uid, email, emailVerified) => {
     // Cached server data belongs to one identity; drop it when the identity changes.
     if (!get().isLoading && get().uid !== uid) queryClient.clear();
-    set({ isLoading: false, isAuthenticated: true, uid, email });
+    set({ isLoading: false, isAuthenticated: true, uid, email, emailVerified });
   },
   setUnauthenticated: () => {
     useResumeStore.getState().reset();
     useInterviewStore.getState().reset();
     if (!get().isLoading) queryClient.clear();
-    set({ isLoading: false, isAuthenticated: false, uid: null, email: null });
+    set({
+      isLoading: false,
+      isAuthenticated: false,
+      uid: null,
+      email: null,
+      emailVerified: false,
+    });
   },
 }));
 export async function refreshIdentity() {
   try {
     const { data } = await client.get<Identity>("/user/me");
     if (data.authenticated) {
-      useAuthStore.getState().setAuthenticated(data.uid, data.email || "");
+      useAuthStore
+        .getState()
+        .setAuthenticated(data.uid, data.email || "", data.email_verified);
       const profile = await queryClient.fetchQuery(profileQuery);
       if (profile.revision > 0) {
         const language =

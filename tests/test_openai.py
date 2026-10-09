@@ -106,7 +106,7 @@ def test_configuration_requires_key_and_model():
 
 
 def test_postgres_auth_available_without_google(client):
-    assert client.get("/auth/options").json() == {"postgres": True, "google": False}
+    assert client.get("/auth/options").json() == {"postgres": True, "google": False, "email": False}
     assert client.post("/auth/google/nonce").status_code == 503
     assert (
         client.post("/auth/google", json={"credential": "unused-credential-value"}).status_code

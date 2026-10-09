@@ -9,6 +9,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { AccountControls } from "@/features/auth/components/AccountControls";
+import { EmailVerification } from "@/features/auth/components/EmailVerification";
 export default function Settings() {
   useLocale();
   const capabilities = useCapabilitiesQuery();
@@ -44,6 +45,7 @@ export default function Settings() {
         <section className="border rounded-xl p-5 space-y-3">
           <h2 className="font-semibold">{tr("copy.c486")}</h2>
           <p>{useAuthStore.getState().email}</p>
+          <EmailVerification />
           <Button disabled={busy} variant="outline" onClick={signout}>
             {tr("ui.logout")}
           </Button>

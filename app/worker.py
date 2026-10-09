@@ -15,6 +15,7 @@ from rq import SimpleWorker, get_current_job
 from rq.serializers import JSONSerializer
 
 from app.application.jobs import session_from
+from app.application.ports import EmailMessage, Mailer
 from app.config import Settings
 from app.domain.errors import DomainError
 from app.domain.models import Session
@@ -36,12 +37,13 @@ OPERATIONS: dict[str, Handler] = {
 
 log = logging.getLogger("career.worker")
 _use_cases: UseCases | None = None
+_mailer: Mailer | None = None
 
 
-def bind(use_cases: UseCases) -> None:
-    """Use the given use cases for jobs run in this process (the worker or a test)."""
-    global _use_cases
-    _use_cases = use_cases
+def bind(use_cases: UseCases, mailer: Mailer | None = None) -> None:
+    """Use the given use cases and mailer for jobs run in this process (the worker or a test)."""
+    global _use_cases, _mailer
+    _use_cases, _mailer = use_cases, mailer
 
 
 def plain(value: Any) -> Any:
@@ -69,6 +71,19 @@ def run(operation: str, payload: dict[str, Any]) -> dict[str, Any]:
     return {"result": plain(result)}
 
 
+def deliver(message: dict[str, str]) -> None:
+    """Email job. A failure raises, so RQ retries it and then keeps it in the failed registry."""
+    if _mailer is None:
+        raise RuntimeError("Email is not configured for the worker")
+    job = get_current_job()
+    token = request_id.set(job.meta.get("request_id", "") if job else "")
+    try:
+        _mailer.send(EmailMessage(**message))
+        log.info("Email sent", extra={"subject": message["subject"]})
+    finally:
+        request_id.reset(token)
+
+
 def healthy(connection: Any, name: str) -> bool:
     """A worker refreshes its Redis key on every heartbeat; a hung one expires, a stopped one
     is marked dead."""
@@ -90,10 +105,10 @@ def main() -> None:
     # Under `python -m` this file is __main__; RQ imports jobs from app.worker, so bind that module.
     from app import worker
 
-    worker.bind(container.use_cases)
+    worker.bind(container.use_cases, container.smtp)
     try:
         SimpleWorker(
-            [container.jobs.queue],
+            container.jobs.queues,
             name=socket.gethostname(),
             connection=container.jobs.connection,
             serializer=JSONSerializer,

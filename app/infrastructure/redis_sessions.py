@@ -16,6 +16,8 @@ if count == 1 then redis.call('EXPIRE', KEYS[1], ARGV[1]) end
 return count
 """
 
+MAILS_PER_HOUR = 3
+
 
 class RedisSessions:
     def __init__(self, settings):
@@ -98,6 +100,27 @@ class RedisSessions:
 
     def close(self):
         self.client.close()
+
+    def consume_mail(self, address):
+        """At most a few emails per address an hour, whoever asks for them."""
+        key = f"{self.namespace}:mail:{hashlib.sha256(address.encode()).hexdigest()}"
+        if self.increment(keys=[key], args=[3600]) > MAILS_PER_HOUR:
+            raise QuotaExceeded
+
+    def issue_token(self, purpose, value, seconds):
+        """Single-use link token; only its hash is stored."""
+        token = secrets.token_urlsafe(32)
+        self.client.set(self.token_key(purpose, token), json.dumps(value), ex=seconds)
+        return token
+
+    def redeem_token(self, purpose, token):
+        value = self.client.getdel(self.token_key(purpose, token))
+        if not value:
+            raise NotFound
+        return json.loads(value)
+
+    def token_key(self, purpose, token):
+        return f"{self.namespace}:{purpose}:{hashlib.sha256(token.encode()).hexdigest()}"
 
     def google_nonce(self, owner):
         nonce = secrets.token_urlsafe(32)
