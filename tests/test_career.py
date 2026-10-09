@@ -182,7 +182,7 @@ def test_account_preserves_records_across_sessions(client, resume, app):
     assert client.get("/user/me").json()["authenticated"]
     assert client.post("/auth/register", json=credentials).status_code == 422
     # Persisted account data survives guest cleanup and a fresh sign-in.
-    app.state.repository.purge_expired(datetime.now(UTC) + timedelta(days=8))
+    app.state.container.repository.purge_expired(datetime.now(UTC) + timedelta(days=8))
     assert client.get(f"/resume/{resume['resume_id']}").status_code == 200
     assert client.post("/auth/logout").status_code == 204
     assert client.get("/resume").status_code == 401
@@ -231,7 +231,7 @@ def test_career_owner_isolation_expiration_and_clear(client, app, resume):
     client.post("/api/session")
     assert client.get("/plan").json() == []
     assert client.get("/interview").json() == []
-    app.state.career.store.purge_expired(datetime.now(UTC) + timedelta(days=8))
+    app.state.container.career_store.purge_expired(datetime.now(UTC) + timedelta(days=8))
 
 
 def test_password_hashes_and_auth_rate_limits(client):
@@ -244,7 +244,7 @@ def test_password_hashes_and_auth_rate_limits(client):
     assert not passwords.verify("anything", "bad-format")
     assert not passwords.verify("anything", "other$00$00")
     for _ in range(15):
-        client.app.state.sessions.consume_auth("testclient")
+        client.app.state.container.sessions.consume_auth("testclient")
     assert (
         client.post(
             "/auth/login", json={"email": "alex@example.com", "password": "a long test password"}
@@ -348,8 +348,9 @@ def test_all_coaching_contracts(provider):
 
 def test_google_nonce_identity_and_replay_protection(client, settings, monkeypatch):
     settings.google_client_id = "test-client"
+    client.app.state.container.use_cases.auth.google_enabled = True
     monkeypatch.setattr(
-        client.app.state.google_login,
+        client.app.state.container.use_cases.auth.google,
         "verify",
         lambda credential, nonce: {"subject": "google-123", "email": "google@example.com"},
     )

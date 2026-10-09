@@ -1,12 +1,17 @@
 from collections import Counter
 from datetime import UTC, datetime, timedelta
+from typing import Any
+
+from app.application.career import CareerService
+from app.application.ports import ActivityLog
+from app.domain.models import Session
 
 
 class Overview:
-    def __init__(self, career, activity):
+    def __init__(self, career: CareerService, activity: ActivityLog):
         self.career, self.activity = career, activity
 
-    def summary(self, session, offset_minutes=0):
+    def summary(self, session: Session, offset_minutes: int = 0) -> dict[str, Any]:
         progress = self.career.progress(session)
         resumes = self.career.resumes.list(session.owner)
         interviews = self.career.store.list("interview", session.owner)
@@ -19,7 +24,7 @@ class Overview:
         now_week = [e for e in events if datetime.fromisoformat(e["at"]) >= monday]
         last_week = [e for e in events if previous <= datetime.fromisoformat(e["at"]) < monday]
 
-        def learning(items):
+        def learning(items: list[dict[str, Any]]) -> int:
             return sum(e["kind"] == "module_completed" for e in items)
 
         weights = {
@@ -42,16 +47,16 @@ class Overview:
             streak += 1
             cursor -= timedelta(days=1)
         assessments = self.career.store.list("assessment", session.owner)
-        latest = {}
+        latest: dict[str, dict[str, Any]] = {}
         for assessment in assessments:
             latest.setdefault(assessment.data["resume_id"], assessment.data)
-        gaps = Counter()
+        gaps: Counter[str] = Counter()
         for resume in resumes:
             if resume.lifecycle == "archived":
                 continue
-            assessment = latest.get(resume.resume_id)
-            if assessment and assessment["resume_revision"] == resume.revision:
-                gaps.update(set(assessment["missing_skills"]))
+            latest_assessment = latest.get(resume.resume_id)
+            if latest_assessment and latest_assessment["resume_revision"] == resume.revision:
+                gaps.update(set(latest_assessment["missing_skills"]))
             elif resume.analysis:
                 gaps.update(set(resume.analysis.missing_skills))
         return {

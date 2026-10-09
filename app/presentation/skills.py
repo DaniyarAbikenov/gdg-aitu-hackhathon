@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Query
 from pydantic import Field, field_validator
 
-from app.domain.models import Session
 from app.domain.skills import skill_name
-from app.presentation.api import workspace
+from app.presentation.dependencies import Cases, Member
 from app.presentation.schemas import StrictModel
 
 
@@ -20,25 +19,15 @@ class NewSkill(StrictModel):
         return value
 
 
-def skill_router():
+def skill_router() -> APIRouter:
     routes = APIRouter(prefix="/skills", tags=["skills"])
 
-    def authenticated(current: Session = Depends(workspace)):
-        if not current.persistent:
-            raise HTTPException(401, "Sign in to use the skill catalog.")
-        return current
-
     @routes.get("")
-    def search(
-        request: Request,
-        q: str = Query(default="", max_length=80),
-        current: Session = Depends(authenticated),
-    ):
-        return {"skills": request.app.state.skills.search(q)}
+    def search(cases: Cases, current: Member, q: str = Query(default="", max_length=80)):
+        return {"skills": cases.skills.search(q)}
 
     @routes.post("")
-    def add(payload: NewSkill, request: Request, current: Session = Depends(authenticated)):
-        request.app.state.sessions.consume_skill(current)
-        return request.app.state.skills.add(payload.name, payload.description)
+    def add(payload: NewSkill, cases: Cases, current: Member):
+        return cases.skills.add(current, payload.name, payload.description)
 
     return routes

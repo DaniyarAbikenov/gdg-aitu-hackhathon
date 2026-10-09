@@ -1,12 +1,19 @@
 """Career use cases coordinate ports; all state is persisted externally."""
 
+import json
+from collections.abc import Sequence
 from dataclasses import asdict
+from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 from app.application.ports import ResumeRepository, SessionStore
-from app.domain.career import CareerCoach, CareerRepository, PasswordHasher
+from app.domain.career import CareerCoach, CareerRecord, CareerRepository
 from app.domain.errors import Conflict, InvalidDocument, NotFound
-from app.domain.models import ResumeFields
+from app.domain.models import ResumeFields, ResumeRecord, Session
 from app.domain.review import compare
+
+DELETABLE = {"plan", "interview", "version"}
+DEFAULT_WIDGETS = ("resumes", "skills", "companies", "learning", "activity", "journey")
 
 
 class CareerService:
@@ -16,18 +23,17 @@ class CareerService:
         resumes: ResumeRepository,
         sessions: SessionStore,
         coach: CareerCoach,
-        passwords: PasswordHasher,
     ):
         self.store, self.resumes, self.sessions = store, resumes, sessions
-        self.coach, self.passwords = coach, passwords
+        self.coach = coach
 
-    def profile(self, session):
+    def profile(self, session: Session) -> CareerRecord | None:
         try:
             return self.store.get("profile", session.owner, session.owner)
         except NotFound:
             return None
 
-    def save_profile(self, session, data, revision):
+    def save_profile(self, session: Session, data: dict[str, Any], revision: int) -> CareerRecord:
         old = self.profile(session)
         if old:
             return self.store.update("profile", session.owner, session.owner, revision, data)
@@ -35,32 +41,11 @@ class CareerService:
             raise Conflict
         return self.store.create("profile", session, data, session.owner)
 
-    def profile_data(self, session):
+    def profile_data(self, session: Session) -> dict[str, Any]:
         profile = self.profile(session)
         return profile.data if profile else {}
 
-    def register(self, session, email, password, client_id):
-        self.sessions.consume_auth(client_id)
-        if session.persistent:
-            raise InvalidDocument("Sign out before registering another account.")
-        self.store.register(email, self.passwords.hash(password), session.owner)
-        return self.sessions.create(client_id, owner=session.owner)
-
-    def login(self, email, password, client_id):
-        self.sessions.consume_auth(client_id)
-        try:
-            account = self.store.account(email)
-        except NotFound:
-            # Spend the same password KDF work for unknown accounts.
-            self.passwords.hash(password)
-            raise NotFound from None
-        if not self.passwords.verify(password, account["password_hash"]):
-            raise NotFound
-        return self.sessions.create(
-            client_id, owner=account["owner"], auth_version=account["auth_version"]
-        )
-
-    def adapt(self, session, resume_id, revision, job):
+    def adapt(self, session: Session, resume_id: str, revision: int, job: str) -> dict[str, Any]:
         resume = self.resumes.get(session.owner, resume_id)
         if resume.revision != revision:
             raise Conflict
@@ -86,8 +71,6 @@ class CareerService:
                 "assessment", session.owner, previous.id, previous.revision, assessment
             )
         else:
-            from uuid import NAMESPACE_URL, uuid5
-
             self.store.create(
                 "assessment",
                 session,
@@ -96,9 +79,9 @@ class CareerService:
             )
         return {**result, "revision": revision, "jd_text": job}
 
-    def apply_proposal(self, session, resume_id, revision, proposal_id):
-        import json
-
+    def apply_proposal(
+        self, session: Session, resume_id: str, revision: int, proposal_id: str
+    ) -> CareerRecord:
         resume = self.resumes.get(session.owner, resume_id)
         assessment = next(
             (
@@ -152,7 +135,15 @@ class CareerService:
             proposal["section"],
         )
 
-    def save_version(self, session, resume_id, revision, fields, label, job):
+    def save_version(
+        self,
+        session: Session,
+        resume_id: str,
+        revision: int,
+        fields: dict[str, Any],
+        label: str,
+        job: str,
+    ) -> CareerRecord:
         # Version creation does not overwrite the source resume. A later restore is a separate CAS operation.
         original = self.resumes.get(session.owner, resume_id)
         if original.revision != revision:
@@ -169,7 +160,7 @@ class CareerService:
             },
         )
 
-    def restore_version(self, session, version_id, revision):
+    def restore_version(self, session: Session, version_id: str, revision: int) -> ResumeRecord:
         version = self.store.get("version", session.owner, version_id)
         return self.resumes.save(
             session.owner,
@@ -178,7 +169,7 @@ class CareerService:
             ResumeFields(**version.data["fields"]),
         )
 
-    def start_interview(self, session, context):
+    def start_interview(self, session: Session, context: dict[str, Any]) -> CareerRecord:
         self.sessions.consume_analysis(session)
         for kind in ["company", "vacancy"]:
             if context.get(kind + "_id"):
@@ -212,7 +203,7 @@ class CareerService:
             {**generated, "context": context, "answers": [], "finished": False, "score": None},
         )
 
-    def public_interview(self, record):
+    def public_interview(self, record: CareerRecord) -> dict[str, Any]:
         data = record.data
         index = len(data["answers"])
         return {
@@ -231,7 +222,9 @@ class CareerService:
             "transcript": data.get("transcript", []),
         }
 
-    def answer(self, session, interview_id, revision, answer):
+    def answer(
+        self, session: Session, interview_id: str, revision: int, answer: str
+    ) -> CareerRecord:
         record = self.store.get("interview", session.owner, interview_id)
         if (
             record.revision != revision
@@ -259,14 +252,14 @@ class CareerService:
 
     def create_plan(
         self,
-        session,
-        goal,
-        resume_id=None,
-        interview_id=None,
-        position="",
-        stacks=None,
-        vacancy_id=None,
-    ):
+        session: Session,
+        goal: str,
+        resume_id: str | None = None,
+        interview_id: str | None = None,
+        position: str = "",
+        stacks: list[str] | None = None,
+        vacancy_id: str | None = None,
+    ) -> CareerRecord:
         gaps = []
         vacancy = self.store.get("vacancy", session.owner, vacancy_id).data if vacancy_id else {}
         if vacancy_id and not resume_id:
@@ -319,7 +312,15 @@ class CareerService:
         )
         return self.store.create("plan", session, plan)
 
-    def complete_module(self, session, plan_id, module_id, revision, completed, evidence):
+    def complete_module(
+        self,
+        session: Session,
+        plan_id: str,
+        module_id: str,
+        revision: int,
+        completed: bool,
+        evidence: str,
+    ) -> CareerRecord:
         plan = self.store.get("plan", session.owner, plan_id)
         module = next((m for m in plan.data["modules"] if m["id"] == module_id), None)
         if not module:
@@ -327,7 +328,7 @@ class CareerService:
         module.update(completed=completed, evidence=evidence)
         return self.store.update("plan", session.owner, plan_id, revision, plan.data)
 
-    def progress(self, session):
+    def progress(self, session: Session) -> dict[str, Any]:
         plans = self.store.list("plan", session.owner)
         interviews = self.store.list("interview", session.owner)
         versions = self.store.list("version", session.owner)
@@ -354,15 +355,63 @@ class CareerService:
             ],
         }
 
-    def claim_reward(self, session, key):
+    def claim_reward(self, session: Session, key: str) -> CareerRecord:
         reward = next((r for r in self.progress(session)["rewards"] if r["key"] == key), None)
         if not reward or not reward["available"]:
             raise InvalidDocument("Complete the milestone before claiming it.")
         if reward["claimed"]:
             raise Conflict
         # Stable ID makes concurrent claims unique.
-        from uuid import NAMESPACE_URL, uuid5
-
         return self.store.create(
             "reward", session, {"key": key}, str(uuid5(NAMESPACE_URL, session.owner + key))
         )
+
+    def interviews(self, session: Session) -> list[dict[str, Any]]:
+        return [self.public_interview(r) for r in self.store.list("interview", session.owner)]
+
+    def interview(self, session: Session, interview_id: str) -> dict[str, Any]:
+        return self.public_interview(self.store.get("interview", session.owner, interview_id))
+
+    def plans(self, session: Session) -> list[CareerRecord]:
+        return self.store.list("plan", session.owner)
+
+    def plan_text(self, session: Session, plan_id: str) -> str:
+        plan = self.store.get("plan", session.owner, plan_id).data
+        lines = [plan["goal"], plan["explanation"], f"Provider: {plan['provider']}"]
+        for week in plan["modules"]:
+            lines += [
+                f"\nWeek {week['id']}: {week['title']} ({week['hours']} hours)",
+                *week["goals"],
+                week["exercise"],
+                "Resource topic: " + week["resource_topic"],
+                "Completed: " + str(week["completed"]),
+                "Evidence: " + week["evidence"],
+            ]
+        return "\n".join(lines)
+
+    def delete(self, session: Session, kind: str, record_id: str) -> None:
+        if kind not in DELETABLE:
+            raise NotFound
+        self.store.delete(kind, session.owner, record_id)
+
+    def preferences(self, session: Session) -> CareerRecord | dict[str, Any]:
+        try:
+            return self.store.get("preferences", session.owner, session.owner)
+        except NotFound:
+            return {"revision": 0, "data": {"widgets": list(DEFAULT_WIDGETS)}}
+
+    def save_preferences(
+        self, session: Session, widgets: Sequence[str], revision: int
+    ) -> CareerRecord:
+        data = {"widgets": list(dict.fromkeys(widgets))}
+        if revision:
+            return self.store.update("preferences", session.owner, session.owner, revision, data)
+        return self.store.create("preferences", session, data, session.owner)
+
+    def targets(self, session: Session, kind: str) -> list[CareerRecord]:
+        return self.store.list(kind, session.owner)
+
+    def save_target(self, session: Session, kind: str, data: dict[str, Any]) -> CareerRecord:
+        if data.get("company_id"):
+            self.store.get("company", session.owner, data["company_id"])
+        return self.store.create(kind, session, data)

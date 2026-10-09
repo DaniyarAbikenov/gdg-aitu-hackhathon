@@ -15,6 +15,10 @@ from app.domain.errors import InvalidDocument, ProviderUnavailable
 from app.infrastructure.ai import structured_ai
 
 
+def ImportFailed(message: str) -> InvalidDocument:  # noqa: N802 - reads like an error class
+    return InvalidDocument(message, code="vacancy_import_failed")
+
+
 class VacancyDraft(StrictModel):
     name: str = Field(max_length=200)
     company_name: str = Field(max_length=200)
@@ -64,14 +68,14 @@ class PublicPage:
             or parsed.password
             or parsed.port not in {None, 80, 443}
         ):
-            raise InvalidDocument("Use a public HTTP or HTTPS vacancy link.")
+            raise ImportFailed("Use a public HTTP or HTTPS vacancy link.")
         addresses = socket.getaddrinfo(
             parsed.hostname,
             parsed.port or (443 if parsed.scheme == "https" else 80),
             type=socket.SOCK_STREAM,
         )
         if not addresses or any(not ipaddress.ip_address(a[4][0]).is_global for a in addresses):
-            raise InvalidDocument("Only public vacancy websites can be imported.")
+            raise ImportFailed("Only public vacancy websites can be imported.")
         return parsed, addresses[0][4][0]
 
     def read(self, url):
@@ -79,7 +83,7 @@ class PublicPage:
             deadline = time.monotonic() + 25
             for _ in range(4):
                 if time.monotonic() > deadline:
-                    raise InvalidDocument("Vacancy import timed out. Paste the text instead.")
+                    raise ImportFailed("Vacancy import timed out. Paste the text instead.")
                 parsed, address = self.address(url)
                 port = parsed.port or (443 if parsed.scheme == "https" else 80)
                 # Pin the validated address; DNS cannot change between checking and connecting.
@@ -110,39 +114,35 @@ class PublicPage:
                     if response.status != 200 or response.getheader("Content-Type", "").split(";")[
                         0
                     ] not in {"text/html", "text/plain", "application/xhtml+xml"}:
-                        raise InvalidDocument(
+                        raise ImportFailed(
                             "This website blocks import. Paste the vacancy text instead."
                         )
                     raw = bytearray()
                     while len(raw) <= self.max_bytes:
                         if time.monotonic() > deadline:
-                            raise InvalidDocument(
-                                "Vacancy import timed out. Paste the text instead."
-                            )
+                            raise ImportFailed("Vacancy import timed out. Paste the text instead.")
                         chunk = response.read1(min(65536, self.max_bytes + 1 - len(raw)))
                         if not chunk:
                             break
                         raw.extend(chunk)
                     if len(raw) > self.max_bytes:
-                        raise InvalidDocument(
-                            "The vacancy page is too large. Paste its text instead."
-                        )
+                        raise ImportFailed("The vacancy page is too large. Paste its text instead.")
                     parser = PageText()
                     parser.feed(raw.decode("utf-8", errors="replace"))
                     text = "\n".join(
                         line.strip() for line in "".join(parser.parts).splitlines() if line.strip()
                     )
                     if len(text) < 60:
-                        raise InvalidDocument(
+                        raise ImportFailed(
                             "The page has no readable vacancy. Paste its text instead."
                         )
                     return {"url": url, "text": text[:45000]}
                 finally:
                     connection.close()
                     sock.close()
-            raise InvalidDocument("Too many redirects. Paste the vacancy text instead.")
+            raise ImportFailed("Too many redirects. Paste the vacancy text instead.")
         except (OSError, ValueError, http.client.HTTPException) as exc:
-            raise InvalidDocument(
+            raise ImportFailed(
                 "Could not load the public vacancy. Paste its text instead."
             ) from exc
 
@@ -167,5 +167,5 @@ class VacancyReader:
             VacancyDraft,
         )
         if not result["name"] or len(result["description"]) < 10:
-            raise InvalidDocument("No vacancy found. Paste the vacancy text instead.")
+            raise ImportFailed("No vacancy found. Paste the vacancy text instead.")
         return {"draft": result, "source_url": source["url"], "provider": self.provider}

@@ -2,6 +2,7 @@
 
 import re
 from datetime import date
+from typing import Any
 
 PRESENT = {
     "present",
@@ -16,7 +17,7 @@ PRESENT = {
 }
 
 
-def normalize_period(value, *, end=False):
+def normalize_period(value: str, *, end: bool = False) -> str:
     value = value.strip()
     if not value:
         return ""
@@ -37,7 +38,7 @@ def normalize_period(value, *, end=False):
     raise ValueError("Choose a year and optional month (YYYY or YYYY-MM)")
 
 
-def validate_period(start, end):
+def validate_period(start: str, end: str) -> None:
     if start and end and end != "present":
         earliest_start = start if len(start) == 7 else start + "-01"
         latest_end = end if len(end) == 7 else end + "-12"
@@ -45,7 +46,7 @@ def validate_period(start, end):
             raise ValueError("The end of a period must not precede its start")
 
 
-def validate_history(fields):
+def validate_history(fields: dict[str, Any]) -> None:
     experience = fields.get("experience", [])
     if isinstance(experience, list):
         for item in experience:

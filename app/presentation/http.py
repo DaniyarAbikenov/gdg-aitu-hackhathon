@@ -1,18 +1,6 @@
-import logging
 from urllib.parse import urlsplit
 
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from redis.exceptions import RedisError
-from sqlalchemy.exc import SQLAlchemyError
-
-from app.domain.errors import (
-    Conflict,
-    InvalidDocument,
-    NotFound,
-    ProviderUnavailable,
-    QuotaExceeded,
-)
+from app.presentation.errors import error_response, install_error_handlers
 
 
 class RequestSizeLimit:
@@ -32,7 +20,7 @@ class RequestSizeLimit:
             chunk = message.get("body", b"")
             size += len(chunk)
             if size > self.limit:
-                response = JSONResponse(status_code=413, content={"detail": "Upload is too large."})
+                response = error_response(413, "payload_too_large", "Upload is too large.")
                 return await response(scope, receive, send)
             chunks.append(chunk)
             if not message.get("more_body", False):
@@ -58,9 +46,7 @@ def configure_http(app, settings):
         origin = request.headers.get("origin")
         if origin and request.method not in {"GET", "HEAD", "OPTIONS"}:
             if urlsplit(origin).netloc != request.headers.get("host"):
-                return JSONResponse(
-                    status_code=403, content={"detail": "Cross-origin request denied."}
-                )
+                return error_response(403, "cross_origin", "Cross-origin request denied.")
         response = await call_next(request)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "same-origin"
@@ -76,48 +62,4 @@ def configure_http(app, settings):
             )
         return response
 
-    @app.exception_handler(RequestValidationError)
-    async def invalid_request(request, exc):
-        return JSONResponse(
-            status_code=422,
-            content={
-                "detail": "Check the form values.",
-                "errors": [
-                    {"field": ".".join(map(str, e["loc"])), "message": e["msg"]}
-                    for e in exc.errors()
-                ],
-            },
-        )
-
-    errors = {
-        NotFound: (404, "Resume not found."),
-        Conflict: (409, "This resume changed in another tab. Reload it before continuing."),
-        QuotaExceeded: (
-            429,
-            "Request or workspace limit reached. Try again later, or remove unused saved items.",
-        ),
-        ProviderUnavailable: (
-            502,
-            "AI processing is temporarily unavailable. Please retry later. Your saved data is unchanged.",
-        ),
-    }
-
-    async def known_error(request, exc):
-        code, message = errors[type(exc)]
-        return JSONResponse(status_code=code, content={"detail": message})
-
-    for error in errors:
-        app.add_exception_handler(error, known_error)
-
-    @app.exception_handler(InvalidDocument)
-    async def invalid_document(request, exc):
-        return JSONResponse(status_code=422, content={"detail": str(exc)})
-
-    async def unavailable(request, exc):
-        logging.getLogger("career").error("Infrastructure unavailable: %s", type(exc).__name__)
-        return JSONResponse(
-            status_code=503, content={"detail": "Storage is temporarily unavailable."}
-        )
-
-    app.add_exception_handler(RedisError, unavailable)
-    app.add_exception_handler(SQLAlchemyError, unavailable)
+    install_error_handlers(app)

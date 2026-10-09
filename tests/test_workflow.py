@@ -1,5 +1,6 @@
 import io
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
 import pytest
 from pypdf import PdfReader
@@ -91,29 +92,29 @@ def test_resume_is_private_to_its_session(client, resume):
 
 def test_session_cookie_and_clear_workspace(client, app, resume):
     token = client.cookies[COOKIE]
-    assert token not in app.state.sessions.client.keys("*session*")
+    assert token not in app.state.container.sessions.client.keys("*session*")
     assert client.post("/api/session").status_code == 200
     assert client.cookies[COOKIE] == token
     assert client.delete("/api/session").status_code == 204
     assert client.get("/resume").status_code == 401
-    with app.state.repository.sessions() as db:
+    with app.state.container.repository.sessions() as db:
         assert list(db.scalars(select(ResumeRow))) == []
 
 
 def test_expired_session_cannot_access_records(client, app, resume):
-    app.state.sessions.delete(client.cookies[COOKIE])
+    app.state.container.sessions.delete(client.cookies[COOKIE])
     assert client.get("/resume/" + resume["resume_id"]).status_code == 401
 
 
 def test_expired_records_are_hidden_and_removed(client, app, resume):
-    with app.state.repository.sessions.begin() as db:
+    with app.state.container.repository.sessions.begin() as db:
         db.execute(update(ResumeRow).values(expires_at=datetime.now(UTC) - timedelta(hours=1)))
     assert client.get("/resume").json() == []
-    assert app.state.repository.purge_expired(datetime.now(UTC)) == 1
+    assert app.state.container.repository.purge_expired(datetime.now(UTC)) == 1
 
 
 def test_analysis_limit_is_shared_and_unchanged_review_is_reused(client, app, resume):
-    app.state.sessions.analysis_limit = 1
+    app.state.container.sessions.analysis_limit = 1
     path = "/resume/" + resume["resume_id"] + "/improve"
     first = client.post(path, json={"jd_text": JOB, "revision": 1}).json()
     repeat = client.post(path, json={"jd_text": JOB, "revision": first["revision"]})
@@ -207,8 +208,8 @@ def test_upload_size_limit_with_and_without_content_length(client):
 
 
 def test_optimistic_check_after_slow_provider(client, app, resume):
-    repository = app.state.repository
-    owner = app.state.sessions.resolve(client.cookies[COOKIE]).owner
+    repository = app.state.container.repository
+    owner = app.state.container.sessions.resolve(client.cookies[COOKIE]).owner
     record = repository.get(owner, resume["resume_id"])
     repository.save(owner, record.resume_id, record.revision, record.fields)
     from app.domain.review import compare
@@ -218,7 +219,7 @@ def test_optimistic_check_after_slow_provider(client, app, resume):
             owner, record.resume_id, record.revision, compare(record.fields, JOB), JOB
         )
     with pytest.raises(NotFound):
-        app.state.sessions.resolve("x" * 101)
+        app.state.container.sessions.resolve("x" * 101)
 
 
 def test_provider_failure_preserves_saved_resume(client, app, resume, monkeypatch):
@@ -227,7 +228,7 @@ def test_provider_failure_preserves_saved_resume(client, app, resume, monkeypatc
     def fail(*args):
         raise ProviderUnavailable
 
-    monkeypatch.setattr(app.state.service.reviewer, "analyze", fail)
+    monkeypatch.setattr(app.state.container.use_cases.resumes.reviewer, "analyze", fail)
     path = "/resume/" + resume["resume_id"]
     result = client.post(path + "/improve", json={"jd_text": JOB, "revision": 1})
     assert result.status_code == 502
@@ -237,6 +238,18 @@ def test_provider_failure_preserves_saved_resume(client, app, resume, monkeypatc
 
 def test_session_creation_is_rate_limited_in_redis(client, app):
     for _ in range(29):
-        app.state.sessions.create("testclient")
+        app.state.container.sessions.create("testclient")
     client.cookies.clear()
     assert client.post("/api/session").status_code == 429
+
+
+def test_errors_carry_stable_codes(client):
+    login = client.post(
+        "/auth/login", json={"email": "nobody@example.com", "password": "not-the-password"}
+    )
+    assert login.status_code == 401
+    assert login.json() == {"detail": "Incorrect email or password.", "code": "invalid_credentials"}
+    missing = client.get(f"/resume/{uuid4()}")
+    assert missing.status_code == 404 and missing.json()["code"] == "not_found"
+    invalid = client.post("/resume/upload")
+    assert invalid.status_code == 422 and invalid.json()["code"] == "validation_failed"

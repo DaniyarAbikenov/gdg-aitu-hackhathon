@@ -1,6 +1,7 @@
 import hashlib
 import json
 import secrets
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -81,6 +82,16 @@ class RedisSessions:
         key = f"{self.namespace}:skills:{session.owner}"
         if self.increment(keys=[key], args=[3600]) > 30:
             raise QuotaExceeded
+
+    @contextmanager
+    def exclusive(self, name, seconds):
+        lock = self.client.lock(f"{self.namespace}:{name}", timeout=seconds, blocking_timeout=0)
+        acquired = lock.acquire()
+        try:
+            yield acquired
+        finally:
+            if acquired:
+                lock.release()
 
     def health(self):
         self.client.ping()

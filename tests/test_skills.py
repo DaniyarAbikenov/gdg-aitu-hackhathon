@@ -57,7 +57,7 @@ def test_catalog_shared_search_description_and_duplicates(client, app):
 
 
 def test_concurrent_additions_share_identity(app, client):
-    repository = PostgresSkillRepository(app.state.repository.engine)
+    repository = PostgresSkillRepository(app.state.container.repository.engine)
     name = "Concurrent " + str(uuid4())
 
     def create(index):

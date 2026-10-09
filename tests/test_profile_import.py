@@ -70,14 +70,16 @@ def test_profile_dates_are_validated_but_legacy_records_remain_readable(client, 
     from app.domain.models import ResumeFields
 
     owner = client.get("/user/me").json()["uid"]
-    original = app.state.repository.get(owner, resume["resume_id"])
+    original = app.state.container.repository.get(owner, resume["resume_id"])
     fields = {
         **resume["fields"],
         "experience": [
             {"role": "Developer", "date_from": "Spring of 2020", "date_to": "Autumn of 2021"}
         ],
     }
-    app.state.repository.save(owner, original.resume_id, original.revision, ResumeFields(**fields))
+    app.state.container.repository.save(
+        owner, original.resume_id, original.revision, ResumeFields(**fields)
+    )
     response = client.get(f"/resume/{resume['resume_id']}")
     assert response.status_code == 200
     assert response.json()["fields"]["experience"][0]["date_from"] == "Spring of 2020"
@@ -133,7 +135,9 @@ def test_pdf_profile_import_sends_document_to_ai_and_never_mutates_profile(clien
         calls.append(body)
         return httpx.Response(200, json=completed(facts))
 
-    app.state.profile_import.documents = Documents(config(), httpx.MockTransport(handle))
+    app.state.container.use_cases.profile_import.documents = Documents(
+        config(), httpx.MockTransport(handle)
+    )
     response = client.post(
         "/user/profile/import", files={"file": ("resume.pdf", pdf, "application/pdf")}
     )
@@ -187,7 +191,7 @@ def test_profile_import_validation_and_provider_failure_do_not_change_data(clien
         == 422
     )
     pdf = Path("tests/fixtures/resume.pdf").read_bytes()
-    app.state.profile_import.documents = Documents(
+    app.state.container.use_cases.profile_import.documents = Documents(
         config(), httpx.MockTransport(lambda request: httpx.Response(503))
     )
     assert (
