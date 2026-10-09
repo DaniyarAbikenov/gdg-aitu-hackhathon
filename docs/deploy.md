@@ -9,6 +9,8 @@ flowchart LR
   Nginx -->|/api/*| API[FastAPI, N workers]
   API --> PG[(PostgreSQL)]
   API --> Redis[(Redis)]
+  Redis -->|AI jobs| Worker[RQ worker]
+  Worker --> PG
 ```
 
 Only Caddy is reachable from the internet. Nginx is bound to the server's loopback address; the API, PostgreSQL and Redis stay on the internal Compose network.
@@ -81,5 +83,6 @@ The `migrate` job runs Alembic before the API starts. Take a backup first (see `
 
 - `CAREER_WEB_WORKERS` sets the number of Uvicorn workers (default 2). All state is in PostgreSQL and Redis, so workers share sessions, rate limits and quotas.
 - Rate limits use the client address. Caddy appends it to `X-Forwarded-For`; Nginx trusts only private-network proxies for that header and passes a single address to the API, so a browser cannot spoof it.
-- Logs: `docker compose ... logs -f backend caddy`. Caddy writes JSON access logs.
+- AI requests from the browser run in the `worker` service. Scale it with `docker compose ... up -d --scale worker=2` if jobs queue up.
+- Logs: `docker compose ... logs -f backend worker caddy`. All three write JSON lines; API and worker lines carry the request id. `CAREER_SENTRY_DSN` and `CAREER_OTEL_ENABLED` turn on error reporting and tracing (see `docs/operations.md#observability`).
 - Backups: `docs/operations.md#backup`. Docker volumes are not backups.
