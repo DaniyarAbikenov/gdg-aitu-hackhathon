@@ -1,8 +1,6 @@
 import type { PracticeScore, SkillNode } from "@/api/types";
 import { displayLocale, tr } from "@/i18n/copy";
 
-const W = 600;
-const H = 200;
 const PAD = { left: 36, right: 16, top: 12, bottom: 28 };
 
 type Point = { at: string; score: number };
@@ -18,10 +16,15 @@ function day(at: string) {
 export function ScoreChart({
   sessions,
   skill,
+  compact = false,
 }: {
   sessions: PracticeScore[];
   skill: SkillNode | null;
+  compact?: boolean;
 }) {
+  // A narrower drawing on phones keeps the axis labels readable.
+  const W = compact ? 400 : 900;
+  const H = compact ? 240 : 220;
   const overall: Point[] = sessions.flatMap((s) =>
     s.score === null ? [] : [{ at: s.at, score: s.score }],
   );
@@ -64,7 +67,7 @@ export function ScoreChart({
               x={PAD.left - 6}
               y={y(v) + 4}
               textAnchor="end"
-              className="fill-muted-foreground text-[11px]"
+              className="fill-muted-foreground text-[13px]"
             >
               {v}
             </text>
@@ -73,16 +76,17 @@ export function ScoreChart({
         <text
           x={PAD.left}
           y={H - 6}
-          className="fill-muted-foreground text-[11px]"
+          className="fill-muted-foreground text-[13px]"
         >
           {day(new Date(first).toISOString())}
         </text>
-        {last !== first && (
+        {day(new Date(last).toISOString()) !==
+          day(new Date(first).toISOString()) && (
           <text
             x={W - PAD.right}
             y={H - 6}
             textAnchor="end"
-            className="fill-muted-foreground text-[11px]"
+            className="fill-muted-foreground text-[13px]"
           >
             {day(new Date(last).toISOString())}
           </text>

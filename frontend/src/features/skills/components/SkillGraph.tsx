@@ -7,7 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { HEIGHT, type Point, WIDTH, layout, radius } from "../layout";
+import { type Point, TALL, WIDE, layout, radius } from "../layout";
 import { STATUS_FILL, latestScore } from "../status";
 
 /**
@@ -19,13 +19,20 @@ export function SkillGraph({
   data,
   selected,
   onSelect,
+  compact = false,
 }: {
   data: SkillMap;
   selected: string | null;
   onSelect: (key: string | null) => void;
+  compact?: boolean;
 }) {
+  const canvas = compact ? TALL : WIDE;
+  const { width: WIDTH, height: HEIGHT } = canvas;
   const keys = useMemo(() => data.nodes.map((n) => n.key), [data.nodes]);
-  const initial = useMemo(() => layout(keys, data.links), [keys, data.links]);
+  const initial = useMemo(
+    () => layout(keys, data.links, canvas),
+    [keys, data.links, canvas],
+  );
   const [moved, setMoved] = useState<Record<string, Point>>({});
   const [hover, setHover] = useState<string | null>(null);
   const [dragging, setDragging] = useState<string | null>(null);
@@ -173,9 +180,11 @@ export function SkillGraph({
               />
             )}
             <text
-              y={r + 16}
+              y={r + 18}
               textAnchor="middle"
-              className="fill-foreground text-[13px] font-medium"
+              className="fill-foreground stroke-background text-[15px] font-medium"
+              strokeWidth={4}
+              paintOrder="stroke"
             >
               {node.name}
             </text>

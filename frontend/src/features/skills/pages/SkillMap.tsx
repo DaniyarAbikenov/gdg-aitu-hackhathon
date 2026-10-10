@@ -3,13 +3,14 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { tr, useLocale } from "@/i18n/copy";
 import { getErrorMessage } from "@/lib/errors";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useSkillMap } from "../api";
 import { ScoreChart } from "../components/ScoreChart";
 import { SkillDetails } from "../components/SkillDetails";
 import { SkillGraph } from "../components/SkillGraph";
 import { STATUS_DOT, STATUS_ORDER, latestScore } from "../status";
+import { useCompact } from "../useCompact";
 
 type View = "map" | "list";
 
@@ -78,8 +79,15 @@ function SkillList({
 export default function SkillMap() {
   useLocale();
   const map = useSkillMap();
+  const compact = useCompact();
   const [view, setView] = useState<View>("map");
   const [selected, setSelected] = useState<string | null>(null);
+  const details = useRef<HTMLDivElement>(null);
+  // On phones the details sit below the map; bring them into view.
+  useEffect(() => {
+    if (compact && selected)
+      details.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+  }, [compact, selected]);
   const data = map.data;
   const byKey = new Map((data?.nodes ?? []).map((n) => [n.key, n]));
   const node = selected ? (byKey.get(selected) ?? null) : null;
@@ -184,6 +192,8 @@ export default function SkillMap() {
                 {view === "map" ? (
                   <>
                     <SkillGraph
+                      key={compact ? "tall" : "wide"}
+                      compact={compact}
                       data={data}
                       selected={selected}
                       onSelect={setSelected}
@@ -206,7 +216,7 @@ export default function SkillMap() {
                   <SkillList nodes={data.nodes} onSelect={setSelected} />
                 )}
               </div>
-              <div className="min-w-0">
+              <div ref={details} className="min-w-0 scroll-mt-4">
                 {node ? (
                   <SkillDetails
                     key={node.key}
@@ -231,7 +241,11 @@ export default function SkillMap() {
               <p className="text-sm text-muted-foreground">
                 {tr("skillMap.scoresHint")}
               </p>
-              <ScoreChart sessions={data.scores} skill={node} />
+              <ScoreChart
+                sessions={data.scores}
+                skill={node}
+                compact={compact}
+              />
             </section>
           </>
         )}

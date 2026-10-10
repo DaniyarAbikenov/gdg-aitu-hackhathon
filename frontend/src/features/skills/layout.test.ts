@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { HEIGHT, WIDTH, layout, radius } from "./layout";
+import { TALL, WIDE, layout, radius } from "./layout";
+
+const { width: WIDTH, height: HEIGHT } = WIDE;
 
 const keys = ["python", "docker", "go", "sql", "git", "kotlin"];
 const edges = [
@@ -36,10 +38,31 @@ describe("layout", () => {
         if (a < b) expect(distance(p[a], p[b])).toBeGreaterThan(20);
   });
 
+  it("lays the long side along a portrait canvas on phones", () => {
+    const chain = ["a", "b", "c", "d", "e"];
+    const links = chain
+      .slice(1)
+      .map((k, i) => ({ source: chain[i], target: k, weight: 1 }));
+    const spread = (
+      p: Record<string, { x: number; y: number }>,
+      axis: "x" | "y",
+    ) =>
+      Math.max(...chain.map((k) => p[k][axis])) -
+      Math.min(...chain.map((k) => p[k][axis]));
+    const wide = layout(chain, links);
+    const tall = layout(chain, links, TALL);
+    expect(spread(wide, "x")).toBeGreaterThan(spread(wide, "y"));
+    expect(spread(tall, "y")).toBeGreaterThan(spread(tall, "x"));
+    for (const p of Object.values(tall)) {
+      expect(p.x).toBeLessThan(TALL.width);
+      expect(p.y).toBeLessThan(TALL.height);
+    }
+  });
+
   it("handles empty and single maps", () => {
     expect(layout([], [])).toEqual({});
     expect(layout(["solo"], []).solo).toEqual({ x: WIDTH / 2, y: HEIGHT / 2 });
     expect(radius(0)).toBeLessThan(radius(4));
-    expect(radius(400)).toBe(26);
+    expect(radius(400)).toBe(28);
   });
 });
