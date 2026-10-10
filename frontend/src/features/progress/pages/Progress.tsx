@@ -4,6 +4,7 @@ import { Journey } from "../components/Journey";
 import { useClaimReward, useProgress } from "../api";
 import { useTranslation } from "react-i18next";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Link } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -53,6 +54,12 @@ export default function Progress() {
         <div>
           <h1 className="text-3xl font-bold mb-2">{t("progress.title")}</h1>
           <p className="text-muted-foreground">{t("progress.subtitle")}</p>
+          <Link
+            className="mt-2 inline-block text-primary underline"
+            to="/applications/funnel"
+          >
+            {tr("funnel.title")}
+          </Link>
         </div>
 
         {error && <p role="alert">{error}</p>}

@@ -1,7 +1,7 @@
 import { tr, useLocale } from "@/i18n/copy";
 import { getErrorMessage } from "@/lib/errors";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,9 @@ export function PlanCreator() {
   useLocale();
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
+  // Topics a candidate found weak after a rejection, one per line.
+  const [params] = useSearchParams();
+  const focus = params.get("focus") ?? "";
   const navigate = useNavigate();
   const createPlan = useCreatePlan();
   const [position, setPosition] = useState("");
@@ -24,7 +27,11 @@ export function PlanCreator() {
   useEffect(() => {
     if (vacancy) {
       setPosition(vacancy.data.name);
-      setStacks(vacancy.data.skills ?? []);
+      const topics = focus
+        .split("\n")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      setStacks(topics.length ? topics : (vacancy.data.skills ?? []));
       setGoal(
         tr("dynamic.prepare", {
           role: vacancy.data.name,
@@ -32,7 +39,7 @@ export function PlanCreator() {
         }).slice(0, 500),
       );
     }
-  }, [vacancy]);
+  }, [vacancy, focus]);
   const create = async () => {
     setBusy(true);
     setError("");

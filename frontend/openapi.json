@@ -414,6 +414,16 @@
             "title": "Notes",
             "type": "string"
           },
+          "rejection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Rejection"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "requirements": {
             "items": {
               "type": "string"
@@ -461,6 +471,14 @@
               }
             ],
             "title": "Source Url"
+          },
+          "stages": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "When the vacancy first reached each status",
+            "title": "Stages",
+            "type": "object"
           },
           "status": {
             "default": "saved",
@@ -515,6 +533,16 @@
             },
             "title": "Plans",
             "type": "array"
+          },
+          "rejection_action": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/NextAction"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "resume_title": {
             "anyOf": [
@@ -983,6 +1011,41 @@
         "title": "Education",
         "type": "object"
       },
+      "EffortWeek": {
+        "additionalProperties": true,
+        "properties": {
+          "applications": {
+            "title": "Applications",
+            "type": "integer"
+          },
+          "modules": {
+            "title": "Modules",
+            "type": "integer"
+          },
+          "practice": {
+            "title": "Practice",
+            "type": "integer"
+          },
+          "reviews": {
+            "title": "Reviews",
+            "type": "integer"
+          },
+          "week": {
+            "description": "Start of the week (Monday 00:00 in the browser's offset), UTC",
+            "title": "Week",
+            "type": "string"
+          }
+        },
+        "required": [
+          "week",
+          "applications",
+          "practice",
+          "modules",
+          "reviews"
+        ],
+        "title": "EffortWeek",
+        "type": "object"
+      },
       "EmailToken": {
         "additionalProperties": false,
         "properties": {
@@ -1056,6 +1119,91 @@
         "title": "Experience",
         "type": "object"
       },
+      "Funnel": {
+        "additionalProperties": true,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "integer"
+          },
+          "effort": {
+            "items": {
+              "$ref": "#/components/schemas/EffortWeek"
+            },
+            "title": "Effort",
+            "type": "array"
+          },
+          "insights": {
+            "items": {
+              "$ref": "#/components/schemas/Insight"
+            },
+            "title": "Insights",
+            "type": "array"
+          },
+          "rejections": {
+            "$ref": "#/components/schemas/Rejections"
+          },
+          "stages": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStage"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "active",
+          "stages",
+          "rejections",
+          "effort",
+          "insights"
+        ],
+        "title": "Funnel",
+        "type": "object"
+      },
+      "FunnelStage": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share of the previous stage that reached this one",
+            "title": "Rate"
+          },
+          "stage": {
+            "enum": [
+              "saved",
+              "applied",
+              "interview",
+              "offer"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count",
+          "rate"
+        ],
+        "title": "FunnelStage",
+        "type": "object"
+      },
       "GoogleCredential": {
         "additionalProperties": false,
         "properties": {
@@ -1083,6 +1231,45 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Insight": {
+        "additionalProperties": true,
+        "properties": {
+          "key": {
+            "enum": [
+              "thisWeek",
+              "restart",
+              "streak",
+              "interviews",
+              "pattern",
+              "outside",
+              "reviewed",
+              "unreviewed"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "title": "Params",
+            "type": "object"
+          }
+        },
+        "required": [
+          "key",
+          "params"
+        ],
+        "title": "Insight",
         "type": "object"
       },
       "InterviewAnswer": {
@@ -1616,6 +1803,36 @@
           "name"
         ],
         "title": "NewSkill",
+        "type": "object"
+      },
+      "NextAction": {
+        "additionalProperties": true,
+        "properties": {
+          "key": {
+            "enum": [
+              "tailorResume",
+              "studyTopics",
+              "practiceTechnical",
+              "practiceStory",
+              "checkSalary",
+              "keepGoing"
+            ],
+            "title": "Key",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "topics"
+        ],
+        "title": "NextAction",
         "type": "object"
       },
       "Offer": {
@@ -2791,6 +3008,36 @@
         "title": "Project",
         "type": "object"
       },
+      "ReasonCount": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "reason": {
+            "enum": [
+              "no_reply",
+              "screening",
+              "technical",
+              "assignment",
+              "behavioral",
+              "position_closed",
+              "salary",
+              "other_candidate",
+              "unknown"
+            ],
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason",
+          "count"
+        ],
+        "title": "ReasonCount",
+        "type": "object"
+      },
       "Record": {
         "additionalProperties": true,
         "properties": {
@@ -2852,6 +3099,174 @@
           "password"
         ],
         "title": "Registration",
+        "type": "object"
+      },
+      "Rejection": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "feedback": {
+            "default": "",
+            "title": "Feedback",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "no_reply",
+              "screening",
+              "technical",
+              "assignment",
+              "behavioral",
+              "position_closed",
+              "salary",
+              "other_candidate",
+              "unknown"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "applied",
+              "interview"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stage",
+          "reason",
+          "created_at"
+        ],
+        "title": "Rejection",
+        "type": "object"
+      },
+      "RejectionResult": {
+        "additionalProperties": true,
+        "properties": {
+          "next_action": {
+            "$ref": "#/components/schemas/NextAction"
+          },
+          "rejection": {
+            "$ref": "#/components/schemas/Rejection"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "rejection",
+          "next_action"
+        ],
+        "title": "RejectionResult",
+        "type": "object"
+      },
+      "RejectionReview": {
+        "additionalProperties": false,
+        "properties": {
+          "feedback": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Feedback",
+            "type": "string"
+          },
+          "reason": {
+            "enum": [
+              "no_reply",
+              "screening",
+              "technical",
+              "assignment",
+              "behavioral",
+              "position_closed",
+              "salary",
+              "other_candidate",
+              "unknown"
+            ],
+            "title": "Reason",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 0.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "applied",
+                  "interview"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage"
+          },
+          "topics": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 10,
+            "title": "Topics",
+            "type": "array"
+          }
+        },
+        "required": [
+          "revision",
+          "reason"
+        ],
+        "title": "RejectionReview",
+        "type": "object"
+      },
+      "Rejections": {
+        "additionalProperties": true,
+        "properties": {
+          "by_reason": {
+            "items": {
+              "$ref": "#/components/schemas/ReasonCount"
+            },
+            "title": "By Reason",
+            "type": "array"
+          },
+          "by_stage": {
+            "items": {
+              "$ref": "#/components/schemas/StageCount"
+            },
+            "title": "By Stage",
+            "type": "array"
+          },
+          "reviewed": {
+            "title": "Reviewed",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "reviewed",
+          "by_stage",
+          "by_reason"
+        ],
+        "title": "Rejections",
         "type": "object"
       },
       "ResumeCreate": {
@@ -3244,6 +3659,29 @@
           "mentions"
         ],
         "title": "SkillGap",
+        "type": "object"
+      },
+      "StageCount": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "stage": {
+            "enum": [
+              "applied",
+              "interview"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count"
+        ],
+        "title": "StageCount",
         "type": "object"
       },
       "Suggestion": {
@@ -3996,6 +4434,48 @@
         "summary": "Follow Up Calendar"
       }
     },
+    "/applications/funnel": {
+      "get": {
+        "operationId": "application_funnel_applications_funnel_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 840,
+              "minimum": -720,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Funnel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Application Funnel"
+      }
+    },
     "/applications/import": {
       "post": {
         "operationId": "import_vacancy_applications_import_post",
@@ -4150,6 +4630,56 @@
           }
         },
         "summary": "Cover Letter"
+      }
+    },
+    "/applications/{application_id}/rejection": {
+      "put": {
+        "operationId": "review_rejection_applications__application_id__rejection_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectionReview"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RejectionResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Rejection"
       }
     },
     "/auth/email/verify": {

@@ -5,7 +5,9 @@ import type {
   ApplicationPayload,
   CoverLetterDraft,
   CompanyPayload,
+  Funnel,
   GenericRecord,
+  RejectionResult,
   TargetPayload,
 } from "@/api/types";
 import { invalidateSummaries } from "@/features/dashboard/api";
@@ -23,6 +25,7 @@ type TargetKind = "company" | "vacancy";
 
 export const applicationKeys = {
   all: ["applications"] as const,
+  funnel: ["applications-funnel"] as const,
 };
 
 export const companyKeys = {
@@ -39,7 +42,12 @@ export function invalidateCatalog(
   queryClient: QueryClient,
   active: QueryKey[] = [],
 ) {
-  const keys = [applicationKeys.all, companyKeys.all, targetKeys.all];
+  const keys = [
+    applicationKeys.all,
+    applicationKeys.funnel,
+    companyKeys.all,
+    targetKeys.all,
+  ];
   return Promise.all([
     ...keys.map((queryKey) =>
       queryClient.invalidateQueries({
@@ -57,6 +65,44 @@ export function useApplications({ enabled = true } = {}) {
     queryFn: async () =>
       (await client.get<ApplicationItem[]>("/applications")).data,
     enabled,
+  });
+}
+
+export function useFunnel() {
+  return useQuery({
+    queryKey: applicationKeys.funnel,
+    queryFn: async () =>
+      (
+        await client.get<Funnel>("/applications/funnel", {
+          params: { offset: -new Date().getTimezoneOffset() },
+        })
+      ).data,
+  });
+}
+
+export type RejectionAnswers = {
+  revision: number;
+  stage: "applied" | "interview";
+  reason: RejectionResult["rejection"]["reason"];
+  topics: string[];
+  feedback: string;
+};
+
+export function useReviewRejection() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...answers }: RejectionAnswers & { id: string }) =>
+      (
+        await client.put<RejectionResult>(
+          `/applications/${id}/rejection`,
+          answers,
+        )
+      ).data,
+    onSuccess: () =>
+      invalidateCatalog(queryClient, [
+        applicationKeys.all,
+        applicationKeys.funnel,
+      ]),
   });
 }
 

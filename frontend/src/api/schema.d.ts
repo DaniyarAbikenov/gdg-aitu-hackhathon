@@ -176,6 +176,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/applications/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Application Funnel */
+        get: operations["application_funnel_applications_funnel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/applications/import": {
         parameters: {
             query?: never;
@@ -221,6 +238,23 @@ export interface paths {
         put?: never;
         /** Cover Letter */
         post: operations["cover_letter_applications__application_id__cover_letter_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/applications/{application_id}/rejection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Review Rejection */
+        put: operations["review_rejection_applications__application_id__rejection_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1385,6 +1419,7 @@ export interface components {
              * @default
              */
             notes: string;
+            rejection?: components["schemas"]["Rejection"] | null;
             /** Requirements */
             requirements?: string[];
             /** Responsibilities */
@@ -1400,6 +1435,13 @@ export interface components {
             skills?: string[];
             /** Source Url */
             source_url?: string | null;
+            /**
+             * Stages
+             * @description When the vacancy first reached each status
+             */
+            stages?: {
+                [key: string]: string;
+            };
             /**
              * Status
              * @default saved
@@ -1424,6 +1466,7 @@ export interface components {
             next_step_key: string;
             /** Plans */
             plans: components["schemas"]["LinkedPlan"][];
+            rejection_action?: components["schemas"]["NextAction"] | null;
             /** Resume Title */
             resume_title: string | null;
             /** Revision */
@@ -1634,6 +1677,24 @@ export interface components {
              */
             year_start: number;
         };
+        /** EffortWeek */
+        EffortWeek: {
+            /** Applications */
+            applications: number;
+            /** Modules */
+            modules: number;
+            /** Practice */
+            practice: number;
+            /** Reviews */
+            reviews: number;
+            /**
+             * Week
+             * @description Start of the week (Monday 00:00 in the browser's offset), UTC
+             */
+            week: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** EmailToken */
         EmailToken: {
             /** Token */
@@ -1679,6 +1740,39 @@ export interface components {
              */
             role: string;
         };
+        /** Funnel */
+        Funnel: {
+            /** Active */
+            active: number;
+            /** Effort */
+            effort: components["schemas"]["EffortWeek"][];
+            /** Insights */
+            insights: components["schemas"]["Insight"][];
+            rejections: components["schemas"]["Rejections"];
+            /** Stages */
+            stages: components["schemas"]["FunnelStage"][];
+            /** Total */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** FunnelStage */
+        FunnelStage: {
+            /** Count */
+            count: number;
+            /**
+             * Rate
+             * @description Share of the previous stage that reached this one
+             */
+            rate: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "saved" | "applied" | "interview" | "offer";
+        } & {
+            [key: string]: unknown;
+        };
         /** GoogleCredential */
         GoogleCredential: {
             /** Credential */
@@ -1688,6 +1782,20 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** Insight */
+        Insight: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "thisWeek" | "restart" | "streak" | "interviews" | "pattern" | "outside" | "reviewed" | "unreviewed";
+            /** Params */
+            params: {
+                [key: string]: number | string;
+            };
+        } & {
+            [key: string]: unknown;
         };
         /** InterviewAnswer */
         InterviewAnswer: {
@@ -1958,6 +2066,18 @@ export interface components {
             description: string;
             /** Name */
             name: string;
+        };
+        /** NextAction */
+        NextAction: {
+            /**
+             * Key
+             * @enum {string}
+             */
+            key: "tailorResume" | "studyTopics" | "practiceTechnical" | "practiceStory" | "checkSalary" | "keepGoing";
+            /** Topics */
+            topics: string[];
+        } & {
+            [key: string]: unknown;
         };
         /** Offer */
         Offer: {
@@ -2455,6 +2575,18 @@ export interface components {
              */
             title: string;
         };
+        /** ReasonCount */
+        ReasonCount: {
+            /** Count */
+            count: number;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "no_reply" | "screening" | "technical" | "assignment" | "behavioral" | "position_closed" | "salary" | "other_candidate" | "unknown";
+        } & {
+            [key: string]: unknown;
+        };
         /** Record */
         Record: {
             /** Created At */
@@ -2482,6 +2614,71 @@ export interface components {
             language: "en" | "ru" | "kk";
             /** Password */
             password: string;
+        };
+        /** Rejection */
+        Rejection: {
+            /** Created At */
+            created_at: string;
+            /**
+             * Feedback
+             * @default
+             */
+            feedback: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "no_reply" | "screening" | "technical" | "assignment" | "behavioral" | "position_closed" | "salary" | "other_candidate" | "unknown";
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "applied" | "interview";
+            /** Topics */
+            topics?: string[];
+        } & {
+            [key: string]: unknown;
+        };
+        /** RejectionResult */
+        RejectionResult: {
+            next_action: components["schemas"]["NextAction"];
+            rejection: components["schemas"]["Rejection"];
+            /** Revision */
+            revision: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** RejectionReview */
+        RejectionReview: {
+            /**
+             * Feedback
+             * @default
+             */
+            feedback: string;
+            /**
+             * Reason
+             * @enum {string}
+             */
+            reason: "no_reply" | "screening" | "technical" | "assignment" | "behavioral" | "position_closed" | "salary" | "other_candidate" | "unknown";
+            /** Revision */
+            revision: number;
+            /** Stage */
+            stage?: ("applied" | "interview") | null;
+            /** Topics */
+            topics?: string[];
+        };
+        /** Rejections */
+        Rejections: {
+            /** By Reason */
+            by_reason: components["schemas"]["ReasonCount"][];
+            /** By Stage */
+            by_stage: components["schemas"]["StageCount"][];
+            /** Reviewed */
+            reviewed: number;
+            /** Total */
+            total: number;
+        } & {
+            [key: string]: unknown;
         };
         /** ResumeCreate */
         ResumeCreate: {
@@ -2654,6 +2851,18 @@ export interface components {
             mentions: number;
             /** Name */
             name: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** StageCount */
+        StageCount: {
+            /** Count */
+            count: number;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "applied" | "interview";
         } & {
             [key: string]: unknown;
         };
@@ -3158,6 +3367,37 @@ export interface operations {
             };
         };
     };
+    application_funnel_applications_funnel_get: {
+        parameters: {
+            query?: {
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Funnel"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     import_vacancy_applications_import_post: {
         parameters: {
             query?: never;
@@ -3266,6 +3506,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    review_rejection_applications__application_id__rejection_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectionReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RejectionResult"];
                 };
             };
             /** @description Validation Error */
