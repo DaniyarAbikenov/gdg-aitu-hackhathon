@@ -19,6 +19,7 @@ from app.application.interviews import InterviewService
 from app.application.jobs import Jobs
 from app.application.knowledge import Knowledge
 from app.application.learning import LearningService
+from app.application.linked_resumes import LinkedResumes
 from app.application.overview import Overview
 from app.application.ports import ResumeReviewer
 from app.application.profile import ProfileService
@@ -139,6 +140,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         ai_usage=AiUsageReport(
             usage, auth, settings.ai_input_usd_per_million, settings.ai_output_usd_per_million
         ),
+        linked_resumes=LinkedResumes(store, repository),
         recovery=Recovery(
             store,
             sessions,

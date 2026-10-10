@@ -16,6 +16,8 @@ class ResumeFields:
     projects: str | list[dict] = ""
     certificates: str = ""
     languages: str = ""
+    awards: list[dict] = field(default_factory=list)
+    interests: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -47,6 +49,7 @@ class ResumeRecord:
     description: str = ""
     lifecycle: str = "draft"
     updated_at: str = ""
+    profile_link: dict | None = None
 
 
 @dataclass(frozen=True)

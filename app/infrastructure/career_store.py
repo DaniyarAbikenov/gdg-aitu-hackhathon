@@ -258,6 +258,58 @@ class PostgresCareerRepository:
             db.flush()
             return to_record(resume)
 
+    def sync_resume(self, session, resume_id, revision, fields, link, label):
+        """Saves profile changes into a resume, keeping the previous text as a version."""
+        from app.infrastructure.activity import record_activity
+        from app.infrastructure.postgres import to_record
+
+        with self.sessions.begin() as db:
+            db.execute(
+                text("SELECT pg_advisory_xact_lock(hashtext(:owner))"), {"owner": session.owner}
+            )
+            resume = db.scalar(
+                select(ResumeRow)
+                .where(ResumeRow.id == resume_id, *self.visible(ResumeRow, session.owner))
+                .with_for_update()
+            )
+            if not resume:
+                raise NotFound
+            if resume.revision != revision:
+                raise Conflict
+            now = datetime.now(UTC)
+            if fields != resume.fields:
+                count = db.scalar(
+                    select(func.count())
+                    .select_from(VersionRow)
+                    .where(*self.visible(VersionRow, session.owner))
+                )
+                if count + 1 > 100:
+                    raise QuotaExceeded
+                version = VersionRow(
+                    id=str(uuid4()),
+                    owner=session.owner,
+                    revision=1,
+                    created_at=now,
+                    expires_at=resume.expires_at,
+                    data={
+                        "resume_id": resume_id,
+                        "fields": resume.fields,
+                        "before": resume.fields,
+                        "label": label,
+                        "jd_text": resume.jd_text,
+                    },
+                )
+                db.add(version)
+                record_activity(db, session.owner, "version_created", version.id)
+                resume.fields = fields
+                resume.status = "edited"
+                resume.analysis = None
+            resume.profile_link = link
+            resume.revision += 1
+            resume.updated_at = now
+            db.flush()
+            return to_record(resume)
+
     def delete(self, kind, owner, record_id):
         table = TABLES[kind]
         with self.sessions.begin() as db:

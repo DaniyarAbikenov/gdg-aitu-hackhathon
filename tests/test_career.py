@@ -422,7 +422,12 @@ def test_gemini_resume_extraction_and_pdf_styles(client, resume):
         experience=[],
         education=[],
         projects=[
-            {"title": "A real project", "description": "A factual result", "tech": ["Python"]}
+            {
+                "id": "",
+                "title": "A real project",
+                "description": "A factual result",
+                "tech": ["Python"],
+            }
         ],
     )
     from dataclasses import asdict
@@ -458,6 +463,7 @@ def test_structured_resume_roundtrip_versions_and_profile(client, resume):
         **resume["fields"],
         "experience": [
             {
+                "id": "",
                 "company": "Library",
                 "role": "Developer",
                 "date_from": "2024",
@@ -468,10 +474,21 @@ def test_structured_resume_roundtrip_versions_and_profile(client, resume):
             }
         ],
         "education": [
-            {"institution": "University", "degree": "BSc", "year_start": 2020, "year_end": 2024}
+            {
+                "id": "",
+                "institution": "University",
+                "degree": "BSc",
+                "year_start": 2020,
+                "year_end": 2024,
+            }
         ],
         "projects": [
-            {"title": "CareerBot", "description": "Resume editor", "tech": ["React", "FastAPI"]}
+            {
+                "id": "",
+                "title": "CareerBot",
+                "description": "Resume editor",
+                "tech": ["React", "FastAPI"],
+            }
         ],
     }
     path = "/resume/" + resume["resume_id"]
