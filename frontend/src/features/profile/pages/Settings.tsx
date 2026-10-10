@@ -68,6 +68,11 @@ export default function Settings() {
               {tr("usage.title")}
             </Link>
           )}
+          {admin && (
+            <Link className="text-primary underline" to="/admin/reports">
+              {tr("companyInsights.moderationTitle")}
+            </Link>
+          )}
         </div>
       </div>
     </MainLayout>

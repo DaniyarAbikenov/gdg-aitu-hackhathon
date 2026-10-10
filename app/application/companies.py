@@ -44,6 +44,13 @@ class Companies:
                 "This company is already in your catalog.", code="duplicate_company"
             )
         data["skills"] = list({s.casefold(): s for s in data["skills"] if s.strip()}.values())
+        # Website research is server-made; keep it while it still describes the same website.
+        if (
+            record_id
+            and "research" in current.data
+            and data.get("website") == current.data.get("website")
+        ):
+            data["research"] = current.data["research"]
         return (
             self.store.update("company", session.owner, record_id, revision, data)
             if record_id

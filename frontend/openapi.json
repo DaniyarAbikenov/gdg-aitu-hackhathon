@@ -834,6 +834,105 @@
         "title": "Company",
         "type": "object"
       },
+      "CompanyFact": {
+        "additionalProperties": true,
+        "properties": {
+          "quote": {
+            "description": "Exact words from the cited page that support the fact",
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "topic": {
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": [
+          "topic",
+          "text",
+          "quote",
+          "source_url"
+        ],
+        "title": "CompanyFact",
+        "type": "object"
+      },
+      "CompanyResearch": {
+        "additionalProperties": true,
+        "properties": {
+          "dropped": {
+            "description": "Facts removed because the cited page did not contain them",
+            "title": "Dropped",
+            "type": "integer"
+          },
+          "facts": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyFact"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "fetched_at": {
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "provider": {
+            "description": "\"openai\", \"gemini\" or \"rule-based\"",
+            "title": "Provider",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "stack": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyTechnology"
+            },
+            "title": "Stack",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fetched_at",
+          "provider",
+          "sources",
+          "facts",
+          "stack",
+          "dropped"
+        ],
+        "title": "CompanyResearch",
+        "type": "object"
+      },
+      "CompanyTechnology": {
+        "additionalProperties": true,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source_url": {
+            "title": "Source Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "source_url"
+        ],
+        "title": "CompanyTechnology",
+        "type": "object"
+      },
       "CoverLetterDraft": {
         "additionalProperties": true,
         "properties": {
@@ -1388,6 +1487,97 @@
         "title": "InterviewContext",
         "type": "object"
       },
+      "InterviewReport": {
+        "additionalProperties": true,
+        "properties": {
+          "advice": {
+            "title": "Advice",
+            "type": "string"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "interviewed_on": {
+            "description": "Month of the interview, YYYY-MM",
+            "title": "Interviewed On",
+            "type": "string"
+          },
+          "mine": {
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "moderation_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Moderation Note"
+          },
+          "outcome": {
+            "enum": [
+              "offer",
+              "rejected",
+              "no_answer",
+              "in_progress",
+              "withdrew"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "stages": {
+            "title": "Stages",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "company_name",
+          "role",
+          "interviewed_on",
+          "stages",
+          "questions",
+          "difficulty",
+          "outcome",
+          "advice",
+          "status",
+          "mine"
+        ],
+        "title": "InterviewReport",
+        "type": "object"
+      },
       "InterviewStart": {
         "additionalProperties": false,
         "properties": {
@@ -1755,6 +1945,30 @@
           "title"
         ],
         "title": "Metadata",
+        "type": "object"
+      },
+      "Moderation": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Note",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "approved",
+              "rejected"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "Moderation",
         "type": "object"
       },
       "ModuleUpdate": {
@@ -3305,6 +3519,126 @@
         "title": "Rejections",
         "type": "object"
       },
+      "ReportForm": {
+        "additionalProperties": false,
+        "properties": {
+          "advice": {
+            "default": "",
+            "maxLength": 3000,
+            "title": "Advice",
+            "type": "string"
+          },
+          "difficulty": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Difficulty",
+            "type": "integer"
+          },
+          "interviewed_on": {
+            "pattern": "^20\\d\\d-(0[1-9]|1[0-2])$",
+            "title": "Interviewed On",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "offer",
+              "rejected",
+              "no_answer",
+              "in_progress",
+              "withdrew"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 15,
+            "title": "Questions",
+            "type": "array"
+          },
+          "role": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Role",
+            "type": "string"
+          },
+          "stages": {
+            "default": "",
+            "maxLength": 3000,
+            "title": "Stages",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "interviewed_on",
+          "difficulty",
+          "outcome"
+        ],
+        "title": "ReportForm",
+        "type": "object"
+      },
+      "ResearchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "language": {
+            "default": "ru",
+            "enum": [
+              "ru",
+              "en",
+              "kk"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision"
+        ],
+        "title": "ResearchRequest",
+        "type": "object"
+      },
+      "ResearchedCompany": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "title": "Data",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "research": {
+            "$ref": "#/components/schemas/CompanyResearch"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "revision",
+          "created_at",
+          "data",
+          "research"
+        ],
+        "title": "ResearchedCompany",
+        "type": "object"
+      },
       "ResumeCreate": {
         "additionalProperties": false,
         "properties": {
@@ -4613,6 +4947,84 @@
         "summary": "Save Article"
       }
     },
+    "/admin/reports": {
+      "get": {
+        "operationId": "moderation_queue_admin_reports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InterviewReport"
+                  },
+                  "title": "Response Moderation Queue Admin Reports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Moderation Queue",
+        "tags": [
+          "companies"
+        ]
+      }
+    },
+    "/admin/reports/{report_id}": {
+      "post": {
+        "operationId": "moderate_admin_reports__report_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Moderation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Moderate",
+        "tags": [
+          "companies"
+        ]
+      }
+    },
     "/api/example": {
       "get": {
         "operationId": "example_api_example_get",
@@ -5374,6 +5786,167 @@
           }
         },
         "summary": "Update Company"
+      }
+    },
+    "/companies/{company_id}/reports": {
+      "get": {
+        "operationId": "company_reports_companies__company_id__reports_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InterviewReport"
+                  },
+                  "title": "Response Company Reports Companies  Company Id  Reports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Company Reports",
+        "tags": [
+          "companies"
+        ]
+      },
+      "post": {
+        "operationId": "share_report_companies__company_id__reports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InterviewReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Share Report",
+        "tags": [
+          "companies"
+        ]
+      }
+    },
+    "/companies/{company_id}/research": {
+      "post": {
+        "operationId": "research_companies__company_id__research_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResearchedCompany"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobView"
+                }
+              }
+            },
+            "description": "Accepted as a background job"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Research",
+        "tags": [
+          "companies"
+        ]
       }
     },
     "/health": {
@@ -6203,6 +6776,67 @@
           }
         },
         "summary": "Claim Reward"
+      }
+    },
+    "/reports": {
+      "get": {
+        "operationId": "my_reports_reports_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InterviewReport"
+                  },
+                  "title": "Response My Reports Reports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "My Reports",
+        "tags": [
+          "companies"
+        ]
+      }
+    },
+    "/reports/{report_id}": {
+      "delete": {
+        "operationId": "delete_report_reports__report_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Report",
+        "tags": [
+          "companies"
+        ]
       }
     },
     "/resume": {

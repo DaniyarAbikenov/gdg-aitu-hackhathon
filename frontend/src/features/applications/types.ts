@@ -1,4 +1,8 @@
-import type { ApplicationPayload, CompanyPayload } from "@/api/types";
+import type {
+  ApplicationPayload,
+  CompanyPayload,
+  CompanyResearch,
+} from "@/api/types";
 
 /** Vacancy form state: list fields are always present while editing. */
 export type ApplicationDraft = Omit<
@@ -36,7 +40,8 @@ export type CompanyData = {
 export type CompanyRecord = {
   id: string;
   revision: number;
-  data: CompanyData;
+  /** `research` is made by the server from the company website and is never sent back. */
+  data: CompanyData & { research?: CompanyResearch };
   vacancy_ids?: string[];
 };
 

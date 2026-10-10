@@ -453,3 +453,43 @@ class SkillMap(View):
     scores: list[PracticeScore]
     strongest: str | None
     next_to_learn: list[str]
+
+
+class CompanyFact(View):
+    topic: str
+    text: str
+    quote: str = Field(description="Exact words from the cited page that support the fact")
+    source_url: str
+
+
+class CompanyTechnology(View):
+    name: str
+    source_url: str
+
+
+class CompanyResearch(View):
+    fetched_at: str
+    provider: str = Field(description='"openai", "gemini" or "rule-based"')
+    sources: list[str]
+    facts: list[CompanyFact]
+    stack: list[CompanyTechnology]
+    dropped: int = Field(description="Facts removed because the cited page did not contain them")
+
+
+class InterviewReport(View):
+    id: str
+    company_name: str
+    role: str
+    interviewed_on: str = Field(description="Month of the interview, YYYY-MM")
+    stages: str
+    questions: list[str]
+    difficulty: int
+    outcome: Literal["offer", "rejected", "no_answer", "in_progress", "withdrew"]
+    advice: str
+    status: Literal["pending", "approved", "rejected"]
+    mine: bool
+    moderation_note: str | None = None
+
+
+class ResearchedCompany(Record):
+    research: CompanyResearch

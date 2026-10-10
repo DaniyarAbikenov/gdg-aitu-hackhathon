@@ -64,6 +64,9 @@ const LegalPolicies = lazy(
   () => import("@/features/knowledge/pages/LegalPolicies"),
 );
 const AiUsage = lazy(() => import("@/features/usage/pages/AiUsage"));
+const ReportModeration = lazy(
+  () => import("@/features/applications/pages/ReportModeration"),
+);
 const Support = lazy(() => import("@/features/knowledge/pages/Support"));
 const FAQ = lazy(() => import("@/features/knowledge/pages/FAQ"));
 
@@ -121,6 +124,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <KnowledgeAdmin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/reports"
+                element={
+                  <ProtectedRoute>
+                    <ReportModeration />
                   </ProtectedRoute>
                 }
               />

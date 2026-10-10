@@ -35,7 +35,7 @@ def client(app, settings):
     with engine.begin() as db:
         db.execute(
             text(
-                "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards, career_preferences, career_companies, career_vacancies, career_activity, career_assessments"
+                "TRUNCATE TABLE resumes, accounts, career_profiles, career_interviews, career_plans, resume_versions, career_rewards, career_preferences, career_companies, career_vacancies, career_activity, career_assessments, interview_reports"
             )
         )
     engine.dispose()

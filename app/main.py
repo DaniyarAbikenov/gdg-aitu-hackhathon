@@ -15,6 +15,7 @@ from app.application.ai_usage import RETENTION_DAYS, AiUsageReport
 from app.application.applications import Applications
 from app.application.auth import Administrators, Auth
 from app.application.companies import Companies
+from app.application.company_insights import CompanyInsights
 from app.application.funnel import JobSearch
 from app.application.interviews import InterviewService
 from app.application.jobs import Jobs
@@ -37,8 +38,10 @@ from app.infrastructure.activity import ActivityRepository
 from app.infrastructure.ai_usage import PostgresAiUsage
 from app.infrastructure.career_store import PostgresCareerRepository
 from app.infrastructure.coach import Coach
+from app.infrastructure.company_reader import CompanyAnalyst, CompanyPages
 from app.infrastructure.documents import Documents
 from app.infrastructure.google_login import GoogleLogin
+from app.infrastructure.interview_reports import InterviewReportRepository
 from app.infrastructure.jobs import QueuedMailer, RedisJobQueue
 from app.infrastructure.knowledge import KnowledgeRepository
 from app.infrastructure.mail import SmtpMailer
@@ -61,6 +64,7 @@ from app.presentation.applications import applications_router
 from app.presentation.career import career_router
 from app.presentation.dependencies import UseCases
 from app.presentation.http import configure_http
+from app.presentation.insights import insights_router
 from app.presentation.jobs import jobs_router
 from app.presentation.product import product_router
 from app.presentation.skills import skill_router
@@ -91,6 +95,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
     sessions = RedisSessions(settings)
     jobs = RedisJobQueue(settings.redis_url, settings.redis_namespace)
     store = PostgresCareerRepository(repository)
+    reports = InterviewReportRepository(repository.sessions)
     activity = ActivityRepository(repository.sessions)
     usage = PostgresAiUsage(repository.sessions)
     meter = usage.record
@@ -122,7 +127,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
     use_cases = UseCases(
         workspaces=Workspaces(sessions, repository, store),
         auth=auth,
-        accounts=Accounts(store, repository, sessions, passwords, activity),
+        accounts=Accounts(store, repository, sessions, passwords, activity, reports),
         resumes=resumes,
         profile_import=ProfileImport(documents, sessions, settings.max_upload_bytes),
         profile=profile,
@@ -145,6 +150,9 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         linked_resumes=LinkedResumes(store, repository),
         job_search=JobSearch(store, activity),
         skill_map=SkillMapService(store),
+        company_insights=CompanyInsights(
+            store, sessions, CompanyPages(), CompanyAnalyst(settings, meter=meter), reports, auth
+        ),
         recovery=Recovery(
             store,
             sessions,
@@ -216,6 +224,7 @@ def create_app(settings=None, reviewer=None):
     app.include_router(product_router(settings))
     app.include_router(voice_router())
     app.include_router(applications_router())
+    app.include_router(insights_router())
     app.include_router(jobs_router())
     # Outermost, so the id and the access line cover every other middleware.
     app.add_middleware(RequestContext)

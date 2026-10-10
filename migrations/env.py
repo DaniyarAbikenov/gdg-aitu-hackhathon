@@ -6,6 +6,7 @@ from app.infrastructure import (
     activity,  # noqa: F401
     ai_usage,  # noqa: F401
     career_store,  # noqa: F401
+    interview_reports,  # noqa: F401
     knowledge,  # noqa: F401
     skills,  # noqa: F401
 )

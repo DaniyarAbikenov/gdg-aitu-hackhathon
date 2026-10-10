@@ -81,6 +81,7 @@ Screenshots show a separate fictional account persisted in the local production 
 - Start an interview, receive coaching, reload or resume a saved session from history, and review scores and reference answers. Scores describe practice performance, not hiring suitability.
 - Generate an eight-week plan from a career goal or interview feedback, persist completed modules and export the plan. NotebookLM uses a text download and manual external import.
 - Open the skill map: your skills against what saved vacancies ask for, gaps ranked by demand, learning progress and practice scores over time per skill.
+- Read what a company says about itself on its website, with a quote and page link for every fact, and share or read anonymous interview reports that a moderator approves.
 - See the application funnel (saved → applied → interview → offer), rejections by stage and reason, and weekly effort. A rejected application asks three questions and turns the answer into one next step; feedback describes effort and patterns, never hiring odds.
 - View real progress and claim milestones backed by saved data.
 - Dictation uses the browser speech API when supported; its provider may process audio. Typed input is always available.
