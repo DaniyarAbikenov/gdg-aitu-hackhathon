@@ -11,6 +11,7 @@ from app.application.ai_usage import AiUsageReport
 from app.application.applications import Applications
 from app.application.auth import Auth
 from app.application.companies import Companies
+from app.application.company_insights import CompanyInsights
 from app.application.funnel import JobSearch
 from app.application.interviews import InterviewService
 from app.application.jobs import Jobs
@@ -57,6 +58,7 @@ class UseCases:
     linked_resumes: LinkedResumes
     job_search: JobSearch
     skill_map: SkillMapService
+    company_insights: CompanyInsights
 
 
 def use_cases(request: Request) -> UseCases:

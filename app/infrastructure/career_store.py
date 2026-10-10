@@ -320,9 +320,11 @@ class PostgresCareerRepository:
 
     def clear(self, owner):
         from app.infrastructure.activity import ActivityRow
+        from app.infrastructure.interview_reports import InterviewReportRow
 
         with self.sessions.begin() as db:
-            db.execute(delete(ActivityRow).where(ActivityRow.owner == owner))
+            for row in (ActivityRow, InterviewReportRow):
+                db.execute(delete(row).where(row.owner == owner))
             for table in TABLES.values():
                 db.execute(delete(table).where(table.owner == owner))
 
@@ -382,6 +384,7 @@ class PostgresCareerRepository:
 
     def delete_account(self, owner, auth_version):
         from app.infrastructure.activity import ActivityRow
+        from app.infrastructure.interview_reports import InterviewReportRow
 
         with self.sessions.begin() as db:
             account = db.scalar(
@@ -391,7 +394,7 @@ class PostgresCareerRepository:
                 raise NotFound
             if account.auth_version != auth_version:
                 raise Conflict
-            for table in [ResumeRow, ActivityRow, *TABLES.values()]:
+            for table in [ResumeRow, ActivityRow, InterviewReportRow, *TABLES.values()]:
                 db.execute(delete(table).where(table.owner == owner))
             db.delete(account)
 

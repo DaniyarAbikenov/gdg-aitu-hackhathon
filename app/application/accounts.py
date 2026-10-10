@@ -2,7 +2,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from typing import Any
 
-from app.application.ports import ActivityLog, ResumeRepository, SessionStore
+from app.application.ports import ActivityLog, InterviewReports, ResumeRepository, SessionStore
 from app.domain.career import CareerRepository, PasswordHasher, RecordKind
 from app.domain.errors import Forbidden, InvalidDocument
 from app.domain.models import Session
@@ -28,9 +28,10 @@ class Accounts:
         sessions: SessionStore,
         passwords: PasswordHasher,
         activity: ActivityLog,
+        reports: InterviewReports,
     ):
         self.store, self.resumes, self.sessions = store, resumes, sessions
-        self.passwords, self.activity = passwords, activity
+        self.passwords, self.activity, self.reports = passwords, activity, reports
 
     def verify(self, session: Session, password: str, client_id: str) -> dict[str, Any]:
         self.sessions.consume_auth(client_id)
@@ -64,6 +65,7 @@ class Accounts:
             "email": self.store.email_for_owner(session.owner),
             "resumes": [asdict(r) for r in self.resumes.list(session.owner)],
             "activity": self.activity.list(session.owner),
+            "interview_reports": self.reports.mine(session.owner),
             **{
                 kind: [asdict(r) for r in self.store.list(kind, session.owner)]
                 for kind in EXPORTED_KINDS
