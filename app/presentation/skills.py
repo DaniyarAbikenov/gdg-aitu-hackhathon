@@ -3,6 +3,7 @@ from pydantic import Field, field_validator
 
 from app.domain.skills import skill_name
 from app.presentation.dependencies import Cases, Member
+from app.presentation.responses import SkillMap
 from app.presentation.schemas import StrictModel
 
 
@@ -25,6 +26,10 @@ def skill_router() -> APIRouter:
     @routes.get("")
     def search(cases: Cases, current: Member, q: str = Query(default="", max_length=80)):
         return {"skills": cases.skills.search(q)}
+
+    @routes.get("/map", response_model=SkillMap)
+    def skill_map(cases: Cases, current: Member):
+        return cases.skill_map.map(current)
 
     @routes.post("")
     def add(payload: NewSkill, cases: Cases, current: Member):

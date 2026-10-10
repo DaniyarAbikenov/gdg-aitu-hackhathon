@@ -401,3 +401,55 @@ class ProfileChanges(BaseModel):
     linked: bool
     status: Literal["current", "suggestions", "outdated", "review"]
     changes: list[ProfileChange]
+
+
+class VacancyRef(View):
+    id: str
+    name: str
+    company: str
+
+
+class SkillLearning(View):
+    plans: list[str]
+    completed: int = Field(description="Completed modules across the plans that cover the skill")
+    total: int
+
+
+class SkillPractice(View):
+    interview_id: str
+    at: str
+    score: int = Field(description="Mean practice score of the answers attributed to the skill")
+    answers: int
+
+
+class SkillNode(View):
+    key: str
+    name: str
+    status: Literal["strength", "have", "gap", "learning"]
+    in_profile: bool
+    demand: int = Field(description="Open saved vacancies that ask for the skill")
+    vacancies: list[VacancyRef]
+    learning: SkillLearning | None
+    practice: list[SkillPractice]
+
+
+class SkillLink(View):
+    source: str
+    target: str
+    weight: int = Field(description="Open vacancies that ask for both skills")
+
+
+class PracticeScore(View):
+    interview_id: str
+    at: str
+    score: int | None
+    label: str
+
+
+class SkillMap(View):
+    vacancies: int
+    nodes: list[SkillNode]
+    links: list[SkillLink]
+    scores: list[PracticeScore]
+    strongest: str | None
+    next_to_learn: list[str]

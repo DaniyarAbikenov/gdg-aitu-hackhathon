@@ -77,6 +77,8 @@ export function useFunnel() {
           params: { offset: -new Date().getTimezoneOffset() },
         })
       ).data,
+    // Practice and learning also count as effort: reload on every visit.
+    staleTime: 0,
   });
 }
 

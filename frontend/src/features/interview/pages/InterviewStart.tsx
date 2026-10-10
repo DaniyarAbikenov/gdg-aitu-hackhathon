@@ -60,6 +60,11 @@ export default function InterviewStart() {
     }
   }, [vacancy]);
   useEffect(() => {
+    // Practising one skill from the skill map.
+    const skill = params.get("skill")?.trim();
+    if (skill && !params.get("vacancy")) setStack([skill]);
+  }, [params]);
+  useEffect(() => {
     const c = companies.find((c) => c.id === params.get("company"));
     if (c) {
       setCompanyId(c.id);

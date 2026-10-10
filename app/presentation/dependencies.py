@@ -23,6 +23,7 @@ from app.application.profile_import import ProfileImport
 from app.application.progress import ProgressService
 from app.application.recovery import Recovery
 from app.application.resumes import ResumeService
+from app.application.skill_map import SkillMapService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
 from app.application.workspaces import Workspaces
@@ -55,6 +56,7 @@ class UseCases:
     ai_usage: AiUsageReport
     linked_resumes: LinkedResumes
     job_search: JobSearch
+    skill_map: SkillMapService
 
 
 def use_cases(request: Request) -> UseCases:

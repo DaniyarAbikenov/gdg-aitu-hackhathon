@@ -83,3 +83,16 @@ Each saved vacancy remembers when it first reached each status (`stages`), so a 
 - feedback built only from those records: this week's effort, a streak of active weeks, interviews reached, a repeated rejection reason, and rejections caused by things outside the candidate's control. It never estimates the chance of an offer.
 
 A rejected application asks three questions (`PUT /applications/{id}/rejection`): where it stopped, the main reason as far as the candidate knows, and, for technical, assignment or behavioural reasons, the topics that felt weak. Employer feedback is optional. The answer leads to one next step: tailor the resume, a learning plan prefilled with the weak topics, a practice interview for that vacancy, checking the salary fit early, or simply moving on when the reason was outside the candidate's control. Records saved before this release have no stage dates; the candidate's answer fills in the stage.
+
+## Skill and gap map
+
+`/skills` (`GET /skills/map`) puts the candidate's skills next to what their open saved vacancies ask for. Each skill is a circle: its size is the number of vacancies asking for it, its colour is its status, and lines join skills that the same vacancy asks for together. The picture is a deterministic force layout, turned to fit a landscape canvas or a portrait one on phones; circles can be dragged, and a list view shows the same data as a table.
+
+- **Matches demand:** in the profile and asked for by at least one vacancy.
+- **In your profile:** no open vacancy asks for it right now.
+- **Gap:** asked for but not in the profile, and not being studied.
+- **Learning:** covered by a learning plan (its stacks or module topics) or practised, but not in the profile yet.
+
+Selecting a skill lists the vacancies asking for it, learning-plan progress and the latest practice score, with next steps: add it to the profile (the candidate's own claim), create a learning plan focused on it, or practise it in an interview. The page also names the strongest match and the three most requested gaps.
+
+"Practice scores over time" draws every finished practice session and, for the selected skill, its own line. A score counts for a skill when the question names it, otherwise for the stack of that session. Scores are coaching, not a hiring prediction.

@@ -28,6 +28,7 @@ from app.application.profile_import import ProfileImport
 from app.application.progress import ProgressService
 from app.application.recovery import Recovery
 from app.application.resumes import ResumeService
+from app.application.skill_map import SkillMapService
 from app.application.skills import SkillCatalog
 from app.application.voice import VoiceInterviews
 from app.application.workspaces import Workspaces
@@ -143,6 +144,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
         ),
         linked_resumes=LinkedResumes(store, repository),
         job_search=JobSearch(store, activity),
+        skill_map=SkillMapService(store),
         recovery=Recovery(
             store,
             sessions,
