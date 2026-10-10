@@ -2,7 +2,7 @@ from datetime import date
 from typing import Any, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Query, Request, Response
 from pydantic import ConfigDict, Field, HttpUrl, field_validator
 
 from app.contracts import StrictModel
@@ -15,7 +15,15 @@ from app.presentation.dependencies import (
     clear_session_cookie,
 )
 from app.presentation.jobs import ACCEPTED, accepted
-from app.presentation.responses import ApplicationItem, CoverLetterDraft, Record
+from app.presentation.responses import (
+    ApplicationItem,
+    CoverLetterDraft,
+    Funnel,
+    Record,
+    RejectionReason,
+    RejectionResult,
+    RejectionStage,
+)
 
 
 class Application(StrictModel):
@@ -54,6 +62,26 @@ class Application(StrictModel):
         if not value.strip():
             raise ValueError("Enter text")
         return value.strip()
+
+
+class RejectionReview(StrictModel):
+    revision: int = Field(ge=0)
+    stage: RejectionStage | None = None
+    reason: RejectionReason
+    topics: list[str] = Field(default_factory=list, max_length=10)
+    feedback: str = Field(default="", max_length=2000)
+
+    @field_validator("topics")
+    @classmethod
+    def clean_topics(cls, value: list[str]) -> list[str]:
+        result: list[str] = []
+        for topic in value:
+            topic = " ".join(topic.split())
+            if len(topic) > 80:
+                raise ValueError("Keep each topic under 80 characters")
+            if topic and topic.casefold() not in {t.casefold() for t in result}:
+                result.append(topic)
+        return result
 
 
 class Assignment(StrictModel):
@@ -156,6 +184,25 @@ def applications_router() -> APIRouter:
             cases.applications.follow_ups(current),
             media_type="text/calendar; charset=utf-8",
             headers={"Content-Disposition": 'attachment; filename="career-follow-ups.ics"'},
+        )
+
+    @routes.get("/applications/funnel", response_model=Funnel)
+    def application_funnel(
+        cases: Cases,
+        current: Member,
+        offset: int = Query(default=0, ge=-720, le=840),
+    ):
+        return cases.job_search.funnel(current, offset)
+
+    @routes.put("/applications/{application_id}/rejection", response_model=RejectionResult)
+    def review_rejection(
+        application_id: UUID, payload: RejectionReview, cases: Cases, current: Member
+    ):
+        return cases.job_search.review_rejection(
+            current,
+            str(application_id),
+            payload.revision,
+            payload.model_dump(exclude={"revision"}),
         )
 
     @routes.get("/applications", response_model=list[ApplicationItem])

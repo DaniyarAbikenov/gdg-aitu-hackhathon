@@ -9,6 +9,7 @@ from app.application.ports import ResumeRepository, SessionStore, VacancyParser
 from app.application.profile import ProfileService
 from app.domain.career import CareerCoach, CareerRecord, CareerRepository
 from app.domain.errors import Conflict, InvalidDocument
+from app.domain.funnel import next_action, record_stage
 from app.domain.letter import candidate_facts, skill_match
 from app.domain.models import Session
 from app.domain.vacancy import CLOSED_STATUSES, VACANCY_DEFAULTS, company_key, next_step
@@ -54,14 +55,19 @@ class Applications:
             selected_company = self.store.get("company", session.owner, data["company_id"])
             data["company_name"] = selected_company.data["name"]
             data["company_description"] = selected_company.data.get("description", "")
+        now = datetime.now(UTC).isoformat()
+        previous_status = None
         if record_id:
             current = self.store.get("vacancy", session.owner, record_id)
             if current.revision != revision:
                 raise Conflict
+            previous_status = current.data.get("status", "saved")
             # Preserve fields created by earlier versions and interview catalogs.
             data = {**current.data, **data}
         elif revision:
             raise InvalidDocument("A new vacancy starts at revision zero.")
+        if data.get("status", "saved") != previous_status:
+            data["stages"] = record_stage(data.get("stages"), data.get("status", "saved"), now)
         key = company_key(data["company_name"])
         company = next(
             (
@@ -82,7 +88,7 @@ class Applications:
                 },
             )
         data["company_id"] = company.id
-        data["updated_at"] = datetime.now(UTC).isoformat()
+        data["updated_at"] = now
         return (
             self.store.update("vacancy", session.owner, record_id, revision, data)
             if record_id
@@ -112,6 +118,7 @@ class Applications:
                 interviews_started=len(related_interviews),
                 interviews_finished=sum(bool(i.data["finished"]) for i in related_interviews),
                 plans=len(related_plans),
+                rejection_reviewed=bool(data.get("rejection")),
             )
             results.append(
                 {
@@ -130,6 +137,9 @@ class Applications:
                         for i in related_interviews
                     ],
                     "plans": [{"id": p.id, "goal": p.data["goal"]} for p in related_plans],
+                    "rejection_action": next_action(data["rejection"])
+                    if data["status"] == "rejected" and data.get("rejection")
+                    else None,
                 }
             )
         return results
