@@ -18,6 +18,7 @@ const Onboarding = lazy(() => import("@/features/profile/pages/Onboarding"));
 const Settings = lazy(() => import("@/features/profile/pages/Settings"));
 const Companies = lazy(() => import("@/features/applications/pages/Companies"));
 const Funnel = lazy(() => import("@/features/applications/pages/Funnel"));
+const SkillMap = lazy(() => import("@/features/skills/pages/SkillMap"));
 const Applications = lazy(
   () => import("@/features/applications/pages/Applications"),
 );
@@ -227,6 +228,14 @@ const App = () => {
               {/*    <ProtectedRoute>*/}
               {/*        <InterviewSession/>*/}
               {/*    </ProtectedRoute>}/>*/}
+              <Route
+                path="/skills"
+                element={
+                  <ProtectedRoute>
+                    <SkillMap />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/progress"
                 element={

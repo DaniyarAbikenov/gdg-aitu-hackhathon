@@ -1206,5 +1206,59 @@
         "link": "Open the funnel"
       }
     }
+  },
+  "skillMap": {
+    "nav": "Skill map",
+    "title": "Skill map",
+    "intro": "Your skills against what your saved vacancies ask for, what you are learning and how practice goes.",
+    "mapLabel": "Skill map. Select a skill for details.",
+    "askedIn": "Saved vacancies asking for it: {{count}}",
+    "practiceScore": "Latest practice score {{score}}",
+    "status": {
+      "strength": "Matches demand",
+      "have": "In your profile",
+      "gap": "Gap",
+      "learning": "Learning"
+    },
+    "explain": {
+      "strength": "In your profile and asked for in {{count}} of {{total}} saved vacancies.",
+      "have": "In your profile. Open saved vacancies asking for it: {{count}} of {{total}}.",
+      "gap": "Asked for in {{count}} of {{total}} saved vacancies and not in your profile yet.",
+      "learning": "Not in your profile yet, and you are working on it. Saved vacancies asking for it: {{count}} of {{total}}."
+    },
+    "askedBy": "Asked for by",
+    "learningProgress": "Learning: {{completed}} of {{total}} modules done",
+    "openPlan": "Open the plan",
+    "practiceSummary": "Latest practice score: {{score}}. Sessions with this skill: {{sessions}}.",
+    "addToProfile": "I know it: add to profile",
+    "learn": "Create a learning plan",
+    "practise": "Practise in an interview",
+    "noScores": "Finish a practice interview to see your scores here.",
+    "chartAll": "All practice sessions (dashed)",
+    "chartSkill": "{{skill}}",
+    "scoresTitle": "Practice scores over time",
+    "scoresHint": "Select a skill to add its line. A score counts for a skill when the question names it, otherwise for the session's stack. Practice scores are coaching, not a hiring prediction.",
+    "date": "Date",
+    "empty": "Add skills to your profile and save vacancies to see your map.",
+    "fillProfile": "Fill in the profile",
+    "saveVacancy": "Save a vacancy",
+    "strongestTitle": "Your strongest match",
+    "strongestBody": "is in your profile and asked for in {{count}} of {{total}} saved vacancies.",
+    "noStrongest": "None of your profile skills is asked for by your open saved vacancies yet.",
+    "nextTitle": "Learn next (number of vacancies asking)",
+    "noGaps": "No gaps: your profile covers the skills your saved vacancies ask for.",
+    "viewLabel": "View",
+    "views": {
+      "map": "Map",
+      "list": "List"
+    },
+    "legend": "Bigger circles are asked for more often. Lines join skills asked for together. The ring shows the latest practice score.",
+    "pick": "Select a skill to see where it is asked for and what to do next.",
+    "columns": {
+      "skill": "Skill",
+      "status": "Status",
+      "demand": "Vacancies asking",
+      "practice": "Latest practice"
+    }
   }
 }

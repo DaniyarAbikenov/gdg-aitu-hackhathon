@@ -25,6 +25,16 @@ export function PlanCreator() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   useEffect(() => {
+    // From the skill map or a rejection review without a vacancy: just the topics.
+    if (!params.get("vacancy") && focus)
+      setStacks(
+        focus
+          .split("\n")
+          .map((t) => t.trim())
+          .filter(Boolean),
+      );
+  }, [params, focus]);
+  useEffect(() => {
     if (vacancy) {
       setPosition(vacancy.data.name);
       const topics = focus

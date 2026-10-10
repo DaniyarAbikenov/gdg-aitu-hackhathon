@@ -2344,6 +2344,42 @@
         "title": "PlanRecord",
         "type": "object"
       },
+      "PracticeScore": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "interview_id": {
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          }
+        },
+        "required": [
+          "interview_id",
+          "at",
+          "score",
+          "label"
+        ],
+        "title": "PracticeScore",
+        "type": "object"
+      },
       "Preferences": {
         "additionalProperties": false,
         "properties": {
@@ -3661,6 +3697,215 @@
         "title": "SkillGap",
         "type": "object"
       },
+      "SkillLearning": {
+        "additionalProperties": true,
+        "properties": {
+          "completed": {
+            "description": "Completed modules across the plans that cover the skill",
+            "title": "Completed",
+            "type": "integer"
+          },
+          "plans": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Plans",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "plans",
+          "completed",
+          "total"
+        ],
+        "title": "SkillLearning",
+        "type": "object"
+      },
+      "SkillLink": {
+        "additionalProperties": true,
+        "properties": {
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "weight": {
+            "description": "Open vacancies that ask for both skills",
+            "title": "Weight",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "target",
+          "weight"
+        ],
+        "title": "SkillLink",
+        "type": "object"
+      },
+      "SkillMap": {
+        "additionalProperties": true,
+        "properties": {
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/SkillLink"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "next_to_learn": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Next To Learn",
+            "type": "array"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/SkillNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "scores": {
+            "items": {
+              "$ref": "#/components/schemas/PracticeScore"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "strongest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strongest"
+          },
+          "vacancies": {
+            "title": "Vacancies",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vacancies",
+          "nodes",
+          "links",
+          "scores",
+          "strongest",
+          "next_to_learn"
+        ],
+        "title": "SkillMap",
+        "type": "object"
+      },
+      "SkillNode": {
+        "additionalProperties": true,
+        "properties": {
+          "demand": {
+            "description": "Open saved vacancies that ask for the skill",
+            "title": "Demand",
+            "type": "integer"
+          },
+          "in_profile": {
+            "title": "In Profile",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "learning": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SkillLearning"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "practice": {
+            "items": {
+              "$ref": "#/components/schemas/SkillPractice"
+            },
+            "title": "Practice",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "strength",
+              "have",
+              "gap",
+              "learning"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "vacancies": {
+            "items": {
+              "$ref": "#/components/schemas/VacancyRef"
+            },
+            "title": "Vacancies",
+            "type": "array"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "status",
+          "in_profile",
+          "demand",
+          "vacancies",
+          "learning",
+          "practice"
+        ],
+        "title": "SkillNode",
+        "type": "object"
+      },
+      "SkillPractice": {
+        "additionalProperties": true,
+        "properties": {
+          "answers": {
+            "title": "Answers",
+            "type": "integer"
+          },
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "interview_id": {
+            "title": "Interview Id",
+            "type": "string"
+          },
+          "score": {
+            "description": "Mean practice score of the answers attributed to the skill",
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "interview_id",
+          "at",
+          "score",
+          "answers"
+        ],
+        "title": "SkillPractice",
+        "type": "object"
+      },
       "StageCount": {
         "additionalProperties": true,
         "properties": {
@@ -3918,6 +4163,30 @@
           }
         },
         "title": "VacancyImport",
+        "type": "object"
+      },
+      "VacancyRef": {
+        "additionalProperties": true,
+        "properties": {
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "company"
+        ],
+        "title": "VacancyRef",
         "type": "object"
       },
       "ValidationError": {
@@ -6797,6 +7066,27 @@
           }
         },
         "summary": "Add",
+        "tags": [
+          "skills"
+        ]
+      }
+    },
+    "/skills/map": {
+      "get": {
+        "operationId": "skill_map_skills_map_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillMap"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Skill Map",
         "tags": [
           "skills"
         ]

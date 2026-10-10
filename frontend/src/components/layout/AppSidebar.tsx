@@ -11,6 +11,7 @@ import {
   Settings,
   HelpCircle,
   HeadphonesIcon,
+  Waypoints,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -39,6 +40,7 @@ export function AppSidebar() {
     { title: tr("copy.c123"), url: "/companies", icon: Building2 },
     { title: tr("copy.c124"), url: "/applications", icon: BriefcaseBusiness },
     { title: t("nav.resume"), url: "/resume", icon: FileText },
+    { title: tr("skillMap.nav"), url: "/skills", icon: Waypoints },
     { title: t("nav.plan"), url: "/plan", icon: Target },
     { title: t("nav.interview"), url: "/interview", icon: MessageSquare },
     { title: t("nav.progress"), url: "/progress", icon: TrendingUp },

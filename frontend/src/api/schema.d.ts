@@ -1105,6 +1105,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/skills/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Skill Map */
+        get: operations["skill_map_skills_map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/targets/{kind}": {
         parameters: {
             query?: never;
@@ -2258,6 +2275,19 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** PracticeScore */
+        PracticeScore: {
+            /** At */
+            at: string;
+            /** Interview Id */
+            interview_id: string;
+            /** Label */
+            label: string;
+            /** Score */
+            score: number | null;
+        } & {
+            [key: string]: unknown;
+        };
         /** Preferences */
         Preferences: {
             /**
@@ -2854,6 +2884,93 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** SkillLearning */
+        SkillLearning: {
+            /**
+             * Completed
+             * @description Completed modules across the plans that cover the skill
+             */
+            completed: number;
+            /** Plans */
+            plans: string[];
+            /** Total */
+            total: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** SkillLink */
+        SkillLink: {
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
+            /**
+             * Weight
+             * @description Open vacancies that ask for both skills
+             */
+            weight: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** SkillMap */
+        SkillMap: {
+            /** Links */
+            links: components["schemas"]["SkillLink"][];
+            /** Next To Learn */
+            next_to_learn: string[];
+            /** Nodes */
+            nodes: components["schemas"]["SkillNode"][];
+            /** Scores */
+            scores: components["schemas"]["PracticeScore"][];
+            /** Strongest */
+            strongest: string | null;
+            /** Vacancies */
+            vacancies: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** SkillNode */
+        SkillNode: {
+            /**
+             * Demand
+             * @description Open saved vacancies that ask for the skill
+             */
+            demand: number;
+            /** In Profile */
+            in_profile: boolean;
+            /** Key */
+            key: string;
+            learning: components["schemas"]["SkillLearning"] | null;
+            /** Name */
+            name: string;
+            /** Practice */
+            practice: components["schemas"]["SkillPractice"][];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "strength" | "have" | "gap" | "learning";
+            /** Vacancies */
+            vacancies: components["schemas"]["VacancyRef"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /** SkillPractice */
+        SkillPractice: {
+            /** Answers */
+            answers: number;
+            /** At */
+            at: string;
+            /** Interview Id */
+            interview_id: string;
+            /**
+             * Score
+             * @description Mean practice score of the answers attributed to the skill
+             */
+            score: number;
+        } & {
+            [key: string]: unknown;
+        };
         /** StageCount */
         StageCount: {
             /** Count */
@@ -2963,6 +3080,17 @@ export interface components {
             text: string;
             /** Url */
             url?: string | null;
+        };
+        /** VacancyRef */
+        VacancyRef: {
+            /** Company */
+            company: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+        } & {
+            [key: string]: unknown;
         };
         /** ValidationError */
         ValidationError: {
@@ -5279,6 +5407,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skill_map_skills_map_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkillMap"];
                 };
             };
         };
