@@ -914,7 +914,13 @@
     "letterFacts": "Fill in your profile or choose a resume for this vacancy first.",
     "resetLink": "This reset link has expired or was already used. Request a new one.",
     "verifyLink": "This confirmation link has expired or was already used.",
-    "emailUnavailable": "Email is not configured on this server."
+    "emailUnavailable": "Email is not configured on this server.",
+    "companyNoWebsite": "Add the company website first.",
+    "companyResearch": "Could not read the company website. Check the address or add facts by hand.",
+    "reportPrivate": "Remove contact details and links: reports are anonymous.",
+    "reportEmpty": "Describe the stages, the questions or your advice.",
+    "reportDate": "The interview month cannot be in the future.",
+    "reportQuota": "You can share up to five reports a day."
   },
   "articleLanguage": "Article language",
   "ui": {
@@ -1260,5 +1266,79 @@
       "demand": "Vacancies asking",
       "practice": "Latest practice"
     }
+  },
+  "companyInsights": {
+    "researchTitle": "What the website says",
+    "researchIntro": "Facts the company states about itself on its own site. Each one links to the page and quotes it.",
+    "read": "Read the website",
+    "refresh": "Read again",
+    "reading": "Reading…",
+    "readingHint": "Reading the home page and up to two about or careers pages.",
+    "needWebsite": "Add the company website to read what it says about itself.",
+    "ruleBased": "Rule-based reading: sentences are quoted as they are, without AI.",
+    "aiChecked": "AI summary: every fact was checked against a quote on the cited page.",
+    "checkedOn": "Read on {{date}}.",
+    "noFacts": "The pages had no clear statements to quote. Try again later or add notes by hand.",
+    "stackTitle": "Technologies named on the site",
+    "namedOn": "Named on {{page}}",
+    "sources": "Pages read:",
+    "topics": {
+      "product": "Product",
+      "stack": "Technology",
+      "hiring": "Hiring",
+      "culture": "Culture and values",
+      "locations": "Offices",
+      "size": "Size",
+      "other": "Other"
+    },
+    "reportsTitle": "Candidate interview reports",
+    "reportsIntro": "Anonymous experiences from other candidates. They appear after a moderator checks them.",
+    "share": "Share your interview",
+    "shareTitle": "Share an interview report",
+    "privacy": "Reports are anonymous: other candidates see only the role, month, stages, questions and advice. Do not include names, contacts or links. A moderator reviews every report before it is published.",
+    "fields": {
+      "role": "Role",
+      "month": "Interview month",
+      "difficulty": "Difficulty",
+      "outcome": "Outcome",
+      "stages": "Stages",
+      "questions": "Questions",
+      "advice": "Advice"
+    },
+    "stagesHint": "For example: recruiter call, live coding, team interview",
+    "questionsHint": "One question per line",
+    "difficulty": {
+      "1": "1: very easy",
+      "2": "2: easy",
+      "3": "3: medium",
+      "4": "4: hard",
+      "5": "5: very hard"
+    },
+    "difficultyValue": "Difficulty {{value}}/5",
+    "outcomes": {
+      "offer": "Offer",
+      "rejected": "Rejected",
+      "no_answer": "No answer",
+      "in_progress": "Still in progress",
+      "withdrew": "Withdrew"
+    },
+    "statuses": {
+      "pending": "Waiting for moderation",
+      "approved": "Published",
+      "rejected": "Not published"
+    },
+    "moderatorNote": "Moderator: {{note}}",
+    "send": "Send for moderation",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "sent": "Thank you. Your report will appear for others after moderation.",
+    "noReports": "No published reports yet. Yours could be the first.",
+    "moderationTitle": "Interview report moderation",
+    "moderationIntro": "Publish reports that help candidates and identify no one. Authors are hidden from moderators too.",
+    "queueEmpty": "No reports are waiting.",
+    "noteLabel": "Note to the author (optional)",
+    "approve": "Publish",
+    "reject": "Reject",
+    "dropped": "Statements removed because the cited page did not contain their quote: {{count}}."
   }
 }

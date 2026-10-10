@@ -7,6 +7,9 @@ import type {
   CompanyPayload,
   Funnel,
   GenericRecord,
+  InterviewReport,
+  ReportPayload,
+  ResearchedCompany,
   RejectionResult,
   TargetPayload,
 } from "@/api/types";
@@ -30,7 +33,11 @@ export const applicationKeys = {
 
 export const companyKeys = {
   all: ["companies"] as const,
+  reports: (id: string) => ["company-reports", id] as const,
+  moderation: ["report-moderation"] as const,
 };
+
+const language = () => (i18n.language === "kz" ? "kk" : i18n.language);
 
 export const targetKeys = {
   all: ["targets"] as const,
@@ -177,7 +184,7 @@ export function useImportVacancy() {
       postJob<VacancyImportResult>("/applications/import", {
         url,
         text,
-        language: i18n.language === "kz" ? "kk" : i18n.language,
+        language: language(),
       }),
   });
 }
@@ -188,5 +195,75 @@ export function useCoverLetter() {
       postJob<CoverLetterDraft>(`/applications/${id}/cover-letter`, {
         language: i18n.language === "kz" ? "kk" : i18n.language,
       }),
+  });
+}
+
+export function useResearchCompany() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, revision }: { id: string; revision: number }) =>
+      postJob<ResearchedCompany>(`/companies/${id}/research`, {
+        revision,
+        language: language(),
+      }),
+    onSuccess: () => invalidateCatalog(queryClient, [companyKeys.all]),
+  });
+}
+
+export function useCompanyReports(id: string) {
+  return useQuery({
+    queryKey: companyKeys.reports(id),
+    queryFn: async () =>
+      (await client.get<InterviewReport[]>(`/companies/${id}/reports`)).data,
+  });
+}
+
+export function useShareReport(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload: ReportPayload) =>
+      (await client.post<InterviewReport>(`/companies/${id}/reports`, payload))
+        .data,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: companyKeys.reports(id) }),
+  });
+}
+
+export function useDeleteReport(companyId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (reportId: string) => {
+      await client.delete(`/reports/${reportId}`);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: companyKeys.reports(companyId),
+      }),
+  });
+}
+
+export function useModerationQueue() {
+  return useQuery({
+    queryKey: companyKeys.moderation,
+    queryFn: async () =>
+      (await client.get<InterviewReport[]>("/admin/reports")).data,
+  });
+}
+
+export function useModerate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...decision
+    }: {
+      id: string;
+      status: "approved" | "rejected";
+      note: string;
+    }) =>
+      (await client.post<InterviewReport>(`/admin/reports/${id}`, decision))
+        .data,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: companyKeys.moderation }),
   });
 }

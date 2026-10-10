@@ -124,6 +124,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Moderation Queue */
+        get: operations["moderation_queue_admin_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Moderate */
+        post: operations["moderate_admin_reports__report_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/example": {
         parameters: {
             query?: never;
@@ -483,6 +517,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/companies/{company_id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Company Reports */
+        get: operations["company_reports_companies__company_id__reports_get"];
+        put?: never;
+        /** Share Report */
+        post: operations["share_report_companies__company_id__reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/companies/{company_id}/research": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Research */
+        post: operations["research_companies__company_id__research_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -806,6 +875,40 @@ export interface paths {
         /** Claim Reward */
         post: operations["claim_reward_progress_rewards__key__post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Reports */
+        get: operations["my_reports_reports_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/reports/{report_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Report */
+        delete: operations["delete_report_reports__report_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1618,6 +1721,54 @@ export interface components {
             /** Website */
             website?: string | null;
         };
+        /** CompanyFact */
+        CompanyFact: {
+            /**
+             * Quote
+             * @description Exact words from the cited page that support the fact
+             */
+            quote: string;
+            /** Source Url */
+            source_url: string;
+            /** Text */
+            text: string;
+            /** Topic */
+            topic: string;
+        } & {
+            [key: string]: unknown;
+        };
+        /** CompanyResearch */
+        CompanyResearch: {
+            /**
+             * Dropped
+             * @description Facts removed because the cited page did not contain them
+             */
+            dropped: number;
+            /** Facts */
+            facts: components["schemas"]["CompanyFact"][];
+            /** Fetched At */
+            fetched_at: string;
+            /**
+             * Provider
+             * @description "openai", "gemini" or "rule-based"
+             */
+            provider: string;
+            /** Sources */
+            sources: string[];
+            /** Stack */
+            stack: components["schemas"]["CompanyTechnology"][];
+        } & {
+            [key: string]: unknown;
+        };
+        /** CompanyTechnology */
+        CompanyTechnology: {
+            /** Name */
+            name: string;
+            /** Source Url */
+            source_url: string;
+        } & {
+            [key: string]: unknown;
+        };
         /** CoverLetterDraft */
         CoverLetterDraft: {
             /** Facts Used */
@@ -1897,6 +2048,44 @@ export interface components {
         } & {
             [key: string]: unknown;
         };
+        /** InterviewReport */
+        InterviewReport: {
+            /** Advice */
+            advice: string;
+            /** Company Name */
+            company_name: string;
+            /** Difficulty */
+            difficulty: number;
+            /** Id */
+            id: string;
+            /**
+             * Interviewed On
+             * @description Month of the interview, YYYY-MM
+             */
+            interviewed_on: string;
+            /** Mine */
+            mine: boolean;
+            /** Moderation Note */
+            moderation_note?: string | null;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "offer" | "rejected" | "no_answer" | "in_progress" | "withdrew";
+            /** Questions */
+            questions: string[];
+            /** Role */
+            role: string;
+            /** Stages */
+            stages: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "rejected";
+        } & {
+            [key: string]: unknown;
+        };
         /** InterviewStart */
         InterviewStart: {
             /** Company Description */
@@ -2061,6 +2250,19 @@ export interface components {
             revision: number;
             /** Title */
             title: string;
+        };
+        /** Moderation */
+        Moderation: {
+            /**
+             * Note
+             * @default
+             */
+            note: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "approved" | "rejected";
         };
         /** ModuleUpdate */
         ModuleUpdate: {
@@ -2707,6 +2909,59 @@ export interface components {
             reviewed: number;
             /** Total */
             total: number;
+        } & {
+            [key: string]: unknown;
+        };
+        /** ReportForm */
+        ReportForm: {
+            /**
+             * Advice
+             * @default
+             */
+            advice: string;
+            /** Difficulty */
+            difficulty: number;
+            /** Interviewed On */
+            interviewed_on: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "offer" | "rejected" | "no_answer" | "in_progress" | "withdrew";
+            /** Questions */
+            questions?: string[];
+            /** Role */
+            role: string;
+            /**
+             * Stages
+             * @default
+             */
+            stages: string;
+        };
+        /** ResearchRequest */
+        ResearchRequest: {
+            /**
+             * Language
+             * @default ru
+             * @enum {string}
+             */
+            language: "ru" | "en" | "kk";
+            /** Revision */
+            revision: number;
+        };
+        /** ResearchedCompany */
+        ResearchedCompany: {
+            /** Created At */
+            created_at: string;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Id */
+            id: string;
+            research: components["schemas"]["CompanyResearch"];
+            /** Revision */
+            revision: number;
         } & {
             [key: string]: unknown;
         };
@@ -3402,6 +3657,61 @@ export interface operations {
             };
         };
     };
+    moderation_queue_admin_reports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewReport"][];
+                };
+            };
+        };
+    };
+    moderate_admin_reports__report_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Moderation"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     example_api_example_get: {
         parameters: {
             query?: never;
@@ -4074,6 +4384,116 @@ export interface operations {
             };
         };
     };
+    company_reports_companies__company_id__reports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewReport"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    share_report_companies__company_id__reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportForm"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewReport"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    research_companies__company_id__research_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                company_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResearchRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResearchedCompany"];
+                };
+            };
+            /** @description Accepted as a background job */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobView"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_health_get: {
         parameters: {
             query?: never;
@@ -4709,6 +5129,55 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Record"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_reports_reports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InterviewReport"][];
+                };
+            };
+        };
+    };
+    delete_report_reports__report_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                report_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

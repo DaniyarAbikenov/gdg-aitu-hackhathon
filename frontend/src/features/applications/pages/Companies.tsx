@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { SkillPicker } from "@/components/SkillPicker";
 import type { CompanyPayload } from "@/api/types";
 import { useCompanies, useSaveCompany } from "../api";
+import { CompanyResearch } from "../components/CompanyResearch";
+import { InterviewReports } from "../components/InterviewReports";
 import type { Assignment, CompanyData, CompanyRecord } from "../types";
 const blank: CompanyData = {
   name: "",
@@ -40,7 +42,9 @@ export default function Companies() {
   const selected = records.find((r) => r.id === params.get("id"));
   const edit = (r: CompanyRecord | null) => {
     setEditing(r);
-    setDraft({ ...blank, ...r?.data });
+    // Website research is kept by the server; the form never sends it back.
+    const { research: _research, ...data } = r?.data ?? {};
+    setDraft({ ...blank, ...data });
     setError("");
   };
   const update = (key: keyof CompanyData, value: unknown) =>
@@ -359,6 +363,8 @@ export default function Companies() {
                 <p className="text-muted-foreground">{tr("copy.c230")}</p>
               )}
             </section>
+            <CompanyResearch company={selected} />
+            <InterviewReports key={selected.id} companyId={selected.id} />
             {selected.data.notes && (
               <div>
                 <h3 className="font-semibold">{tr("copy.c169")}</h3>

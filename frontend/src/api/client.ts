@@ -35,6 +35,13 @@ const messageByCode: Record<string, string> = {
   invalid_input: "validation",
   payload_too_large: "validation",
   storage_unavailable: "network",
+  company_no_website: "companyNoWebsite",
+  company_research_failed: "companyResearch",
+  report_private: "reportPrivate",
+  report_empty: "reportEmpty",
+  report_date: "reportDate",
+  report_quota: "reportQuota",
+  report_account: "auth",
 };
 
 /** Fallback for responses without a code, such as proxy errors or unknown routes. */

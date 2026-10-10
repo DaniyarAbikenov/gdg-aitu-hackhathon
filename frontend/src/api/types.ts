@@ -37,3 +37,7 @@ export type NextAction = Schemas["NextAction"];
 export type Rejection = Schemas["Rejection"];
 export type RejectionReason = Schemas["Rejection"]["reason"];
 export type RejectionResult = Schemas["RejectionResult"];
+export type CompanyResearch = Schemas["CompanyResearch"];
+export type ResearchedCompany = Schemas["ResearchedCompany"];
+export type InterviewReport = Schemas["InterviewReport"];
+export type ReportPayload = Schemas["ReportForm"];
