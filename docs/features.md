@@ -72,3 +72,14 @@ Each resume remembers which profile facts it was built from (`resumes.profile_li
 - **removed:** facts deleted from the profile but still in the resume.
 
 Nothing changes until the candidate saves decisions with `POST /resume/{id}/profile-changes`. Before an accepted change is written, the previous text is stored as a version in the same transaction, and a stale list of changes is refused with 409. Keeping the resume text creates no version and hides that suggestion afterwards. Resumes made before linking are matched to profile entries by company and role (or title) and linked after one review. The resume library marks resumes with pending updates (`GET /resume-links`).
+
+## Application funnel and rejection reviews
+
+Each saved vacancy remembers when it first reached each status (`stages`), so a rejection keeps the furthest stage it got to. `/applications/funnel` (`GET /applications/funnel?offset=`) shows:
+
+- saved → applied → interview → offer, with the share of the previous stage that moved on;
+- rejections after applying or after an interview, and the reasons the candidate noted;
+- eight local weeks of effort: applications sent, practice interviews finished and learning modules completed;
+- feedback built only from those records: this week's effort, a streak of active weeks, interviews reached, a repeated rejection reason, and rejections caused by things outside the candidate's control. It never estimates the chance of an offer.
+
+A rejected application asks three questions (`PUT /applications/{id}/rejection`): where it stopped, the main reason as far as the candidate knows, and, for technical, assignment or behavioural reasons, the topics that felt weak. Employer feedback is optional. The answer leads to one next step: tailor the resume, a learning plan prefilled with the weak topics, a practice interview for that vacancy, checking the salary fit early, or simply moving on when the reason was outside the candidate's control. Records saved before this release have no stage dates; the candidate's answer fills in the stage.
