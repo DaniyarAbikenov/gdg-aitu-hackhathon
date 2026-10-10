@@ -15,6 +15,7 @@ from app.application.ai_usage import RETENTION_DAYS, AiUsageReport
 from app.application.applications import Applications
 from app.application.auth import Administrators, Auth
 from app.application.companies import Companies
+from app.application.funnel import JobSearch
 from app.application.interviews import InterviewService
 from app.application.jobs import Jobs
 from app.application.knowledge import Knowledge
@@ -141,6 +142,7 @@ def build_container(settings: Settings, reviewer: ResumeReviewer | None = None) 
             usage, auth, settings.ai_input_usd_per_million, settings.ai_output_usd_per_million
         ),
         linked_resumes=LinkedResumes(store, repository),
+        job_search=JobSearch(store, activity),
         recovery=Recovery(
             store,
             sessions,

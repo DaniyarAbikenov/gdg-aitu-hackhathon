@@ -182,6 +182,98 @@ class PreferencesRecord(View):
 ApplicationStatus = Literal[
     "saved", "preparing", "applied", "interview", "offer", "rejected", "archived"
 ]
+RejectionStage = Literal["applied", "interview"]
+RejectionReason = Literal[
+    "no_reply",
+    "screening",
+    "technical",
+    "assignment",
+    "behavioral",
+    "position_closed",
+    "salary",
+    "other_candidate",
+    "unknown",
+]
+
+
+class Rejection(View):
+    stage: RejectionStage
+    reason: RejectionReason
+    topics: list[str] = Field(default_factory=list)
+    feedback: str = ""
+    created_at: str
+
+
+class NextAction(View):
+    key: Literal[
+        "tailorResume",
+        "studyTopics",
+        "practiceTechnical",
+        "practiceStory",
+        "checkSalary",
+        "keepGoing",
+    ]
+    topics: list[str]
+
+
+class RejectionResult(View):
+    revision: int
+    rejection: Rejection
+    next_action: NextAction
+
+
+class FunnelStage(View):
+    stage: Literal["saved", "applied", "interview", "offer"]
+    count: int
+    rate: float | None = Field(description="Share of the previous stage that reached this one")
+
+
+class StageCount(View):
+    stage: RejectionStage
+    count: int
+
+
+class ReasonCount(View):
+    reason: RejectionReason
+    count: int
+
+
+class Rejections(View):
+    total: int
+    reviewed: int
+    by_stage: list[StageCount]
+    by_reason: list[ReasonCount]
+
+
+class EffortWeek(View):
+    week: str = Field(description="Start of the week (Monday 00:00 in the browser's offset), UTC")
+    applications: int
+    practice: int
+    modules: int
+    reviews: int
+
+
+class Insight(View):
+    key: Literal[
+        "thisWeek",
+        "restart",
+        "streak",
+        "interviews",
+        "pattern",
+        "outside",
+        "reviewed",
+        "unreviewed",
+    ]
+    params: dict[str, int | str]
+
+
+class Funnel(View):
+    total: int
+    active: int
+    stages: list[FunnelStage]
+    rejections: Rejections
+    effort: list[EffortWeek]
+    insights: list[Insight]
 
 
 class ApplicationFields(View):
@@ -203,6 +295,10 @@ class ApplicationFields(View):
     next_action: str = ""
     follow_up: str | None = None
     cover_letter: str = ""
+    stages: dict[str, str] = Field(
+        default_factory=dict, description="When the vacancy first reached each status"
+    )
+    rejection: Rejection | None = None
 
 
 class LinkedInterview(View):
@@ -227,6 +323,7 @@ class ApplicationItem(View):
     resume_title: str | None
     interviews: list[LinkedInterview]
     plans: list[LinkedPlan]
+    rejection_action: NextAction | None = None
 
 
 class JobError(View):

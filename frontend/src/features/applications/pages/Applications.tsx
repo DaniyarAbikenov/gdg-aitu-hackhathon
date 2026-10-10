@@ -6,6 +6,7 @@ import {
   BriefcaseBusiness,
   ArrowRight,
   CalendarPlus,
+  Filter,
   Plus,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -15,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { VacancyImport } from "../components/VacancyImport";
 import { ApplicationBoard } from "../components/ApplicationBoard";
 import { CoverLetter } from "../components/CoverLetter";
+import { RejectionReview } from "../components/RejectionReview";
 import { SkillPicker } from "@/components/SkillPicker";
 import type { ApplicationItem, ResumeRecord } from "@/api/types";
 import type { ApplicationDraft, CompanyRecord } from "../types";
@@ -151,6 +153,12 @@ export default function Applications() {
             <p className="text-muted-foreground mt-2">{tr("copy.c149")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link to="/applications/funnel">
+                <Filter className="h-4 w-4 mr-2" />
+                {tr("funnel.open")}
+              </Link>
+            </Button>
             <Button asChild variant="outline">
               <a href="/api/applications/calendar.ics" download>
                 <CalendarPlus className="h-4 w-4 mr-2" />
@@ -545,6 +553,12 @@ export default function Applications() {
                 {tr("copy.c192")} {p.goal}
               </Link>
             ))}
+            {selected.data.status === "rejected" && (
+              <RejectionReview
+                key={`${selected.id}:${selected.revision}`}
+                application={selected}
+              />
+            )}
             <CoverLetter key={selected.id} application={selected} />
             {selected.data.notes && (
               <div>

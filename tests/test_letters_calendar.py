@@ -67,7 +67,11 @@ def test_letter_uses_only_profile_facts_and_names_gaps(client):
 def test_accepted_letter_is_kept_by_later_edits(client):
     member(client)
     item = application(client)
-    data = {k: v for k, v in item["data"].items() if k not in {"updated_at", "company_id"}}
+    data = {
+        k: v
+        for k, v in item["data"].items()
+        if k not in {"updated_at", "company_id", "stages", "rejection"}
+    }
     saved = client.put(
         f"/applications/{item['id']}",
         json={**data, "revision": item["revision"], "cover_letter": "My accepted letter"},

@@ -17,6 +17,7 @@ const VerifyEmail = lazy(() => import("@/features/auth/pages/VerifyEmail"));
 const Onboarding = lazy(() => import("@/features/profile/pages/Onboarding"));
 const Settings = lazy(() => import("@/features/profile/pages/Settings"));
 const Companies = lazy(() => import("@/features/applications/pages/Companies"));
+const Funnel = lazy(() => import("@/features/applications/pages/Funnel"));
 const Applications = lazy(
   () => import("@/features/applications/pages/Applications"),
 );
@@ -94,6 +95,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <Applications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/applications/funnel"
+                element={
+                  <ProtectedRoute>
+                    <Funnel />
                   </ProtectedRoute>
                 }
               />

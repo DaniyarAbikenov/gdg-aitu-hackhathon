@@ -39,7 +39,9 @@ def test_application_context_resume_plan_and_owner_boundaries(client):
         client.put(f"/applications/{item['id']}", json={**item["data"], "revision": 1}).status_code
         == 422
     )  # timestamps are not editable
-    updated = {k: v for k, v in linked["data"].items() if k != "updated_at"}
+    updated = {
+        k: v for k, v in linked["data"].items() if k not in {"updated_at", "stages", "rejection"}
+    }
     response = client.put(
         f"/applications/{item['id']}",
         json={**updated, "revision": linked["revision"], "status": "applied"},

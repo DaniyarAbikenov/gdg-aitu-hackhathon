@@ -894,7 +894,8 @@
     "practice": "Practice against the vacancy requirements.",
     "finish": "Finish your current practice session.",
     "plan": "Build a plan from your preparation results.",
-    "contact": "Schedule an application or your next contact."
+    "contact": "Schedule an application or your next contact.",
+    "reviewRejection": "Answer three questions about the rejection to get your next step."
   },
   "errors": {
     "validation": "Check the entered fields.",
@@ -1100,5 +1101,110 @@
     },
     "chooseExplain": "Your profile can hold more facts than one resume needs. Untick what does not fit this vacancy.",
     "entriesOf": "Entries of {{section}}"
+  },
+  "funnel": {
+    "title": "Application funnel",
+    "intro": "How far your applications get, where they stop and what you did each week. Built only from what you recorded.",
+    "open": "Funnel",
+    "empty": "Save a vacancy and move it through the stages to see your funnel.",
+    "addVacancy": "Go to applications",
+    "stagesTitle": "Stages",
+    "stages": {
+      "saved": "Saved",
+      "applied": "Applied",
+      "interview": "Interview",
+      "offer": "Offer"
+    },
+    "ofPrevious": "{{rate}}% of the previous stage",
+    "active": "In progress now: {{count}}",
+    "rejectionsTitle": "Rejections",
+    "rejectedAt": {
+      "applied": "After applying",
+      "interview": "After an interview"
+    },
+    "reasonsTitle": "Reasons you noted",
+    "noRejections": "No rejections recorded.",
+    "unreviewed": "Not reviewed yet: {{count}}",
+    "effortTitle": "Weekly effort",
+    "effortHint": "Last 8 weeks: applications sent, practice interviews finished and learning modules completed.",
+    "effort": {
+      "applications": "Applications",
+      "practice": "Practice interviews",
+      "modules": "Learning modules"
+    },
+    "week": "Week",
+    "weekOf": "Week of {{date}}",
+    "feedbackTitle": "Your feedback",
+    "noFeedback": "Feedback appears once you record applications, practice or learning.",
+    "insights": {
+      "thisWeek": "This week: applications {{applications}}, practice interviews {{practice}}, learning modules {{modules}}. Keep the rhythm.",
+      "restart": "Last week you were active and this week is still quiet. One application or one practice session keeps the routine going.",
+      "streak": "Weeks in a row with steady work on your search: {{weeks}}.",
+      "interviews": "Applications that led to an interview: {{count}}. Employers respond to your profile.",
+      "pattern": "{{count}} of {{total}} reviewed rejections had the same reason: {{reason}}. Working on that one step helps the most.",
+      "outside": "Rejections for reasons outside your control (closed position, salary, another candidate): {{count}}. They say nothing about your skills.",
+      "reviewed": "Rejections you turned into a concrete next step: {{count}}.",
+      "unreviewed": "Rejections waiting for a three-question review: {{count}}."
+    },
+    "reasons": {
+      "no_reply": "No reply after applying",
+      "screening": "Did not pass the first call",
+      "technical": "Technical interview",
+      "assignment": "Take-home assignment",
+      "behavioral": "Behavioural or team-fit interview",
+      "position_closed": "The position was closed or frozen",
+      "salary": "Salary expectations did not match",
+      "other_candidate": "They chose another candidate",
+      "unknown": "I don't know"
+    }
+  },
+  "rejection": {
+    "title": "What happened with this application?",
+    "intro": "Three quick questions turn this rejection into one next step. Only you see the answers.",
+    "stage": "Where did it stop?",
+    "reason": "What was the main reason, as far as you know?",
+    "topics": "Topics that felt weak",
+    "topicsHint": "Optional, one per line. For example: SQL joins",
+    "feedback": "Employer feedback, if any",
+    "submit": "Get my next step",
+    "edit": "Change answers",
+    "summary": "Stopped: {{stage}}. Reason: {{reason}}.",
+    "nextTitle": "Your next step",
+    "support": {
+      "outside": "This was not about your preparation. Keep applying: the next vacancy is a fresh start.",
+      "skill": "One rejection is one data point, not a verdict. The step below works on exactly what came up."
+    },
+    "actions": {
+      "tailorResume": {
+        "title": "Tailor the resume to the vacancy",
+        "body": "With no reply, the resume is the first thing to check: make the match with the requirements visible at the top.",
+        "link": "Open the resume"
+      },
+      "studyTopics": {
+        "title": "Study the weak topics",
+        "body": "Build a learning plan around: {{topics}}.",
+        "link": "Create the plan"
+      },
+      "practiceTechnical": {
+        "title": "Practice the technical part",
+        "body": "Run a practice interview against this vacancy's requirements and look at the weakest answers.",
+        "link": "Start practice"
+      },
+      "practiceStory": {
+        "title": "Practice your story",
+        "body": "Rehearse your introduction and examples from your experience in a practice interview for this vacancy.",
+        "link": "Start practice"
+      },
+      "checkSalary": {
+        "title": "Check the salary fit early",
+        "body": "Compare the posted range with yours before applying, and raise it in the first call.",
+        "link": "Back to applications"
+      },
+      "keepGoing": {
+        "title": "Keep going",
+        "body": "Nothing to fix here. Pick the next saved vacancy and apply.",
+        "link": "Open the funnel"
+      }
+    }
   }
 }

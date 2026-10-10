@@ -37,7 +37,12 @@ def next_step(
     interviews_started: int,
     interviews_finished: int,
     plans: int,
+    rejection_reviewed: bool = True,
 ) -> NextStep:
+    if status == "rejected" and not rejection_reviewed:
+        return NextStep(
+            "reviewRejection", "Ответьте на три вопроса об отказе и получите следующий шаг."
+        )
     if status in CLOSED_STATUSES:
         return NextStep("wrapUp", "Подведите итоги и сохраните полезные выводы.")
     if next_action:
