@@ -30,11 +30,11 @@ describe("InterviewReports", () => {
       http.get("*/api/companies/c1/reports", () => HttpResponse.json(reports)),
       http.post("*/api/companies/c1/reports", async ({ request }) => {
         sent = (await request.json()) as Record<string, unknown>;
-        const mine = {
+        const mine: InterviewReport = {
           ...published,
           ...sent,
           id: "r2",
-          status: "pending",
+          status: "pending" as const,
           mine: true,
           moderation_note: "",
         };
