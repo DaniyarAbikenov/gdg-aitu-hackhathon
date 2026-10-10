@@ -75,8 +75,10 @@ class ResumeFields(StrictModel):
         result = []
         for item in interests:
             item = " ".join(item.split())
-            if not item or len(item) > 80:
-                raise ValueError("Interests must contain between 1 and 80 characters")
+            if not item:
+                continue  # One interest per line; blank lines are not facts.
+            if len(item) > 80:
+                raise ValueError("Keep each interest under 80 characters")
             if item.casefold() not in {i.casefold() for i in result}:
                 result.append(item)
         return result

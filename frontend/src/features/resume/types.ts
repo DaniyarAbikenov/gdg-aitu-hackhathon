@@ -13,6 +13,7 @@ export interface ResumeFields {
   skills?: string[];
 
   experience?: {
+    id?: string;
     company: string;
     role: string;
     date_from: string;
@@ -23,6 +24,7 @@ export interface ResumeFields {
   }[];
 
   education?: {
+    id?: string;
     institution: string;
     degree: string;
     year_start: number;
@@ -30,10 +32,21 @@ export interface ResumeFields {
   }[];
 
   projects?: {
+    id?: string;
     title: string;
     description: string;
     tech: string[];
   }[];
+
+  /** Achievements outside one job: competitions, awards, publications. */
+  awards?: {
+    id?: string;
+    title: string;
+    detail: string;
+    year: number;
+  }[];
+
+  interests?: string[];
 }
 
 /** A resume whose legacy text sections were normalized into editable entries. */

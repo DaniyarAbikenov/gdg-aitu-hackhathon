@@ -794,6 +794,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/resume-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profile Status */
+        get: operations["profile_status_resume_links_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/resume/create": {
         parameters: {
             query?: never;
@@ -959,6 +976,24 @@ export interface paths {
         get: operations["pdf_resume__resume_id__pdf_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/resume/{resume_id}/profile-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profile Changes */
+        get: operations["profile_changes_resume__resume_id__profile_changes_get"];
+        put?: never;
+        /** Apply Profile Changes */
+        post: operations["apply_profile_changes_resume__resume_id__profile_changes_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1446,6 +1481,32 @@ export interface components {
             /** Title */
             title: string;
         };
+        /**
+         * Award
+         * @description An achievement outside a single job: a competition, award, publication or certificate.
+         */
+        Award: {
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+            /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Year
+             * @default 0
+             */
+            year: number;
+        };
         /** Body_import_profile_user_profile_import_post */
         Body_import_profile_user_profile_import_post: {
             /** File */
@@ -1553,6 +1614,11 @@ export interface components {
              */
             degree: string;
             /**
+             * Id
+             * @default
+             */
+            id: string;
+            /**
              * Institution
              * @default
              */
@@ -1592,6 +1658,11 @@ export interface components {
              * @default
              */
             date_to: string;
+            /**
+             * Id
+             * @default
+             */
+            id: string;
             /**
              * Location
              * @default
@@ -2095,6 +2166,8 @@ export interface components {
              * @default false
              */
             audio_mode: boolean;
+            /** Awards */
+            awards?: components["schemas"]["Award"][];
             /**
              * Career Goal
              * @default
@@ -2131,6 +2204,8 @@ export interface components {
              * @default
              */
             full_name: string;
+            /** Interests */
+            interests?: string[];
             /**
              * Language
              * @default en
@@ -2170,6 +2245,52 @@ export interface components {
              */
             summary: string;
         };
+        /**
+         * ProfileChange
+         * @description One difference between the master profile and a resume.
+         */
+        ProfileChange: {
+            /**
+             * Demand
+             * @default 0
+             */
+            demand: number;
+            /** Id */
+            id: string;
+            /** Key */
+            key: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "update" | "review" | "new" | "removed";
+            /** Label */
+            label: string;
+            /** Profile */
+            profile?: unknown;
+            /** Resume */
+            resume?: unknown;
+            /** Section */
+            section: string;
+        };
+        /** ProfileChanges */
+        ProfileChanges: {
+            /** Changes */
+            changes: components["schemas"]["ProfileChange"][];
+            /** Linked */
+            linked: boolean;
+            /** Profile Revision */
+            profile_revision: number;
+            /** Resume Id */
+            resume_id: string;
+            /** Revision */
+            revision: number;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "current" | "suggestions" | "outdated" | "review";
+        };
         /** ProfileData */
         ProfileData: {
             /**
@@ -2177,6 +2298,8 @@ export interface components {
              * @default false
              */
             audio_mode: boolean;
+            /** Awards */
+            awards?: components["schemas"]["Award"][];
             /**
              * Career Goal
              * @default
@@ -2216,6 +2339,8 @@ export interface components {
              * @default
              */
             full_name: string;
+            /** Interests */
+            interests?: string[];
             /**
              * Language
              * @default en
@@ -2280,6 +2405,17 @@ export interface components {
             /** Revision */
             revision: number;
         };
+        /** ProfileSync */
+        ProfileSync: {
+            /** Accept */
+            accept?: string[];
+            /** Dismiss */
+            dismiss?: string[];
+            /** Label */
+            label: string;
+            /** Revision */
+            revision: number;
+        };
         /** Progress */
         Progress: {
             /** Average Score */
@@ -2306,6 +2442,11 @@ export interface components {
              * @default
              */
             description: string;
+            /**
+             * Id
+             * @default
+             */
+            id: string;
             /** Tech */
             tech?: string[];
             /**
@@ -2360,7 +2501,11 @@ export interface components {
              */
             position: string;
             /** Sections */
-            sections?: ("summary" | "experience" | "education" | "projects" | "skills" | "certificates" | "languages")[];
+            sections?: ("summary" | "experience" | "education" | "projects" | "awards" | "skills" | "interests" | "certificates" | "languages")[];
+            /** Selection */
+            selection?: {
+                [key: string]: string[];
+            } | null;
             /** Title */
             title: string;
             /**
@@ -2373,6 +2518,8 @@ export interface components {
         };
         /** ResumeFields */
         ResumeFields: {
+            /** Awards */
+            awards?: components["schemas"]["Award"][];
             /**
              * Certificates
              * @default
@@ -2398,6 +2545,8 @@ export interface components {
              * @default
              */
             full_name: string;
+            /** Interests */
+            interests?: string[];
             /**
              * Languages
              * @default
@@ -4189,6 +4338,28 @@ export interface operations {
             };
         };
     };
+    profile_status_resume_links_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     create_resume_resume_create_post: {
         parameters: {
             query?: never;
@@ -4555,6 +4726,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_changes_resume__resume_id__profile_changes_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileChanges"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_profile_changes_resume__resume_id__profile_changes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                resume_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileSync"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ResumeRecord"];
                 };
             };
             /** @description Validation Error */

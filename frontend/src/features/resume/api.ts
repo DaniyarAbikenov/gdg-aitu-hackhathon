@@ -1,6 +1,6 @@
 import { postJob } from "@/api/jobs";
 import client from "@/api/client";
-import type { ResumeRecord, VersionRecord } from "@/api/types";
+import type { ProfileChanges, ResumeRecord, VersionRecord } from "@/api/types";
 import { invalidateSummaries } from "@/features/dashboard/api";
 import {
   type QueryClient,
@@ -62,6 +62,8 @@ export const resumeKeys = {
   detail: (id: string) => [...resumeKeys.all, "detail", id] as const,
   assessment: (id: string) => [...resumeKeys.all, "assessment", id] as const,
   versions: (id: string) => [...resumeKeys.all, "versions", id] as const,
+  links: () => [...resumeKeys.all, "links"] as const,
+  changes: (id: string) => [...resumeKeys.all, "changes", id] as const,
 };
 
 // Edits are guarded by revision, so a page always loads the current record on mount.
@@ -135,6 +137,7 @@ export function useCreateResume() {
       job: string;
       facts: string;
       sections: string[];
+      selection?: Record<string, string[]>;
       use_ai: boolean;
     }) => (await client.post<CreatedResume>("/resume/create", payload)).data,
     onSuccess: () => invalidateResumes(queryClient),
@@ -268,6 +271,54 @@ export function useGenerateResumePdf() {
         responseType: "blob",
       });
       return { pdf_url: URL.createObjectURL(data) };
+    },
+  });
+}
+
+/** How each resume relates to the master profile: current, suggestions, outdated or review. */
+export function useResumeLinks() {
+  return useQuery({
+    queryKey: resumeKeys.links(),
+    queryFn: async () =>
+      (await client.get<Record<string, string>>("/resume-links")).data,
+    staleTime: 0,
+  });
+}
+
+export function useProfileChanges(id: string) {
+  return useQuery({
+    queryKey: resumeKeys.changes(id),
+    queryFn: async () =>
+      (await client.get<ProfileChanges>(`/resume/${id}/profile-changes`)).data,
+    staleTime: 0,
+  });
+}
+
+export function useApplyProfileChanges() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      revision: number;
+      accept: string[];
+      dismiss: string[];
+      label: string;
+    }) =>
+      (
+        await client.post<ResumeRecord>(
+          `/resume/${id}/profile-changes`,
+          payload,
+        )
+      ).data,
+    onSuccess: (record) => {
+      queryClient.setQueryData(
+        resumeKeys.detail(record.resume_id),
+        normalized(record),
+      );
+      return invalidateResumes(queryClient, record.resume_id);
     },
   });
 }
