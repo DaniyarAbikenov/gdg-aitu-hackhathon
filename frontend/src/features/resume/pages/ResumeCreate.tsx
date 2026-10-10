@@ -13,6 +13,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { useVacancyContext } from "@/features/applications/useVacancyContext";
 import { VacancyContext } from "@/features/applications/components/VacancyContext";
 import { useCapabilities } from "@/api/system";
+import { describe } from "../profileValues";
+
+/** The selectable entries of a profile section: [key, label] pairs. */
+function entriesOf(value: unknown): [string, string][] {
+  if (!Array.isArray(value)) return [];
+  const result: [string, string][] = [];
+  for (const item of value) {
+    if (typeof item === "string") result.push([item, item]);
+    else if (item && typeof item === "object" && "id" in item && item.id)
+      result.push([String(item.id), describe(item).slice(0, 140)]);
+    else return []; // Entries saved before ids existed are chosen as a whole section.
+  }
+  return result;
+}
+
 function sectionStatus(value: unknown) {
   if (Array.isArray(value))
     return tr("dynamic.entries", { count: value.length });
@@ -26,9 +41,11 @@ export default function ResumeCreate() {
     experience: tr("copy.c068"),
     education: tr("copy.c076"),
     projects: tr("copy.c081"),
+    awards: tr("linked.awards"),
     skills: tr("copy.c104"),
     certificates: tr("copy.c444"),
     languages: tr("copy.c445"),
+    interests: tr("linked.interests"),
   };
   const capabilities = useCapabilities();
   const { vacancy, error: contextError } = useVacancyContext();
@@ -37,7 +54,11 @@ export default function ResumeCreate() {
   const [position, setPosition] = useState("");
   const [job, setJob] = useState("");
   const [facts, setFacts] = useState("");
-  const [sections, setSections] = useState(Object.keys(blocks));
+  const [sections, setSections] = useState(
+    Object.keys(blocks).filter((key) => key !== "interests"),
+  );
+  // Entries the candidate left out, per section; everything else is included.
+  const [excluded, setExcluded] = useState<Record<string, string[]>>({});
   const [ai, setAI] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -77,6 +98,20 @@ export default function ResumeCreate() {
         job,
         facts,
         sections,
+        selection: Object.fromEntries(
+          sections
+            .map(
+              (key) =>
+                [key, entriesOf(profile?.[key as keyof ProfileData])] as const,
+            )
+            .filter(([, entries]) => entries.length > 0)
+            .map(([key, entries]) => [
+              key,
+              entries
+                .map(([id]) => id)
+                .filter((id) => !(excluded[key] ?? []).includes(id)),
+            ]),
+        ),
         use_ai: ai,
       });
       if (created.questions.length) setQuestions(created.questions);
@@ -122,25 +157,61 @@ export default function ResumeCreate() {
         </label>
         <fieldset className="border rounded-lg p-4 space-y-3">
           <legend>{tr("copy.c450")}</legend>
-          {Object.entries(blocks).map(([key, label]) => (
-            <label className="flex gap-2" key={key}>
-              <input
-                type="checkbox"
-                checked={sections.includes(key)}
-                onChange={() =>
-                  setSections(
-                    sections.includes(key)
-                      ? sections.filter((s) => s !== key)
-                      : [...sections, key],
-                  )
-                }
-              />
-              {label}
-              <span className="text-muted-foreground text-sm">
-                {profile && sectionStatus(profile[key as keyof ProfileData])}
-              </span>
-            </label>
-          ))}
+          <p className="text-sm text-muted-foreground">
+            {tr("linked.chooseExplain")}
+          </p>
+          {Object.entries(blocks).map(([key, label]) => {
+            const value = profile?.[key as keyof ProfileData];
+            const entries = entriesOf(value);
+            const left = excluded[key] ?? [];
+            return (
+              <div key={key} className="space-y-2">
+                <label className="flex gap-2">
+                  <input
+                    type="checkbox"
+                    checked={sections.includes(key)}
+                    onChange={() =>
+                      setSections(
+                        sections.includes(key)
+                          ? sections.filter((s) => s !== key)
+                          : [...sections, key],
+                      )
+                    }
+                  />
+                  {label}
+                  <span className="text-muted-foreground text-sm">
+                    {profile && sectionStatus(value)}
+                  </span>
+                </label>
+                {sections.includes(key) && entries.length > 1 && (
+                  <ul
+                    aria-label={tr("linked.entriesOf", { section: label })}
+                    className="ml-6 space-y-1 text-sm"
+                  >
+                    {entries.map(([id, text]) => (
+                      <li key={id}>
+                        <label className="flex gap-2 break-words">
+                          <input
+                            type="checkbox"
+                            checked={!left.includes(id)}
+                            onChange={() =>
+                              setExcluded({
+                                ...excluded,
+                                [key]: left.includes(id)
+                                  ? left.filter((v) => v !== id)
+                                  : [...left, id],
+                              })
+                            }
+                          />
+                          <span className="min-w-0">{text}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </fieldset>
         <label className="flex gap-2">
           <input

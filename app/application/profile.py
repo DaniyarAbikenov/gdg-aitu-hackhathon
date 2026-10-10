@@ -5,6 +5,7 @@ from typing import Any
 
 from app.domain.career import CareerRecord, CareerRepository
 from app.domain.errors import Conflict, NotFound
+from app.domain.master import with_ids
 from app.domain.models import Session
 
 DEFAULT_WIDGETS = ("resumes", "skills", "companies", "learning", "activity", "journey")
@@ -25,6 +26,8 @@ class ProfileService:
         return profile.data if profile else {}
 
     def save(self, session: Session, data: dict[str, Any], revision: int) -> CareerRecord:
+        # Stable entry ids let resumes follow later edits of the same fact.
+        data = with_ids(data)
         if self.get(session):
             return self.store.update("profile", session.owner, session.owner, revision, data)
         if revision != 0:

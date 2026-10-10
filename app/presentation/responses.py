@@ -282,3 +282,25 @@ class AiUsage(View):
     totals: UsageTotals
     operations: list[OperationUsage]
     daily: list[DailyUsage]
+
+
+class ProfileChange(BaseModel):
+    """One difference between the master profile and a resume."""
+
+    id: str
+    kind: Literal["update", "review", "new", "removed"]
+    section: str
+    key: str
+    label: str
+    resume: Any = None
+    profile: Any = None
+    demand: int = 0
+
+
+class ProfileChanges(BaseModel):
+    resume_id: str
+    revision: int
+    profile_revision: int
+    linked: bool
+    status: Literal["current", "suggestions", "outdated", "review"]
+    changes: list[ProfileChange]

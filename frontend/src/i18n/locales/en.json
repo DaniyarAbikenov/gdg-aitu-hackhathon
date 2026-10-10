@@ -1047,5 +1047,58 @@
     "latency": "Average time",
     "failedCount": "{{count}} failed",
     "byDay": "By day"
+  },
+  "linked": {
+    "awards": "Achievements and awards",
+    "awardTitle": "Achievement",
+    "awardYear": "Year",
+    "awardDetail": "Details",
+    "interests": "Interests and hobbies",
+    "interestsHint": "One per line, for example: chess",
+    "title": "Updates from your profile",
+    "explain": "This resume is linked to your profile. Choose what to bring in; nothing changes until you save your decisions.",
+    "unlinked": "This resume was made before profile linking. Matching entries are compared with your profile; review them once to link the resume.",
+    "current": "The resume matches your profile.",
+    "kinds": {
+      "review": "Changed in both the profile and this resume",
+      "update": "Updated in your profile",
+      "removed": "Removed from your profile",
+      "new": "New in your profile"
+    },
+    "choices": {
+      "review": {
+        "accept": "Use the profile version",
+        "dismiss": "Keep the resume text"
+      },
+      "update": {
+        "accept": "Update the resume",
+        "dismiss": "Keep as is"
+      },
+      "removed": {
+        "accept": "Remove from the resume",
+        "dismiss": "Keep in the resume"
+      },
+      "new": {
+        "accept": "Add to the resume",
+        "dismiss": "Not for this resume"
+      }
+    },
+    "demand": "Asked for in {{count}} saved vacancies",
+    "inResume": "In the resume",
+    "inProfile": "In the profile",
+    "save": "Save decisions ({{count}})",
+    "history": "The current text is kept in the version history first.",
+    "saveFirst": "Save your edits in the editor below before applying profile updates.",
+    "versionLabel": "Before the profile update",
+    "applied": "Updated. The previous text is in the version history.",
+    "kept": "Saved. These suggestions will not be shown again.",
+    "status": {
+      "current": "Matches the profile",
+      "suggestions": "New profile facts to consider",
+      "outdated": "The profile has updates for this resume",
+      "review": "Profile and resume both changed: review needed"
+    },
+    "chooseExplain": "Your profile can hold more facts than one resume needs. Untick what does not fit this vacancy.",
+    "entriesOf": "Entries of {{section}}"
   }
 }

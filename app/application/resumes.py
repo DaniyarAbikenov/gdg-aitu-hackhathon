@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import asdict
 from pathlib import PurePath
 from typing import Any
 
 from app.application.ports import DocumentProcessor, ResumeRepository, ResumeReviewer, SessionStore
+from app.domain import master
 from app.domain.career import CareerRecord, CareerRepository
 from app.domain.errors import Conflict, InvalidDocument, NotFound
 from app.domain.models import ResumeFields, ResumeRecord, Session
-
-CONTACT_FIELDS = {"full_name", "email", "phone", "location"}
 
 
 class ResumeService:
@@ -57,37 +57,42 @@ class ResumeService:
         facts: str,
         vacancy_id: str | None,
         validate: Callable[[dict[str, Any]], ResumeFields],
+        selection: dict[str, list[str]] | None = None,
     ) -> dict[str, Any]:
-        """Snapshot selected profile facts into a new resume, optionally composed by AI.
+        """A new resume linked to the selected profile facts, optionally composed by AI.
 
         `validate` applies the external resume contract to AI or profile data.
+        `selection` narrows a section to chosen entries; a missing section means all.
         """
         if vacancy_id:
             self.store.get("vacancy", session.owner, vacancy_id)
         try:
-            profile = self.store.get("profile", session.owner, session.owner).data
+            record = self.store.get("profile", session.owner, session.owner)
+            profile, profile_revision = record.data, record.revision
         except NotFound:
-            profile = {}
-        fields = {k: v for k, v in profile.items() if k in CONTACT_FIELDS | set(sections)}
-        fields["position"] = position
+            profile, profile_revision = {}, 0
+        selected = master.select(profile, sections, selection)
+        fields = {**selected, "position": position}
         if use_ai:
             self.sessions.consume_analysis(session)
             result = self.documents.compose(fields, position, job, facts)
             if result["questions"]:
                 return {"questions": result["questions"]}
-            fields = result["fields"]
+            fields = master.restore_ids(selected, result["fields"])
         if vacancy_id:
             # The vacancy may have been deleted during a slow provider call.
             self.store.get("vacancy", session.owner, vacancy_id)
-        record = self.repository.create(
+        valid = validate(fields)
+        resume = self.repository.create(
             session,
             "Created resume",
-            validate(fields),
+            valid,
             title=title,
             description=job[:2000],
             vacancy_id=vacancy_id,
+            profile_link=master.build_link(profile, profile_revision, asdict(valid)),
         )
-        return {"resume": record, "questions": []}
+        return {"resume": resume, "questions": []}
 
     def save(
         self, session: Session, resume_id: str, revision: int, fields: ResumeFields

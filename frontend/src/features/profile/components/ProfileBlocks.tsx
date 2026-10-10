@@ -88,6 +88,16 @@ export function ProfileBlocks({
         ["tech", tr("copy.c084")],
       ],
     },
+    {
+      key: "awards",
+      title: tr("linked.awards"),
+      empty: { title: "", detail: "", year: 0 },
+      fields: [
+        ["title", tr("linked.awardTitle")],
+        ["year", tr("linked.awardYear")],
+        ["detail", tr("linked.awardDetail")],
+      ],
+    },
   ] as const;
   return (
     <div className="space-y-6">
@@ -135,7 +145,9 @@ export function ProfileBlocks({
                   const multiline =
                     array ||
                     key === "description" ||
+                    key === "detail" ||
                     key === "responsibilities";
+                  const year = key === "year" || key.startsWith("year_");
                   const change = (text: string) =>
                     set(
                       section.key,
@@ -146,7 +158,7 @@ export function ProfileBlocks({
                               ...r,
                               [key]: array
                                 ? text.split("\n")
-                                : key.startsWith("year_")
+                                : year
                                   ? Number(text)
                                   : text,
                             },
@@ -165,7 +177,7 @@ export function ProfileBlocks({
                         onChange={change}
                       />
                     );
-                  if (key.startsWith("year_"))
+                  if (year)
                     return (
                       <label key={key} className="space-y-1">
                         <span className="text-sm font-medium">{label}</span>
@@ -192,7 +204,7 @@ export function ProfileBlocks({
                         />
                       ) : (
                         <Input
-                          type={key.startsWith("year_") ? "number" : "text"}
+                          type="text"
                           value={text}
                           onChange={(e) => change(e.target.value)}
                         />
@@ -231,6 +243,24 @@ export function ProfileBlocks({
       })}
       {scalar("certificates", tr("copy.c094"), true)}
       {scalar("languages", tr("copy.c095"), true)}
+      <label className="block space-y-2">
+        <span className="text-sm font-medium">{tr("linked.interests")}</span>
+        <Textarea
+          aria-label={tr("linked.interests")}
+          placeholder={tr("linked.interestsHint")}
+          value={(data.interests ?? []).join("\n")}
+          onChange={(e) => set("interests", e.target.value.split("\n"))}
+          onBlur={(e) =>
+            set(
+              "interests",
+              e.target.value
+                .split("\n")
+                .map((v) => v.trim())
+                .filter(Boolean),
+            )
+          }
+        />
+      </label>
     </div>
   );
 }

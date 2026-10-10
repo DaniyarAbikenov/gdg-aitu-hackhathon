@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FileText, Upload } from "lucide-react";
-import { useResumes, useUpdateResumeMetadata, useUploadResume } from "../api";
+import {
+  useResumeLinks,
+  useResumes,
+  useUpdateResumeMetadata,
+  useUploadResume,
+} from "../api";
 
 export default function Resume() {
   useLocale();
@@ -21,6 +26,7 @@ export default function Resume() {
   const [drag, setDrag] = useState(false);
   const [error, setError] = useState("");
   const resumes = useResumes();
+  const links = useResumeLinks().data ?? {};
   const uploadResume = useUploadResume();
   const updateMetadata = useUpdateResumeMetadata();
   const loading = resumes.isPending;
@@ -184,6 +190,14 @@ export default function Resume() {
                     {status[r.lifecycle]}
                   </span>
                 </div>
+                {links[r.resume_id] && links[r.resume_id] !== "current" && (
+                  <Link
+                    to={`/resume/${r.resume_id}/edit`}
+                    className={`block rounded-md px-3 py-2 text-sm ${links[r.resume_id] === "suggestions" ? "bg-muted" : "bg-primary/10 text-primary"}`}
+                  >
+                    {tr(`linked.status.${links[r.resume_id]}`)}
+                  </Link>
+                )}
                 <p className="text-sm whitespace-pre-wrap break-words">
                   {r.description || tr("copy.c436")}
                 </p>

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-from app.domain.models import Session
+from app.domain.models import ResumeRecord, Session
 
 RecordKind = Literal[
     "profile",
@@ -46,6 +46,15 @@ class CareerRepository(Protocol):
         remaining: dict,
         section: str,
     ) -> CareerRecord: ...
+    def sync_resume(
+        self,
+        session: Session,
+        resume_id: str,
+        revision: int,
+        fields: dict,
+        link: dict,
+        label: str,
+    ) -> ResumeRecord: ...
     def delete(self, kind: RecordKind, owner: str, record_id: str) -> None: ...
     def clear(self, owner: str) -> None: ...
     def register(self, email: str, password_hash: str, owner: str) -> None: ...

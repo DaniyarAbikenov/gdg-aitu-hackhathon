@@ -16,7 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
-from app.contracts import Education, Experience, Project
+from app.contracts import Award, Education, Experience, Project
 from app.domain.errors import InvalidDocument
 from app.domain.models import ResumeFields
 from app.domain.periods import validate_history
@@ -89,14 +89,16 @@ def resume_sections(fields):
         ("Experience", "experience"),
         ("Education", "education"),
         ("Projects", "projects"),
+        ("Achievements", "awards"),
         ("Certificates", "certificates"),
         ("Languages", "languages"),
+        ("Interests", "interests"),
     ]:
         value = getattr(fields, key)
         if not value:
             continue
         blocks = []
-        if key == "skills":
+        if key in {"skills", "interests"}:
             blocks = [" · ".join(value)]
         elif isinstance(value, str):
             blocks = [line for line in value.splitlines() if line.strip()]
@@ -119,6 +121,13 @@ def resume_sections(fields):
                         ),
                         entry.get("responsibilities", ""),
                         *["• " + item for item in entry.get("achievements", [])],
+                    ]
+                elif key == "awards":
+                    lines = [
+                        " · ".join(
+                            str(v) for v in [entry.get("title"), entry.get("year") or ""] if v
+                        ),
+                        entry.get("detail", ""),
                     ]
                 elif key == "education":
                     lines = [
@@ -220,6 +229,8 @@ class ExtractedResume(BaseModel):
     projects: list[Project] = Field(default_factory=list, max_length=40)
     certificates: str = Field(default="", max_length=3000)
     languages: str = Field(default="", max_length=500)
+    awards: list[Award] = Field(default_factory=list, max_length=40)
+    interests: list[str] = Field(default_factory=list, max_length=30)
 
     @model_validator(mode="after")
     def validate_dates(self):
@@ -257,11 +268,14 @@ class Documents:
             else:
                 source = {"text": extract_text(filename, data)}
             fields = self.ai.generate(
-                "Extract the actual resume facts. Preserve all experience, education, projects, contact details and certificates. Use structured entries for experience, education and projects. For work dates return YYYY-MM when a month is stated, YYYY when only a year is stated, and present for an explicitly ongoing role. Never invent a month or a day. Use zero for unknown education years and empty strings for unknown work dates. Do not infer or invent missing facts. Empty fields are allowed.",
+                "Extract the actual resume facts. Preserve all experience, education, projects, contact details, certificates, achievements such as awards or competitions, and stated hobbies or interests. Use structured entries for experience, education and projects. For work dates return YYYY-MM when a month is stated, YYYY when only a year is stated, and present for an explicitly ongoing role. Never invent a month or a day. Use zero for unknown education years and empty strings for unknown work dates. Do not infer or invent missing facts. Empty fields are allowed.",
                 source,
                 ExtractedResume,
                 document=data if pdf else None,
             )
+            for section in ("experience", "education", "projects", "awards"):
+                # Entry ids belong to the profile; a document never supplies them.
+                fields[section] = [{**item, "id": ""} for item in fields.get(section) or []]
             return ResumeFields(**fields)
         return extract_fields(extract_text(filename, data))
 

@@ -44,6 +44,7 @@ class ResumeRow(Base):
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
     analysis: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
     jd_text: Mapped[str] = mapped_column(Text, default="")
+    profile_link: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
 
 def to_record(row):
@@ -65,6 +66,7 @@ def to_record(row):
         description=row.description,
         lifecycle=row.lifecycle,
         updated_at=row.updated_at.isoformat(),
+        profile_link=row.profile_link,
     )
 
 
@@ -90,7 +92,17 @@ class PostgresRepository:
             filters.append(ResumeRow.id == resume_id)
         return filters
 
-    def create(self, session, filename, fields, *, title=None, description="", vacancy_id=None):
+    def create(
+        self,
+        session,
+        filename,
+        fields,
+        *,
+        title=None,
+        description="",
+        vacancy_id=None,
+        profile_link=None,
+    ):
         with self.sessions.begin() as db:
             # Serialize the quota check across workers without blocking other owners.
             db.execute(
@@ -118,6 +130,7 @@ class PostgresRepository:
                 expires_at=None if session.persistent else session.expires_at,
                 analysis=None,
                 jd_text="",
+                profile_link=profile_link,
             )
             if vacancy_id:
                 from app.infrastructure.career_store import VacancyRow

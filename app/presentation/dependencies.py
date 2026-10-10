@@ -15,6 +15,7 @@ from app.application.interviews import InterviewService
 from app.application.jobs import Jobs
 from app.application.knowledge import Knowledge
 from app.application.learning import LearningService
+from app.application.linked_resumes import LinkedResumes
 from app.application.overview import Overview
 from app.application.profile import ProfileService
 from app.application.profile_import import ProfileImport
@@ -51,6 +52,7 @@ class UseCases:
     jobs: Jobs
     recovery: Recovery
     ai_usage: AiUsageReport
+    linked_resumes: LinkedResumes
 
 
 def use_cases(request: Request) -> UseCases:

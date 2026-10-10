@@ -664,6 +664,39 @@
         "title": "Assignment",
         "type": "object"
       },
+      "Award": {
+        "additionalProperties": false,
+        "description": "An achievement outside a single job: a competition, award, publication or certificate.",
+        "properties": {
+          "detail": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Detail",
+            "type": "string"
+          },
+          "id": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "maxLength": 300,
+            "title": "Title",
+            "type": "string"
+          },
+          "year": {
+            "default": 0,
+            "maximum": 2200.0,
+            "minimum": 0.0,
+            "title": "Year",
+            "type": "integer"
+          }
+        },
+        "title": "Award",
+        "type": "object"
+      },
       "Body_import_profile_user_profile_import_post": {
         "properties": {
           "file": {
@@ -920,6 +953,12 @@
             "title": "Degree",
             "type": "string"
           },
+          "id": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Id",
+            "type": "string"
+          },
           "institution": {
             "default": "",
             "maxLength": 300,
@@ -987,6 +1026,12 @@
             "default": "",
             "maxLength": 50,
             "title": "Date To",
+            "type": "string"
+          },
+          "id": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Id",
             "type": "string"
           },
           "location": {
@@ -2147,6 +2192,14 @@
             "title": "Audio Mode",
             "type": "boolean"
           },
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/Award"
+            },
+            "maxItems": 40,
+            "title": "Awards",
+            "type": "array"
+          },
           "career_goal": {
             "default": "",
             "maxLength": 1000,
@@ -2211,6 +2264,14 @@
             "maxLength": 120,
             "title": "Full Name",
             "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Interests",
+            "type": "array"
           },
           "language": {
             "default": "en",
@@ -2280,6 +2341,104 @@
         "title": "Profile",
         "type": "object"
       },
+      "ProfileChange": {
+        "description": "One difference between the master profile and a resume.",
+        "properties": {
+          "demand": {
+            "default": 0,
+            "title": "Demand",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "update",
+              "review",
+              "new",
+              "removed"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "profile": {
+            "title": "Profile"
+          },
+          "resume": {
+            "title": "Resume"
+          },
+          "section": {
+            "title": "Section",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "section",
+          "key",
+          "label"
+        ],
+        "title": "ProfileChange",
+        "type": "object"
+      },
+      "ProfileChanges": {
+        "properties": {
+          "changes": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileChange"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "linked": {
+            "title": "Linked",
+            "type": "boolean"
+          },
+          "profile_revision": {
+            "title": "Profile Revision",
+            "type": "integer"
+          },
+          "resume_id": {
+            "title": "Resume Id",
+            "type": "string"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "current",
+              "suggestions",
+              "outdated",
+              "review"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resume_id",
+          "revision",
+          "profile_revision",
+          "linked",
+          "status",
+          "changes"
+        ],
+        "title": "ProfileChanges",
+        "type": "object"
+      },
       "ProfileData": {
         "additionalProperties": true,
         "properties": {
@@ -2287,6 +2446,14 @@
             "default": false,
             "title": "Audio Mode",
             "type": "boolean"
+          },
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/Award"
+            },
+            "maxItems": 40,
+            "title": "Awards",
+            "type": "array"
           },
           "career_goal": {
             "default": "",
@@ -2357,6 +2524,14 @@
             "maxLength": 120,
             "title": "Full Name",
             "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Interests",
+            "type": "array"
           },
           "language": {
             "default": "en",
@@ -2491,6 +2666,44 @@
         "title": "ProfileSave",
         "type": "object"
       },
+      "ProfileSync": {
+        "additionalProperties": false,
+        "properties": {
+          "accept": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Accept",
+            "type": "array"
+          },
+          "dismiss": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 200,
+            "title": "Dismiss",
+            "type": "array"
+          },
+          "label": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revision",
+          "label"
+        ],
+        "title": "ProfileSync",
+        "type": "object"
+      },
       "Progress": {
         "additionalProperties": true,
         "properties": {
@@ -2552,6 +2765,12 @@
             "default": "",
             "maxLength": 6000,
             "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "default": "",
+            "maxLength": 40,
+            "title": "Id",
             "type": "string"
           },
           "tech": {
@@ -2663,15 +2882,47 @@
                 "experience",
                 "education",
                 "projects",
+                "awards",
                 "skills",
+                "interests",
                 "certificates",
                 "languages"
               ],
               "type": "string"
             },
-            "maxItems": 7,
+            "maxItems": 9,
             "title": "Sections",
             "type": "array"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "propertyNames": {
+                  "enum": [
+                    "summary",
+                    "experience",
+                    "education",
+                    "projects",
+                    "awards",
+                    "skills",
+                    "interests",
+                    "certificates",
+                    "languages"
+                  ]
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selection"
           },
           "title": {
             "maxLength": 200,
@@ -2706,6 +2957,14 @@
       "ResumeFields": {
         "additionalProperties": false,
         "properties": {
+          "awards": {
+            "items": {
+              "$ref": "#/components/schemas/Award"
+            },
+            "maxItems": 40,
+            "title": "Awards",
+            "type": "array"
+          },
           "certificates": {
             "default": "",
             "maxLength": 3000,
@@ -2755,6 +3014,14 @@
             "maxLength": 120,
             "title": "Full Name",
             "type": "string"
+          },
+          "interests": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 30,
+            "title": "Interests",
+            "type": "array"
           },
           "languages": {
             "default": "",
@@ -5161,6 +5428,28 @@
         "summary": "List Resumes"
       }
     },
+    "/resume-links": {
+      "get": {
+        "operationId": "profile_status_resume_links_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Profile Status Resume Links Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Profile Status"
+      }
+    },
     "/resume/create": {
       "post": {
         "operationId": "create_resume_resume_create_post",
@@ -5647,6 +5936,94 @@
           }
         },
         "summary": "Pdf"
+      }
+    },
+    "/resume/{resume_id}/profile-changes": {
+      "get": {
+        "operationId": "profile_changes_resume__resume_id__profile_changes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resume Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileChanges"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Profile Changes"
+      },
+      "post": {
+        "operationId": "apply_profile_changes_resume__resume_id__profile_changes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "resume_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Resume Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileSync"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumeRecord"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Profile Changes"
       }
     },
     "/resume/{resume_id}/save": {

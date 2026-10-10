@@ -9,6 +9,7 @@ class StrictModel(BaseModel):
 
 
 class Experience(StrictModel):
+    id: str = Field(default="", max_length=40)
     company: str = Field(default="", max_length=300)
     role: str = Field(default="", max_length=300)
     date_from: str = Field(default="", max_length=50)
@@ -28,6 +29,7 @@ class Experience(StrictModel):
 
 
 class Education(StrictModel):
+    id: str = Field(default="", max_length=40)
     institution: str = Field(default="", max_length=300)
     degree: str = Field(default="", max_length=300)
     year_start: int = Field(default=0, ge=0, le=2200)
@@ -35,9 +37,19 @@ class Education(StrictModel):
 
 
 class Project(StrictModel):
+    id: str = Field(default="", max_length=40)
     title: str = Field(default="", max_length=300)
     description: str = Field(default="", max_length=6000)
     tech: list[str] = Field(default_factory=list, max_length=60)
+
+
+class Award(StrictModel):
+    """An achievement outside a single job: a competition, award, publication or certificate."""
+
+    id: str = Field(default="", max_length=40)
+    title: str = Field(default="", max_length=300)
+    detail: str = Field(default="", max_length=2000)
+    year: int = Field(default=0, ge=0, le=2200)
 
 
 class ResumeFields(StrictModel):
@@ -54,6 +66,22 @@ class ResumeFields(StrictModel):
     projects: str | list[Project] = Field(default="", max_length=6000)
     certificates: str = Field(default="", max_length=3000)
     languages: str = Field(default="", max_length=500)
+    awards: list[Award] = Field(default_factory=list, max_length=40)
+    interests: list[str] = Field(default_factory=list, max_length=30)
+
+    @field_validator("interests")
+    @classmethod
+    def clean_interests(cls, interests):
+        result = []
+        for item in interests:
+            item = " ".join(item.split())
+            if not item:
+                continue  # One interest per line; blank lines are not facts.
+            if len(item) > 80:
+                raise ValueError("Keep each interest under 80 characters")
+            if item.casefold() not in {i.casefold() for i in result}:
+                result.append(item)
+        return result
 
     @field_validator("skills")
     @classmethod

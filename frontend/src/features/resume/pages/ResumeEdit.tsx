@@ -4,12 +4,19 @@ import { ProfileBlocks } from "@/features/profile/components/ProfileBlocks";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAdaptResume, useResume, useSaveResumeFields } from "../api";
+import {
+  structured,
+  useAdaptResume,
+  useResume,
+  useSaveResumeFields,
+} from "../api";
 import { useResumeStore } from "../store";
 import { Button } from "@/components/ui/button";
 import { MainLayout } from "@/components/layout/MainLayout";
 
 import { ResumeSkillsEditor } from "../components/ResumeSkillsEditor";
+import { ProfileUpdates } from "../components/ProfileUpdates";
+import { sameValue } from "../profileValues";
 
 export default function ResumeEdit() {
   useLocale();
@@ -93,6 +100,14 @@ export default function ResumeEdit() {
             {error || getErrorMessage(loadError)}
           </p>
         )}
+        <ProfileUpdates
+          resumeId={resumeId!}
+          dirty={!sameValue(fields ?? {}, resume.data?.fields ?? {})}
+          onApplied={(record) => {
+            useResumeStore.getState().setRevision(record.revision);
+            setFields(structured(record.fields));
+          }}
+        />
         {/* ✅ блок редакторов */}
         <div className="space-y-8">
           <ProfileBlocks

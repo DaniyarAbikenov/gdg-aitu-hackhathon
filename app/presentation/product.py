@@ -2,14 +2,21 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Query, Response, UploadFile
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from app.config import Settings
 from app.contracts import ResumeFields, StrictModel
 from app.domain.models import ResumeFields as DomainFields
 from app.presentation.dependencies import Cases, Member
 from app.presentation.errors import ApiError
-from app.presentation.responses import AiUsage, Overview, PreferencesRecord, Record
+from app.presentation.responses import (
+    AiUsage,
+    Overview,
+    PreferencesRecord,
+    ProfileChanges,
+    Record,
+)
+from app.presentation.schemas import ResumeRecord
 
 DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
@@ -19,18 +26,44 @@ def domain_fields(data: dict) -> DomainFields:
     return DomainFields(**ResumeFields.model_validate(data).model_dump())
 
 
+Section = Literal[
+    "summary",
+    "experience",
+    "education",
+    "projects",
+    "awards",
+    "skills",
+    "interests",
+    "certificates",
+    "languages",
+]
+
+
 class ResumeCreate(StrictModel):
     vacancy_id: UUID | None = None
     title: str = Field(min_length=1, max_length=200)
     position: str = Field(default="", max_length=200)
     job: str = Field(default="", max_length=15000)
-    sections: list[
-        Literal[
-            "summary", "experience", "education", "projects", "skills", "certificates", "languages"
-        ]
-    ] = Field(default_factory=list, max_length=7)
+    sections: list[Section] = Field(default_factory=list, max_length=9)
+    # Chosen entry ids (or skill and interest names) per section; a missing section means all.
+    selection: dict[Section, list[str]] | None = None
     use_ai: bool = False
     facts: str = Field(default="", max_length=10000)
+
+    @field_validator("selection")
+    @classmethod
+    def bounded(cls, value):
+        if value and any(len(picks) > 80 for picks in value.values()):
+            raise ValueError("Choose at most 80 entries per section")
+        return value
+
+
+class ProfileSync(StrictModel):
+    revision: int = Field(ge=1)
+    accept: list[str] = Field(default_factory=list, max_length=200)
+    dismiss: list[str] = Field(default_factory=list, max_length=200)
+    # The interface language decides how the saved previous version is named.
+    label: str = Field(min_length=1, max_length=160)
 
 
 class Metadata(StrictModel):
@@ -115,7 +148,7 @@ def product_router(settings: Settings) -> APIRouter:
 
     @routes.post("/resume/create", status_code=201)
     def create_resume(payload: ResumeCreate, cases: Cases, current: Member):
-        return cases.resumes.create(
+        result = cases.resumes.create(
             current,
             title=payload.title,
             position=payload.position,
@@ -125,6 +158,31 @@ def product_router(settings: Settings) -> APIRouter:
             facts=payload.facts,
             vacancy_id=str(payload.vacancy_id) if payload.vacancy_id else None,
             validate=domain_fields,
+            selection=None
+            if payload.selection is None
+            else {str(k): v for k, v in payload.selection.items()},
+        )
+        if "resume" in result:
+            result["resume"] = ResumeRecord.model_validate(result["resume"])
+        return result
+
+    @routes.get("/resume-links", response_model=dict[str, str])
+    def profile_status(cases: Cases, current: Member):
+        return cases.linked_resumes.statuses(current)
+
+    @routes.get("/resume/{resume_id}/profile-changes", response_model=ProfileChanges)
+    def profile_changes(resume_id: UUID, cases: Cases, current: Member):
+        return cases.linked_resumes.changes(current, str(resume_id))
+
+    @routes.post("/resume/{resume_id}/profile-changes", response_model=ResumeRecord)
+    def apply_profile_changes(resume_id: UUID, payload: ProfileSync, cases: Cases, current: Member):
+        return cases.linked_resumes.apply(
+            current,
+            str(resume_id),
+            payload.revision,
+            payload.accept,
+            payload.dismiss,
+            payload.label,
         )
 
     @routes.patch("/resume/{resume_id}/metadata")
