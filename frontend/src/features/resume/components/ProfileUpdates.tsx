@@ -52,7 +52,10 @@ export function ProfileUpdates({
   if (!data) return null;
   if (!data.changes.length)
     return (
-      <p className="rounded-lg border p-3 text-sm text-muted-foreground">
+      <p
+        role="status"
+        className="rounded-lg border p-3 text-sm text-muted-foreground"
+      >
         {done || tr("linked.current")}
       </p>
     );
