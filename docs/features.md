@@ -59,3 +59,16 @@ The fetcher rejects private/reserved IPs, credentials and nonstandard ports, pin
 ## Password recovery and email confirmation
 
 The sign-in page offers "Forgot password?" when email is configured. The emailed link opens a page that sets a new password and signs out every device. New accounts receive a confirmation link; settings show the status and can send a new one. Messages are written in the interface language (English, Russian or Kazakh). See `docs/operations.md#account-controls` for limits and SMTP settings.
+
+## Master profile and linked resumes
+
+The profile is the single place for every confirmed fact, including achievements and interests that rarely belong in every resume. Experience, education, project and achievement entries carry stable ids. `/resume/new` lets the candidate choose whole sections and individual entries; interests start unselected.
+
+Each resume remembers which profile facts it was built from (`resumes.profile_link`). `GET /resume/{id}/profile-changes` compares three states (what the resume was built from, the resume now, and the profile now) and lists:
+
+- **update:** only the profile changed, safe to apply;
+- **review:** both the profile and the resume changed, so the candidate decides;
+- **new:** facts added to the profile since; new skills are ranked by how many open saved vacancies ask for them;
+- **removed:** facts deleted from the profile but still in the resume.
+
+Nothing changes until the candidate saves decisions with `POST /resume/{id}/profile-changes`. Before an accepted change is written, the previous text is stored as a version in the same transaction, and a stale list of changes is refused with 409. Keeping the resume text creates no version and hides that suggestion afterwards. Resumes made before linking are matched to profile entries by company and role (or title) and linked after one review. The resume library marks resumes with pending updates (`GET /resume-links`).
